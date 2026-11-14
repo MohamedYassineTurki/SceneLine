@@ -31,8 +31,8 @@ flowchart TD
     PR --> D[Décision signée et datée<br/>empreinte SHA-256]
 ```
 
-Code : [`catalog.py`](../../catalog.py), [`matching.py`](../../matching.py), [`guard.py`](../../guard.py),
-[`decisions.py`](../../decisions.py).
+Code : [`product_matcher/catalog.py`](../../src/product_matcher/catalog.py), [`product_matcher/matching.py`](../../src/product_matcher/matching.py), [`cultural_guard/guard.py`](../../src/cultural_guard/guard.py),
+[`producer_review/decisions.py`](../../src/producer_review/decisions.py).
 
 ## Les règles d'appariement (avant tout modèle)
 Une paire produit × plan est écartée, **avec une explication**, si : la catégorie est exclue par le producteur,

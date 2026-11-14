@@ -25,7 +25,7 @@ flowchart LR
     AS --> L[Relevé des modifications]
 ```
 
-Code : [`render.py`](../../render.py).
+Code : [`integration/render.py`](../../src/integration/render.py).
 
 ## Recalage temporel : les gestes restent sur le dialogue
 Un outil génératif peut rendre un plan plus long ou plus court, ou accélérer une partie du geste. Poser ce plan

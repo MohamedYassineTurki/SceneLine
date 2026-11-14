@@ -11,10 +11,10 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
-from review import replace_json
-from understand import BACKUP_MODEL, PRIMARY_MODEL, Gemini, Metrics, image_part, one_of, resized_file, text_of, text_part
+from video_analyzer.review import replace_json
+from video_analyzer.understand import BACKUP_MODEL, PRIMARY_MODEL, Gemini, Metrics, image_part, one_of, resized_file, text_of, text_part
 
-DEMO = Path(__file__).parent / "demo_products"
+DEMO = Path(__file__).resolve().parents[2] / "demo_products"
 LOCK = threading.RLock()
 
 CATEGORIES = {

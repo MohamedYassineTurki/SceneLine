@@ -19,11 +19,11 @@ from datetime import datetime, timezone
 import cv2
 import numpy as np
 
-import render
-from catalog import MODES, effective, load_catalog
-from decisions import digest, read
-from review import replace_json
-from understand import (BACKUP_MODEL, PRIMARY_MODEL, Gemini, Metrics, image_part, one_of, resized_file, text_of,
+from integration import render
+from product_matcher.catalog import MODES, effective, load_catalog
+from producer_review.decisions import digest, read
+from video_analyzer.review import replace_json
+from video_analyzer.understand import (BACKUP_MODEL, PRIMARY_MODEL, Gemini, Metrics, image_part, one_of, resized_file, text_of,
                         text_part)
 
 LOCK = threading.RLock()

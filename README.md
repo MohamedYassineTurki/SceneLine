@@ -8,10 +8,10 @@
 
 [![IA Éthique 360](https://img.shields.io/badge/Hackathon-IA%20%C3%89thique%20360-1d1d1f)](docs/ETHIQUE-360.md)
 [![Python](https://img.shields.io/badge/Python-3.11+-0066cc?logo=python&logoColor=white)](requirements.txt)
-[![Flask](https://img.shields.io/badge/Flask-3.1-0066cc?logo=flask&logoColor=white)](app.py)
-[![Gemini](https://img.shields.io/badge/Google-Gemini-0066cc?logo=googlegemini&logoColor=white)](understand.py)
-[![Kling AI](https://img.shields.io/badge/Kling%20AI-4.0-0066cc)](kling.py)
-[![FFmpeg](https://img.shields.io/badge/FFmpeg-local-0066cc?logo=ffmpeg&logoColor=white)](render.py)
+[![Flask](https://img.shields.io/badge/Flask-3.1-0066cc?logo=flask&logoColor=white)](src/server/app.py)
+[![Gemini](https://img.shields.io/badge/Google-Gemini-0066cc?logo=googlegemini&logoColor=white)](src/video_analyzer/understand.py)
+[![Kling AI](https://img.shields.io/badge/Kling%20AI-4.0-0066cc)](src/generation/kling.py)
+[![FFmpeg](https://img.shields.io/badge/FFmpeg-local-0066cc?logo=ffmpeg&logoColor=white)](src/integration/render.py)
 
 [Démo](#-démonstration-réelle) · [Le problème](#-le-problème) · [Les 4 étapes](#-les-4-étapes) · [Architecture](#-architecture) · [Éthique 360](#-éthique-360) · [Stack](#-stack-technique) · [Lancer](#-lancer-sceneline)
 
@@ -127,7 +127,7 @@ flowchart LR
 Trois principes structurent tout le code :
 
 1. **Les temps viennent de la mesure, jamais du modèle.** PySceneDetect fixe les coupes ; tout intervalle est exact à l'image près.
-2. **Le modèle note, le code décide, l'humain tranche.** Les décisions sont des règles Python lisibles ([`classify()`](understand.py), [`matching.py`](matching.py), [`guard.py`](guard.py)) ; une réponse de modèle hors schéma devient « incertain », jamais une modification.
+2. **Le modèle note, le code décide, l'humain tranche.** Les décisions sont des règles Python lisibles ([`classify()`](src/video_analyzer/understand.py), [`product_matcher/matching.py`](src/product_matcher/matching.py), [`cultural_guard/guard.py`](src/cultural_guard/guard.py)) ; une réponse de modèle hors schéma devient « incertain », jamais une modification.
 3. **L'original n'est jamais modifié.** Chaque version éditée est un nouveau fichier lié par son empreinte à la révision approuvée.
 
 ➡️ Diagrammes de séquence, modules, API REST et choix d'architecture : [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
@@ -180,7 +180,7 @@ Clés Gemini, côté serveur uniquement : variables `GEMINI_API_KEY` (puis `GEMI
 `.gemini-keys` à la racine (une clé par ligne, ignoré par Git).
 
 ```bash
-.venv/Scripts/python app.py --port 8000
+.venv/Scripts/python run.py --port 8000
 ```
 
 Ouvrez <http://127.0.0.1:8000>. La clé Kling AI, facultative, se connecte dans l'interface à l'étape 3 ; elle reste
@@ -202,28 +202,39 @@ La démo de ce README est produite par un script qui pilote l'application réell
 
 ## 📁 Structure du dépôt
 
+Le code est organisé **par étape du parcours** : chaque module a son dossier et son propre README.
+
 ```
 SceneLine/
-├── app.py                 Serveur Flask et API REST
-├── analyze.py             Étape 1 · plans, transcription, images (local)
-├── understand.py          Étape 1 · scènes, surfaces, règles de décision, client Gemini
-├── context.py             Contexte de l'œuvre et consentements
-├── catalog.py             Étape 2 · catalogue, provenance, analyse des visuels
-├── matching.py            Étape 2 · règles d'appariement et classement
-├── guard.py               Étape 2 · Cultural Integrity Guard
-├── decisions.py           Étape 2 · propositions, révisions, décisions signées
-├── kit.py                 Étape 3 · kit de génération
-├── kling.py               Étape 3 · génération avec Kling AI
-├── render.py              Étape 4 · recalage, assemblage, relevé des modifications
-├── review.py · evaluate.py · placements.py   Outils d'analyse et d'évaluation
-├── web/                   Interface (index.html, app.js, products.js, compare.js, ethics.js, style.css)
-├── demo_products/         Catalogue de démonstration, avec provenance de chaque visuel
-├── validation/            Annotation manuelle pour évaluer les placements
-├── design/                Système de design et prototype de l'interface
-├── motion-video/          Vidéo de présentation, en code (HyperFrames)
-├── scripts/               Enregistrement reproductible de la démo
-└── docs/                  Architecture, étapes, Éthique 360, vidéo, médias
+├── run.py                       Point d'entrée : python run.py
+├── src/
+│   ├── server/                  Serveur Flask et API REST
+│   ├── video_analyzer/          Étape 1 · plans, dialogue, scènes, protection, surfaces, règles de décision
+│   ├── product_matcher/         Étape 2 · catalogue, provenance des visuels, appariement
+│   ├── cultural_guard/          Étape 2 · Cultural Integrity Guard (5 critères, cohérence géographique)
+│   ├── producer_review/         Étape 2 · propositions, révisions, décisions signées
+│   ├── generation/              Étape 3 · kit de génération, Kling AI avec accord par placement
+│   ├── integration/             Étape 4 · recalage temporel, assemblage, relevé des modifications
+│   ├── evaluation/              Mesure de la qualité face à une annotation manuelle
+│   └── web/                     Interface HTML · CSS · JS, sans framework
+├── docs/                        Architecture, une page par étape, Éthique 360, vidéo, médias
+├── demo_products/               Catalogue de démonstration, provenance de chaque visuel
+├── validation/                  Annotation de référence de l'épisode de test
+├── design/                      Système de design et prototype de l'interface
+├── motion-video/                Vidéo de présentation, écrite en code (HyperFrames)
+└── scripts/                     Enregistrement reproductible de la démo
 ```
+
+| Module | README | Étape |
+|---|---|---|
+| `server` | [src/server](src/server) | API, file de travaux, garde d'hôte |
+| `video_analyzer` | [src/video_analyzer](src/video_analyzer) | 1 · Analyse |
+| `product_matcher` | [src/product_matcher](src/product_matcher) | 2 · Produits |
+| `cultural_guard` | [src/cultural_guard](src/cultural_guard) | 2 · Éthique culturelle |
+| `producer_review` | [src/producer_review](src/producer_review) | 2 · Décisions |
+| `generation` | [src/generation](src/generation) | 3 · Génération |
+| `integration` | [src/integration](src/integration) | 4 · Intégration |
+| `web` | [src/web](src/web) | Interface |
 
 ---
 

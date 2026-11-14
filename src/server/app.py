@@ -10,20 +10,21 @@ import sys
 from uuid import uuid4
 
 from flask import Flask, abort, jsonify, request, send_from_directory
-from review import gemini_keys, replace_json
-from understand import PRIMARY_MODEL as DEFAULT_GEMINI_MODEL
-import catalog
-import context as project_context
-import decisions
-import guard
-import matching
-import kit
-import kling
-import render
+from video_analyzer.review import gemini_keys, replace_json
+from video_analyzer.understand import PRIMARY_MODEL as DEFAULT_GEMINI_MODEL
+from product_matcher import catalog
+from video_analyzer import context as project_context
+from producer_review import decisions
+from cultural_guard import guard
+from product_matcher import matching
+from generation import kit
+from generation import kling
+from integration import render
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]  # racine du dépôt (src/<module>/<fichier>.py)
+SRC = ROOT / "src"
 RUNS = ROOT / "output" / "web-runs"
-app = Flask(__name__, static_folder="web", static_url_path="/ui")
+app = Flask(__name__, static_folder=str(SRC / "web"), static_url_path="/ui")
 app.config["MAX_CONTENT_LENGTH"] = 513 * 1024 * 1024
 worker = ThreadPoolExecutor(max_workers=1)
 resume_lock = Lock()
@@ -50,9 +51,9 @@ def run_analysis(folder, video, description, review_only=False):
     stage = 4 if review_only else 0
     try:
         commands = [
-            [str(ROOT / "analyze.py"), str(video), "--output", str(folder),
+            [str(SRC / "video_analyzer" / "analyze.py"), str(video), "--output", str(folder),
              "--description=" + description, "--model", "base"],
-            [str(ROOT / "understand.py"), str(folder), "--video", str(video),
+            [str(SRC / "video_analyzer" / "understand.py"), str(folder), "--video", str(video),
              "--gemini-model", DEFAULT_GEMINI_MODEL],
         ]
         for command in commands[1 if review_only else 0:]:
@@ -61,7 +62,7 @@ def run_analysis(folder, video, description, review_only=False):
             with subprocess.Popen([sys.executable, "-u", *command], cwd=ROOT,
                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                   encoding="utf-8", errors="replace",
-                                  env={**os.environ, "PYTHONIOENCODING": "utf-8"}) as process:
+                                  env={**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONPATH": str(SRC)}) as process:
                 with (folder / "run.log").open("a", encoding="utf-8") as log:
                     for line in process.stdout:
                         log.write(line)
@@ -315,7 +316,7 @@ def retain_opportunity(job_id, key):
 @app.post("/api/jobs/<job_id>/opportunities/<key>/surfaces")
 def find_surfaces(job_id, key):
     """Le producteur demande d'autres surfaces dans l'intervalle (un seul appel Gemini, sur six images)."""
-    import understand
+    from video_analyzer import understand
     folder = ready_job(job_id)
     data = json.loads((folder / "sceneline.json").read_text(encoding="utf-8"))
     item = next((o for o in data["opportunities"] if o["key"] == key), None)
@@ -490,7 +491,8 @@ def kling_resume(job_id, proposal_id):
         return jsonify(message=str(error)), error.status
 
 
-if __name__ == "__main__":
+def main():
+    """Point d'entrée : `python run.py --port 8000`."""
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -508,3 +510,6 @@ if __name__ == "__main__":
         submit_analysis(folder, video, "", True)
     app.run(host="127.0.0.1", port=args.port, threaded=True)
 
+
+if __name__ == "__main__":
+    main()

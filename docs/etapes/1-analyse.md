@@ -45,8 +45,8 @@ flowchart TD
 | 6 · Classement | Règles en Python | local | Écarte, classe, garde au plus 8 placements (3 par scène) |
 | 7 · Vérification | Gemini Flash-Lite | 1 appel par finaliste | Confirme que la surface reste libre et visible sur six images rapprochées |
 
-Code : [`analyze.py`](../../analyze.py) (phases 1 à 3), [`understand.py`](../../understand.py) (phases 4 à 7),
-[`context.py`](../../context.py) (contexte et consentements).
+Code : [`video_analyzer/analyze.py`](../../src/video_analyzer/analyze.py) (phases 1 à 3), [`video_analyzer/understand.py`](../../src/video_analyzer/understand.py) (phases 4 à 7),
+[`video_analyzer/context.py`](../../src/video_analyzer/context.py) (contexte et consentements).
 
 ## La logique, en détail
 

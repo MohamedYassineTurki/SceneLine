@@ -11,7 +11,7 @@ d'époque et de catégorie, point culturel relevé par l'appariement).
 
 import re
 
-from catalog import CATEGORIES, effective
+from product_matcher.catalog import CATEGORIES, effective
 
 LEVELS = ["faible", "moyen", "eleve"]
 LABELS = {"faible": "Risque faible", "moyen": "Risque moyen", "eleve": "Risque élevé"}

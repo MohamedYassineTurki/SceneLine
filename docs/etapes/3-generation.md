@@ -12,10 +12,10 @@
 | Principe | SceneLine envoie le plan, le produit et le prompt à Kling AI, suit la tâche, récupère la vidéo et l'intègre | SceneLine prépare un kit complet (ZIP) ; le créateur génère dans Google Flow, Kling, Runway… puis importe le résultat |
 | Clé | La clé d'API du créateur, **en mémoire seulement** | Aucune clé |
 | Accord | Case à cocher **par placement**, vérifiée **côté serveur** | Le créateur envoie lui-même |
-| Code | [`kling.py`](../../kling.py) | [`kit.py`](../../kit.py) |
+| Code | [`generation/kling.py`](../../src/generation/kling.py) | [`generation/kit.py`](../../src/generation/kit.py) |
 
 ## Le kit de génération
-Pour un placement approuvé, [`kit.py`](../../kit.py) assemble :
+Pour un placement approuvé, [`generation/kit.py`](../../src/generation/kit.py) assemble :
 - **la scène** : le plan source exact (sans audio), découpé sur l'intervalle approuvé ;
 - **l'asset** : le visuel propre du produit, sur un fond carré de 1024 px ;
 - **le prompt**, en français et en anglais : la description du plan (rédigée par Gemini à partir de trois images),

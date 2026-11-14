@@ -14,16 +14,16 @@ L'interface est écrite en HTML, CSS et JavaScript, sans framework ni étape de 
 
 ```mermaid
 flowchart LR
-    subgraph Navigateur["Navigateur · web/"]
+    subgraph Navigateur["Navigateur · src/web/"]
         UI["index.html · app.js<br/>products.js · compare.js<br/>ethics.js"]
     end
 
-    subgraph Serveur["Serveur Flask · app.py"]
+    subgraph Serveur["Serveur Flask · src/server/"]
         API["API REST /api/jobs/…"]
         Q["File de travaux<br/>(1 analyse à la fois)"]
     end
 
-    subgraph Local["Traitements locaux · aucune donnée ne sort"]
+    subgraph Local["Modules src/ · traitements locaux"]
         AN["analyze.py<br/>plans · transcription · images"]
         UN["understand.py<br/>règles de décision"]
         GU["guard.py<br/>Cultural Integrity Guard"]
@@ -94,19 +94,19 @@ sequenceDiagram
 
 | Étape | Module | Responsabilité |
 |---|---|---|
-| Serveur | [`app.py`](../app.py) | API REST, file de travaux, reprise après redémarrage, garde d'hôte (seul `/pub/` est servi à un hôte non local) |
-| 1 · Préparation | [`analyze.py`](../analyze.py) | Métadonnées (ffprobe), plans (PySceneDetect), transcription horodatée (faster-whisper, local), une image par plan (FFmpeg) |
-| 1 · Compréhension | [`understand.py`](../understand.py) | Scènes et contexte, protection éditoriale, intervalles de coupe à coupe, revue des surfaces, **règles de décision en code**, vérification des finalistes |
-| 1 · Client Gemini | [`understand.py`](../understand.py) (`Gemini`) | Rotation des clés, mémoire des quotas épuisés, modèle de secours, sorties JSON contraintes par schéma |
-| 1 · Contexte | [`context.py`](../context.py) | Type d'œuvre, lieu, époque, intention, exclusions de catégories et d'intervalles, consentements horodatés |
-| 2 · Catalogue | [`catalog.py`](../catalog.py) | Fiches produit, provenance obligatoire du visuel, analyse du visuel, origine et marchés visés |
-| 2 · Appariement | [`matching.py`](../matching.py) | Règles explicites produit × plan, puis classement Gemini des paires restantes ; scores mis en cache |
-| 2 · Éthique | [`guard.py`](../guard.py) | **Cultural Integrity Guard** : cinq critères, risque faible / moyen / élevé, cohérence géographique |
-| 2 · Décisions | [`decisions.py`](../decisions.py) | Propositions, révisions, décisions signées et datées, empreinte SHA-256 de chaque révision |
-| 3 · Kit | [`kit.py`](../kit.py) | Plan source exact, asset du produit, prompt FR/EN, prompt négatif, réglages, archive ZIP |
-| 3 · Génération | [`kling.py`](../kling.py) | API Kling AI : clé en mémoire, accord par placement vérifié côté serveur, lien public éphémère, suivi de tâche |
-| 4 · Intégration | [`render.py`](../render.py) | Recalage temporel par programmation dynamique, retrait des bandes noires, assemblage avec l'audio d'origine, relevé des modifications |
-| Évaluation | [`evaluate.py`](../evaluate.py) | Compare les placements à une annotation manuelle (`validation/`) |
+| Serveur | [`server/app.py`](../src/server/app.py) | API REST, file de travaux, reprise après redémarrage, garde d'hôte (seul `/pub/` est servi à un hôte non local) |
+| 1 · Préparation | [`video_analyzer/analyze.py`](../src/video_analyzer/analyze.py) | Métadonnées (ffprobe), plans (PySceneDetect), transcription horodatée (faster-whisper, local), une image par plan (FFmpeg) |
+| 1 · Compréhension | [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) | Scènes et contexte, protection éditoriale, intervalles de coupe à coupe, revue des surfaces, **règles de décision en code**, vérification des finalistes |
+| 1 · Client Gemini | [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) (`Gemini`) | Rotation des clés, mémoire des quotas épuisés, modèle de secours, sorties JSON contraintes par schéma |
+| 1 · Contexte | [`video_analyzer/context.py`](../src/video_analyzer/context.py) | Type d'œuvre, lieu, époque, intention, exclusions de catégories et d'intervalles, consentements horodatés |
+| 2 · Catalogue | [`product_matcher/catalog.py`](../src/product_matcher/catalog.py) | Fiches produit, provenance obligatoire du visuel, analyse du visuel, origine et marchés visés |
+| 2 · Appariement | [`product_matcher/matching.py`](../src/product_matcher/matching.py) | Règles explicites produit × plan, puis classement Gemini des paires restantes ; scores mis en cache |
+| 2 · Éthique | [`cultural_guard/guard.py`](../src/cultural_guard/guard.py) | **Cultural Integrity Guard** : cinq critères, risque faible / moyen / élevé, cohérence géographique |
+| 2 · Décisions | [`producer_review/decisions.py`](../src/producer_review/decisions.py) | Propositions, révisions, décisions signées et datées, empreinte SHA-256 de chaque révision |
+| 3 · Kit | [`generation/kit.py`](../src/generation/kit.py) | Plan source exact, asset du produit, prompt FR/EN, prompt négatif, réglages, archive ZIP |
+| 3 · Génération | [`generation/kling.py`](../src/generation/kling.py) | API Kling AI : clé en mémoire, accord par placement vérifié côté serveur, lien public éphémère, suivi de tâche |
+| 4 · Intégration | [`integration/render.py`](../src/integration/render.py) | Recalage temporel par programmation dynamique, retrait des bandes noires, assemblage avec l'audio d'origine, relevé des modifications |
+| Évaluation | [`evaluation/evaluate.py`](../src/evaluation/evaluate.py) | Compare les placements à une annotation manuelle (`validation/`) |
 
 ---
 

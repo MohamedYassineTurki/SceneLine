@@ -37,7 +37,7 @@ class GeminiUnavailable(RuntimeError):
 def gemini_keys():
     names = ["GEMINI_API_KEY", *(f"GEMINI_API_KEY_{i}" for i in range(2, 6))]
     keys = [os.environ.get(name, "").strip() for name in names]
-    local_file = Path(__file__).with_name(".gemini-keys")
+    local_file = Path(__file__).resolve().parents[2] / ".gemini-keys"
     if local_file.is_file():
         keys.extend(line.strip() for line in local_file.read_text(encoding="utf-8").splitlines())
     return list(dict.fromkeys(key for key in keys if key))

@@ -11,11 +11,11 @@ import json
 import threading
 from datetime import datetime, timezone
 
-import guard
-from catalog import load_catalog
-from matching import load_matching, producer_interval_exclusion, rule_check
-from context import load_context
-from review import replace_json
+from cultural_guard import guard
+from product_matcher.catalog import load_catalog
+from product_matcher.matching import load_matching, producer_interval_exclusion, rule_check
+from video_analyzer.context import load_context
+from video_analyzer.review import replace_json
 
 LOCK = threading.RLock()
 ACTIONS = {"accepter", "refuser", "ajuster", "reviser"}

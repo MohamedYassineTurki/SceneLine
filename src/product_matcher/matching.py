@@ -13,11 +13,11 @@ import re
 import threading
 from pathlib import Path
 
-from catalog import CATEGORIES, CATEGORY_KEYWORDS, MODES, analyze_product, effective, load_catalog
-from context import load_context
-import guard
-from review import replace_json
-from understand import (BACKUP_MODEL, PRIMARY_MODEL, Gemini, Metrics, clock, dialogue_near, image_part,
+from product_matcher.catalog import CATEGORIES, CATEGORY_KEYWORDS, MODES, analyze_product, effective, load_catalog
+from video_analyzer.context import load_context
+from cultural_guard import guard
+from video_analyzer.review import replace_json
+from video_analyzer.understand import (BACKUP_MODEL, PRIMARY_MODEL, Gemini, Metrics, clock, dialogue_near, image_part,
                         one_of, resized_file, text_of, text_part)
 
 RANKING_VERSION = 2  # change quand le prompt ou le barème change : invalide les scores en cache
@@ -256,7 +256,7 @@ def run_matching(folder, model=PRIMARY_MODEL):
     state["catalog_version"] = load_catalog(folder)["version"]
     with LOCK:
         replace_json(matching_path(folder), state)
-    from decisions import sync_proposals
+    from producer_review.decisions import sync_proposals
     sync_proposals(folder)
     set_status(folder, state="complete", done=total, total=total)
     print("Terminé", flush=True)

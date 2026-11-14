@@ -32,7 +32,7 @@ from urllib.request import Request, urlopen
 import cv2
 import numpy as np
 
-from review import gemini_keys, replace_json
+from video_analyzer.review import gemini_keys, replace_json
 
 PRIMARY_MODEL = "gemini-3.5-flash"
 BACKUP_MODEL = "gemini-3.1-flash-lite"
@@ -104,7 +104,7 @@ class GeminiUnavailable(RuntimeError):
     pass
 
 
-QUOTA_FILE = Path(__file__).resolve().parent / "output" / "gemini-quota.json"
+QUOTA_FILE = Path(__file__).resolve().parents[2] / "output" / "gemini-quota.json"
 DAILY_COOLDOWN_S = 6 * 3600     # un quota journalier épuisé ne revient pas dans la journée
 MINUTE_COOLDOWN_S = 65
 

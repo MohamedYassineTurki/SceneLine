@@ -26,9 +26,9 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
-import render
-from decisions import read
-from review import replace_json
+from integration import render
+from producer_review.decisions import read
+from video_analyzer.review import replace_json
 
 BASE = os.environ.get("SCENELINE_KLING_BASE", "https://api-singapore.klingai.com").rstrip("/")
 MODELS = {

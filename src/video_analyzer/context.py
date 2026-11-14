@@ -4,7 +4,7 @@ import json
 import re
 from datetime import datetime, timezone
 
-from catalog import CATEGORIES
+from product_matcher.catalog import CATEGORIES
 
 WORK_TYPES = ["Série", "Film", "Court métrage", "Documentaire", "Autre"]
 TEXT_FIELDS = {"location": "Lieu de l'action", "period": "Époque de l'action",
@@ -74,7 +74,7 @@ EDITABLE = {"location", "period", "languages", "intention"}
 
 def update_context(folder, changes):
     """Le producteur complète ou corrige le contexte après l'import (lieu, époque, langues, intention)."""
-    from review import replace_json
+    from video_analyzer.review import replace_json
     context = load_context(folder) or {"work_type": "Autre", "excluded_categories": [], "excluded_intervals": [],
                                        "excluded_intervals_text": "", "extra_description": "", "unknown_fields": []}
     for key in EDITABLE:

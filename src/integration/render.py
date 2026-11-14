@@ -18,9 +18,9 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
-from catalog import load_catalog
-from decisions import decision_for, digest, read
-from review import replace_json
+from product_matcher.catalog import load_catalog
+from producer_review.decisions import decision_for, digest, read
+from video_analyzer.review import replace_json
 
 LOCK = threading.RLock()
 CONTEXT_MS = 3000          # contexte conservé avant et après l'intervalle
