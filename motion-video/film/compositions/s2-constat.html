@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: block; src: url('assets/fonts/inter-latin.woff2') format('woff2'); }
+        #root { position: absolute; inset: 0; background: #f5f5f7; font-family: 'Inter', sans-serif; color: #1d1d1f; overflow: hidden; }
+        .mk { background-image: linear-gradient(#ffcc00, #ffcc00); background-repeat: no-repeat; background-size: 0% 100%; -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 0 4px; border-radius: 4px; }
+
+        #s2-full { position: absolute; inset: 0; }
+        #s2-thumb { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; transform-origin: 0 0; }
+        #s2-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        #s2-thumb-cap { position: absolute; left: 120px; top: 708px; width: 560px; font-size: 24px; color: #5b5b61; line-height: 1.35; }
+        #s2-thumb-cap b { color: #1d1d1f; font-weight: 600; }
+
+        .card { position: absolute; background: #fff; border: 1px solid #e3e3e8; border-radius: 20px; box-shadow: 0 1px 2px rgba(29,29,31,.08), 0 18px 50px rgba(29,29,31,.08); }
+        #s2-nawaat { left: 780px; top: 150px; width: 1020px; padding: 48px 56px 44px; }
+        .src { display: flex; align-items: center; gap: 14px; font-size: 22px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #5b5b61; }
+        .src .dot { width: 14px; height: 14px; border-radius: 3px; background: #ffcc00; }
+        .ttl { margin-top: 16px; font-size: 40px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+        .q { margin-top: 30px; font-size: 34px; line-height: 1.45; font-weight: 500; color: #1d1d1f; }
+        #s2-q2 { margin-top: 26px; padding-top: 26px; border-top: 1px solid #e3e3e8; }
+        .by { margin-top: 30px; font-size: 21px; color: #6e6e73; }
+
+        /* La chaîne de production */
+        #s2-chain { position: absolute; inset: 0; }
+        #s2-ctitle { position: absolute; left: 0; right: 0; top: 210px; text-align: center; font-size: 60px; font-weight: 600; letter-spacing: -0.03em; }
+        #s2-csub { position: absolute; left: 0; right: 0; top: 298px; text-align: center; font-size: 30px; color: #5b5b61; }
+        #s2-rail { position: absolute; left: 290px; right: 290px; top: 547px; height: 6px; border-radius: 3px; background: #e3e3e8; overflow: hidden; }
+        #s2-rail-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ffcc00, #d17f00 55%, #b81d22); transform-origin: left center; }
+        .nd { position: absolute; top: 480px; width: 360px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .nd .bub { width: 140px; height: 140px; border-radius: 50%; background: #fff; border: 3px solid #e3e3e8; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 30px rgba(29,29,31,.08); position: relative; }
+        .nd .bub svg { width: 64px; height: 64px; }
+        .nd .ring { position: absolute; inset: -3px; border-radius: 50%; border: 3px solid #d17f00; opacity: 0; }
+        .nd b { margin-top: 26px; font-size: 36px; font-weight: 600; letter-spacing: -0.02em; }
+        .nd .cq { margin-top: 12px; font-size: 28px; line-height: 1.3; color: #8a5100; font-weight: 500; max-width: 330px; }
+        #s2-n0 { left: 110px; } #s2-n1 { left: 590px; } #s2-n2 { left: 1070px; } #s2-n3 { left: 1550px; } /* centres : 290, 770, 1250, 1730 */
+        #s2-n0 .cq { color: #1d1d1f; }
+        #s2-n3 .ring { border-color: #b81d22; } #s2-n3 .cq { color: #b81d22; }
+        #s2-tag { position: absolute; left: 155px; top: 412px; padding: 8px 16px; border-radius: 10px; background: #ffcc00; font-size: 24px; font-weight: 600; transform: rotate(-4deg); }
+
+        #s2-need { position: absolute; inset: 0; background: #fff; display: flex; align-items: center; justify-content: center; }
+        #s2-need p { max-width: 1400px; text-align: center; font-size: 76px; font-weight: 600; line-height: 1.2; letter-spacing: -0.03em; }
+      </style>
+      <div id="root" data-composition-id="s2" data-width="1920" data-height="1080">
+        <div id="s2-full" class="clip" data-start="0" data-duration="10.91" data-track-index="0">
+          <div id="s2-thumb"><img src="assets/img/yasmine-last.jpg" alt="" /></div>
+          <div id="s2-thumb-cap"><b>Yasmine Dimassi</b>, actrice, à Nawaat : les marques arrivent « de dernière minute ».</div>
+
+          <div id="s2-nawaat" class="card">
+            <div class="src"><span class="dot"></span>Nawaat · 11 mars 2025</div>
+            <div class="ttl">Télévision tunisienne : l’emprise du recyclage</div>
+            <p id="s2-q1" class="q">« La publicité règne en maître, <span id="s2-m1" class="mk">conditionnant la production</span> et le succès financier des œuvres. »</p>
+            <p id="s2-q2" class="q">« …les annonceurs qui signent <span id="s2-m2" class="mk">à la dernière minute</span> les contrats publicitaires… »</p>
+            <div class="by">Rihab Boukhayatia · nawaat.org</div>
+          </div>
+        </div>
+
+        <div id="s2-chain" class="clip" data-start="10.82" data-duration="10.09" data-track-index="0">
+          <div id="s2-ctitle">Une signature tardive, toute la chaîne bousculée</div>
+          <div id="s2-csub">Il ne reste que deux jours de tournage, et une marque arrive.</div>
+          <div id="s2-rail"><div id="s2-rail-fill"></div></div>
+          <div id="s2-tag">J-2 du tournage</div>
+          <div class="nd" id="s2-n0"><div class="bub"><span class="ring"></span>
+            <svg viewBox="0 0 64 64"><rect x="14" y="8" width="36" height="48" rx="5" fill="none" stroke="#1d1d1f" stroke-width="4"/><path d="M22 22h20M22 31h20M22 40h11" stroke="#1d1d1f" stroke-width="4" stroke-linecap="round"/><path d="M36 46l4 4 9-10" stroke="#d17f00" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div><b>Annonceur</b><span class="cq">Contrat signé à la dernière minute</span></div>
+          <div class="nd" id="s2-n1"><div class="bub"><span class="ring"></span>
+            <svg viewBox="0 0 64 64"><rect x="8" y="22" width="48" height="32" rx="5" fill="none" stroke="#1d1d1f" stroke-width="4"/><path d="M8 22l6-12h40l-6 12" fill="none" stroke="#1d1d1f" stroke-width="4" stroke-linejoin="round"/><path d="M24 10l-6 12M38 10l-6 12" stroke="#1d1d1f" stroke-width="4"/></svg>
+            </div><b>Producteur</b><span class="cq">Réorganise le tournage</span></div>
+          <div class="nd" id="s2-n2"><div class="bub"><span class="ring"></span>
+            <svg viewBox="0 0 64 64"><path d="M14 50l6-1 30-30-5-5-30 30z" fill="none" stroke="#1d1d1f" stroke-width="4" stroke-linejoin="round"/><path d="M40 19l5 5" stroke="#1d1d1f" stroke-width="4"/><path d="M12 56h40" stroke="#d17f00" stroke-width="4" stroke-linecap="round"/></svg>
+            </div><b>Scénariste</b><span class="cq">Réécrit la scène en urgence</span></div>
+          <div class="nd" id="s2-n3"><div class="bub"><span class="ring"></span>
+            <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="22" fill="none" stroke="#1d1d1f" stroke-width="4"/><circle cx="24" cy="27" r="3" fill="#1d1d1f"/><circle cx="40" cy="27" r="3" fill="#1d1d1f"/><path d="M22 44c4-4 16-4 20 0" stroke="#b81d22" stroke-width="4" fill="none" stroke-linecap="round"/></svg>
+            </div><b>Acteurs</b><span class="cq">Jouent avec un malaise</span></div>
+        </div>
+
+        <div id="s2-need" class="clip" data-start="20.73" data-duration="4.73" data-track-index="0">
+          <p id="s2-need-p">Il faut une IA qui place les produits <span id="s2-m4" class="mk">sans trahir l’œuvre</span>.</p>
+        </div>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        const E = "power3.out";
+        // Yasmine figée → vignette à gauche
+        tl.fromTo("#s2-thumb", { scale: 1, x: 0, y: 0, borderRadius: 0 }, { scale: 560 / 1920, x: 120, y: 380, borderRadius: 40, duration: 0.8, ease: "power3.inOut" }, 0.05);
+        tl.fromTo("#s2-thumb-cap", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: E }, 0.68);
+        // Article Nawaat (voix l01 à 0,6 s, l01b à 7,2 s)
+        tl.fromTo("#s2-nawaat", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.6, ease: E }, 0.91);
+        tl.to("#s2-m1", { backgroundSize: "100% 100%", duration: 0.6, ease: "power2.inOut" }, 4.09);
+        tl.to("#s2-q1", { opacity: 0.45, duration: 0.4 }, 6.18);
+        tl.fromTo("#s2-q2", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 6.18);
+        tl.to("#s2-m2", { backgroundSize: "100% 100%", duration: 0.5, ease: "power2.inOut" }, 8.91);
+        tl.to(["#s2-nawaat", "#s2-thumb", "#s2-thumb-cap"], { opacity: 0, x: -60, duration: 0.4, ease: "power2.in" }, 10.45);
+        // La chaîne de production (voix l02 à 12,2 s)
+        tl.fromTo("#s2-ctitle", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 10.91);
+        tl.fromTo("#s2-csub", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 11.27);
+        tl.fromTo(".nd", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: E, stagger: 0.15 }, 11.45);
+        tl.set(".nd .cq", { opacity: 0 }, 0);
+        tl.fromTo("#s2-tag", { opacity: 0, scale: 1.6, rotation: -14 }, { opacity: 1, scale: 1, rotation: -4, duration: 0.35, ease: "back.out(2.4)" }, 12);
+        tl.to("#s2-n0 .cq", { opacity: 1, duration: 0.3 }, 12.18);
+        tl.fromTo("#s2-rail-fill", { scaleX: 0 }, { scaleX: 0.06, duration: 0.3 }, 12.18);
+        // « vacille » : la chaîne tremble
+        tl.fromTo(".nd .bub", { rotation: 0 }, { rotation: 4, duration: 0.07, yoyo: true, repeat: 5, ease: "sine.inOut", stagger: 0.04 }, 13.18);
+        const step = (i, t, fill) => {
+          tl.to("#s2-rail-fill", { scaleX: fill, duration: 0.6, ease: "power2.inOut" }, t - 0.5);
+          tl.to(`#s2-n${i} .ring`, { opacity: 1, duration: 0.25 }, t);
+          tl.fromTo(`#s2-n${i} .bub`, { scale: 1 }, { scale: 1.08, duration: 0.18, yoyo: true, repeat: 1, ease: "power2.out" }, t);
+          tl.fromTo(`#s2-n${i} .cq`, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: E }, t + 0.1);
+        };
+        step(1, 14.09, 0.38);
+        step(2, 16.09, 0.68);
+        step(3, 18.36, 1);
+        tl.to("#s2-n3 .bub", { x: -4, duration: 0.06, yoyo: true, repeat: 5 }, 19.64);
+        tl.to("#s2-chain > *", { opacity: 0, duration: 0.35 }, 20.41);
+        // Conclusion (voix l02b à 23,0 s)
+        tl.fromTo("#s2-need-p", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, 20.82);
+        tl.to("#s2-m4", { backgroundSize: "100% 100%", duration: 0.6, ease: "power2.inOut" }, 22.73);
+        window.__timelines["s2"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

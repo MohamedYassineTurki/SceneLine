@@ -1,0 +1,98 @@
+[
+ {
+  "id": "l01",
+  "text": "Ce que Yasmine décrit, Nawaat l’a documenté : la publicité conditionne toute la production !"
+ },
+ {
+  "id": "l01b",
+  "text": "Et ces contrats, les annonceurs les signent souvent… à la dernière minute !"
+ },
+ {
+  "id": "l02",
+  "text": "Résultat : toute la chaîne de production vacille. Le producteur réorganise le tournage, le scénariste réécrit la scène en urgence… et l’acteur, lui, joue avec un malaise."
+ },
+ {
+  "id": "l02b",
+  "text": "Il faut donc une IA qui place les produits… sans trahir l’œuvre."
+ },
+ {
+  "id": "l03",
+  "text": "Voici SceneLine ! Le placement de produit virtuel qui préserve l’authenticité culturelle et artistique des œuvres."
+ },
+ {
+  "id": "l04",
+  "text": "Et il est pensé dès le départ selon les six angles de l’IA éthique 360."
+ },
+ {
+  "id": "s4a-0",
+  "text": "Étape un : l’analyse. Pour ce test, nous avons pris une scène d’une série française."
+ },
+ {
+  "id": "s4a-1",
+  "text": "SceneLine comprend chaque scène et chaque plan…"
+ },
+ {
+  "id": "s4a-2",
+  "text": "il protège les génériques et les moments sensibles…"
+ },
+ {
+  "id": "s4a-3",
+  "text": "et les plans comme le dialogue sont analysés en local."
+ },
+ {
+  "id": "s4b-0",
+  "text": "Étape deux : les produits."
+ },
+ {
+  "id": "s4b-1",
+  "text": "Notre Cultural Integrity Guard vérifie chaque produit."
+ },
+ {
+  "id": "s4b-2",
+  "text": "Dans notre exemple, l’action se passe à Paris : Boga Cidre est donc écartée, elle ne correspond ni au lieu, ni au public de l’œuvre."
+ },
+ {
+  "id": "s4b-3",
+  "text": "Pour SceneLine, la culture de la scène passe en priorité : seuls les produits qui la respectent sont proposés."
+ },
+ {
+  "id": "s4b-4",
+  "text": "Et rien n’est modifié sans votre accord !"
+ },
+ {
+  "id": "s4c-0",
+  "text": "Étape trois : la génération."
+ },
+ {
+  "id": "s4c-1",
+  "text": "Rien ne part sans votre autorisation."
+ },
+ {
+  "id": "s4c-2",
+  "text": "SceneLine envoie le plan à Kling et récupère la vidéo, directement depuis l’application."
+ },
+ {
+  "id": "s4c-3",
+  "text": "Et seulement pour les placements approuvés."
+ },
+ {
+  "id": "s4d-0",
+  "text": "Étape quatre : l’intégration."
+ },
+ {
+  "id": "s4d-1",
+  "text": "Le résultat est replacé dans la vidéo d’origine, avec son audio."
+ },
+ {
+  "id": "s4d-2",
+  "text": "L’original, lui, est conservé."
+ },
+ {
+  "id": "s4d-3",
+  "text": "Et le spectateur est informé : le placement est signalé à l’écran."
+ },
+ {
+  "id": "l09",
+  "text": "L’IA propose. Le créateur décide. Le spectateur est informé."
+ }
+]

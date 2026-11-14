@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SceneLine — système de design</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d1d1f'/%3E%3Cg transform='translate(12 12) scale(.625)'%3E%3Crect x='7' y='11' width='50' height='42' rx='9' fill='none' stroke='%23fff' stroke-width='6'/%3E%3Crect x='31' y='29' width='17' height='14' rx='3' fill='%23ffcc00'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+
+<!-- ============ 1. JETONS : à copier tels quels ============ -->
+<style id="tokens-css">
+:root {
+  /* Neutres */
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --sunken: #ececf0;
+  --rule: #e3e3e8;          /* séparateurs décoratifs uniquement */
+  --rule-strong: #8a8a93;   /* bords de champs et de contrôles (3,4 : 1) */
+  --ink: #1d1d1f;
+  --ink-2: #5b5b61;
+  --ink-3: #6e6e73;         /* légendes, 4,7 : 1 minimum */
+
+  /* Accent : actions et sélection seulement */
+  --accent: #0066cc;
+  --accent-hover: #0058b0;
+  --accent-wash: #e8f1fb;
+  --on-accent: #ffffff;
+
+  /* Repère : logo, placements sur la frise, étiquette « Placement virtuel » */
+  --marker: #ffcc00;
+
+  /* Risque : Cultural Integrity Guard uniquement */
+  --risk-faible-text: #19732f;
+  --risk-faible-fill: #23873f;
+  --risk-faible-wash: #e6f4ea;
+  --risk-moyen-text: #8a5100;
+  --risk-moyen-fill: #d17f00;
+  --risk-moyen-wash: #fdf1dc;
+  --risk-eleve-text: #b81d22;
+  --risk-eleve-fill: #b81d22;
+  --risk-eleve-wash: #fdebec;
+
+  /* Typographie */
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --text-display: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);  /* 28 → 40 px */
+  --lh-display: 1.15;  --ls-display: -0.02em;
+  --text-h2: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);     /* 20 → 24 px */
+  --lh-h2: 1.25;       --ls-h2: -0.015em;
+  --text-h3: 1.125rem; --lh-h3: 1.35;  --ls-h3: -0.01em;
+  --text-body: 1rem;   --lh-body: 1.6;
+  --text-label: 0.9375rem;  --lh-label: 1.4;
+  --text-small: 0.875rem;   --lh-small: 1.5;
+  --text-caption: 0.75rem;  --lh-caption: 1.4;  --ls-caption: 0.01em;
+  --text-timecode: 0.875rem; --lh-timecode: 1.4;
+  --measure: 65ch;
+
+  /* Espacement (grille de 4 px) */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+
+  /* Rayons */
+  --radius-sm: 6px;  --radius-md: 10px;  --radius-lg: 16px;  --radius-pill: 999px;
+
+  /* Traits et ombres */
+  --border: 1px solid var(--rule);
+  --border-control: 1px solid var(--rule-strong);
+  --shadow-1: 0 1px 2px rgba(29, 29, 31, 0.08);
+  --shadow-pop: 0 8px 24px rgba(29, 29, 31, 0.10);
+
+  /* Focus */
+  --focus-ring: 2px solid var(--accent);
+  --focus-offset: 2px;
+
+  /* Mouvement */
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Cibles tactiles */
+  --hit: 44px;
+}
+</style>
+
+<!-- ============ 2. BASE ET COMPOSANTS ============ -->
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html { font-family: var(--font-sans); font-size: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0; font-size: var(--text-body); line-height: var(--lh-body);
+  color: var(--ink); background: var(--bg);
+  font-synthesis: none; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; hyphens: manual;
+}
+:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+h1, h2, h3, h4, p, ul, ol, pre, figure { margin: 0; }
+h1 { font-size: var(--text-display); line-height: var(--lh-display); letter-spacing: var(--ls-display); font-weight: var(--fw-semibold); text-wrap: balance; }
+h2 { font-size: var(--text-h2); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); font-weight: var(--fw-semibold); text-wrap: balance; }
+h3 { font-size: var(--text-h3); line-height: var(--lh-h3); letter-spacing: var(--ls-h3); font-weight: var(--fw-semibold); }
+p { max-width: var(--measure); text-wrap: pretty; }
+code, pre { font-family: ui-monospace, "SF Mono", Consolas, monospace; }
+code { font-size: .8125rem; }
+a { color: var(--accent); }
+.tnum { font-variant-numeric: tabular-nums; }
+.cap { font-size: var(--text-caption); line-height: var(--lh-caption); letter-spacing: var(--ls-caption); font-weight: var(--fw-medium); color: var(--ink-2); }
+.small { font-size: var(--text-small); line-height: var(--lh-small); color: var(--ink-2); }
+.note { font-size: .9375rem; line-height: 1.6; color: var(--ink-2); max-width: 70ch; }
+
+/* Mise en page de la page */
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 640px) { .wrap { padding: 0 24px; } }
+@media (min-width: 1280px) { .wrap { padding: 0 32px; } }
+header.top { padding: 48px 0 32px; display: flex; flex-direction: column; gap: 20px; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 8px; }
+nav.toc a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: var(--border-control); border-radius: var(--radius-pill); background: var(--surface); color: var(--ink); font-size: var(--text-label); font-weight: var(--fw-medium); text-decoration: none; transition: border-color var(--dur-fast) var(--ease); }
+nav.toc a:hover { border-color: var(--ink-2); }
+main > section { padding: 56px 0; border-top: var(--border); display: flex; flex-direction: column; gap: 32px; }
+.block { display: flex; flex-direction: column; gap: 16px; }
+.panel { background: var(--surface); border: var(--border); border-radius: var(--radius-lg); }
+.pad { padding: 24px; }
+@media (min-width: 640px) { .pad { padding: 28px 32px; } }
+.grid2, .grid3, .grid4 { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 720px) { .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 960px) { .grid4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.states { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); align-items: start; }
+.cell { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; min-width: 0; }
+.cq { container-type: inline-size; }
+.scroll { overflow-x: auto; }
+
+/* Logo */
+.logo-stage { display: flex; justify-content: center; align-items: center; padding: 56px 24px; }
+.versions { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.vtile { border-radius: 12px; height: 128px; display: flex; align-items: center; justify-content: center; border: var(--border); }
+.sizes { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 36px; }
+.sizes > div { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+/* Boutons */
+.btn { font: inherit; font-size: var(--text-label); font-weight: var(--fw-medium); line-height: var(--lh-label); min-height: var(--hit); padding: 0 20px; border-radius: var(--radius-md); border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+.btn-primary:hover, .btn-primary.is-hover { background: var(--accent-hover); }
+.btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--rule-strong); }
+.btn-secondary:hover, .btn-secondary.is-hover { background: var(--bg); border-color: var(--ink-2); }
+.btn-quiet { background: transparent; color: var(--accent); }
+.btn-quiet:hover, .btn-quiet.is-hover { background: var(--accent-wash); }
+.btn-destructive { background: var(--ink); color: #fff; }
+.btn-destructive:hover, .btn-destructive.is-hover { background: #000; }
+.btn:focus-visible, .btn.is-focus { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.btn:disabled { background: var(--sunken); color: var(--ink-3); border-color: transparent; cursor: not-allowed; }
+.btn-grid { display: grid; gap: 16px 20px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); align-items: center; }
+
+/* Champs */
+.field { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.field label { font-size: var(--text-small); font-weight: var(--fw-medium); line-height: 1.4; }
+.input, .select { font: inherit; font-size: var(--text-label); line-height: 1.4; width: 100%; min-height: var(--hit); padding: 0 14px; border: var(--border-control); border-radius: var(--radius-md); background: var(--surface); color: var(--ink); transition: border-color var(--dur-fast) var(--ease); }
+.input::placeholder { color: var(--ink-3); }
+.input:hover, .select:hover, .input.is-hover { border-color: var(--ink-2); }
+.input:focus-visible, .select:focus-visible, .input.is-focus, .select.is-focus { outline: var(--focus-ring); outline-offset: var(--focus-offset); border-color: var(--accent); }
+.input:disabled, .select:disabled { background: var(--sunken); color: var(--ink-3); border-color: transparent; cursor: not-allowed; }
+.input[aria-invalid="true"] { border: 2px solid var(--ink); padding: 0 13px; }
+.select { appearance: none; -webkit-appearance: none; padding-right: 40px; cursor: pointer; }
+.select-wrap { position: relative; width: 100%; }
+.select-wrap svg { position: absolute; right: 14px; top: 50%; margin-top: -8px; pointer-events: none; }
+.msg-err { display: flex; gap: 8px; align-items: flex-start; font-size: var(--text-small); line-height: 1.4; font-weight: var(--fw-medium); color: var(--ink); }
+.msg-err svg { flex: none; margin-top: 1px; }
+
+/* Puces à cocher */
+.chip { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: var(--hit); padding: 0 16px; border: var(--border-control); border-radius: var(--radius-pill); background: var(--surface); font-size: var(--text-label); font-weight: var(--fw-medium); line-height: 1.4; cursor: pointer; transition: background-color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease); }
+.chip input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.chip .tick-i { display: none; }
+.chip:hover, .chip.is-hover { border-color: var(--ink-2); }
+.chip:has(input:checked) { background: var(--accent-wash); border-color: var(--accent); color: var(--accent); }
+.chip:has(input:checked) .tick-i { display: block; }
+.chip:has(input:focus-visible), .chip.is-focus { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.chip:has(input:disabled) { background: var(--sunken); color: var(--ink-3); border-color: transparent; cursor: not-allowed; }
+.chip:has(input:disabled) input { cursor: not-allowed; }
+
+/* Contrôle segmenté */
+.segmented { display: inline-flex; padding: 3px; gap: 2px; background: var(--sunken); border-radius: 12px; }
+.segmented label { position: relative; display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 0 18px; border-radius: 9px; font-size: var(--text-label); font-weight: var(--fw-medium); line-height: 1.4; color: var(--ink-2); cursor: pointer; transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); }
+.segmented input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.segmented label:hover { color: var(--ink); }
+.segmented label:has(input:checked) { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-1); }
+.segmented label:has(input:focus-visible), .segmented label.is-focus { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+/* Stepper */
+.stepper { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; list-style: none; margin: 0; padding: 0; }
+.step { display: flex; align-items: center; gap: 10px; min-height: var(--hit); padding: 8px 14px 8px 10px; border: var(--border); background: var(--surface); border-radius: var(--radius-pill); font-size: var(--text-label); font-weight: var(--fw-medium); line-height: 1.3; color: var(--ink-2); }
+.step .n { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--rule-strong); font-size: .8125rem; font-weight: var(--fw-semibold); font-variant-numeric: tabular-nums; color: var(--ink-2); background: var(--surface); }
+.step.is-done { color: var(--ink); }
+.step.is-done .n { background: var(--accent); border-color: var(--accent); color: #fff; }
+.step.is-current { background: var(--accent-wash); border-color: var(--accent); color: var(--ink); }
+.step.is-current .n { border-color: var(--accent); color: var(--accent); }
+@container (max-width: 560px) {
+  .stepper { gap: 4px; }
+  .step { flex-direction: column; gap: 6px; padding: 8px 2px; border-radius: 12px; text-align: center; font-size: var(--text-caption); }
+}
+
+/* Pastilles */
+.badge { display: inline-flex; align-items: center; min-height: 24px; padding: 0 10px; border-radius: var(--radius-pill); font-size: var(--text-caption); font-weight: var(--fw-medium); line-height: 1.4; background: var(--sunken); color: var(--ink-2); }
+.badge-accent { background: var(--accent-wash); color: var(--accent); }
+.risk { display: inline-flex; align-items: center; gap: 6px; min-height: 26px; padding: 0 11px 0 9px; border-radius: var(--radius-pill); font-size: .8125rem; font-weight: var(--fw-semibold); line-height: 1.3; white-space: nowrap; }
+.risk-faible { background: var(--risk-faible-wash); color: var(--risk-faible-text); }
+.risk-moyen { background: var(--risk-moyen-wash); color: var(--risk-moyen-text); }
+.risk-eleve { background: var(--risk-eleve-wash); color: var(--risk-eleve-text); }
+
+/* Progression et jauges */
+.progress { height: 8px; border-radius: var(--radius-pill); background: var(--sunken); overflow: hidden; }
+.progress > i { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--accent); transition: width var(--dur-base) var(--ease); }
+.meter { display: grid; grid-template-columns: 100px minmax(0, 1fr) 44px; gap: 12px; align-items: center; font-size: var(--text-small); line-height: 1.4; }
+.meter .bar { height: 8px; border-radius: var(--radius-pill); background: var(--sunken); overflow: hidden; }
+.meter .bar > i { display: block; height: 100%; border-radius: var(--radius-pill); background: var(--ink); }
+.meter b { font-weight: var(--fw-semibold); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Frise */
+.tl { display: flex; flex-direction: column; gap: 8px; padding-top: 28px; }
+.tl-ticks { position: relative; height: 22px; }
+.tick { position: absolute; top: 2px; width: 8px; height: 18px; margin-left: -4px; padding: 0; border: 1.5px solid var(--ink); border-radius: 2px; background: var(--marker); cursor: pointer; }
+.tick::before { content: ""; position: absolute; inset: -14px; }
+.tick:hover, .tick.is-hover { outline: 2px solid var(--ink); outline-offset: 1px; }
+.tick:focus-visible, .tick.is-focus { outline: var(--focus-ring); outline-offset: 3px; }
+.tick.is-selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent); }
+.tl-scenes { position: relative; display: flex; gap: 2px; align-items: center; height: 20px; }
+.sc { display: block; padding: 0; border: 0; border-radius: 2px; cursor: pointer; }
+.sc:hover { opacity: .8; }
+.sc:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+.sc-faible { height: 8px; background: var(--risk-faible-fill); }
+.sc-moyen { height: 12px; background: var(--risk-moyen-fill); }
+.sc-eleve { height: 16px; background: var(--risk-eleve-fill); }
+.playhead { position: absolute; top: -34px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--ink); pointer-events: none; }
+.playhead::before { content: ""; position: absolute; top: 0; left: -4px; width: 10px; height: 6px; border-radius: 2px; background: var(--ink); }
+.tl-axis { display: flex; justify-content: space-between; font-size: .8125rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px 28px; font-size: var(--text-small); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Ligne de placement */
+.prow { display: grid; grid-template-columns: 128px minmax(0, 1fr) auto; gap: 20px; align-items: center; padding: 16px 20px; border-top: var(--border); }
+.prow:first-child { border-top: 0; }
+.prow.is-selected { background: var(--accent-wash); box-shadow: inset 0 0 0 1.5px var(--accent); border-radius: var(--radius-lg); }
+.thumb { width: 128px; aspect-ratio: 16 / 9; border-radius: var(--radius-sm); background: var(--sunken); display: grid; place-items: center; }
+.prow .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: var(--text-small); font-weight: var(--fw-medium); line-height: 1.4; font-variant-numeric: tabular-nums; }
+.prow h4 { margin: 6px 0 2px; font-size: 1rem; line-height: 1.35; font-weight: var(--fw-semibold); }
+.prow p { font-size: var(--text-small); line-height: 1.5; color: var(--ink-2); }
+.prow .acts { display: flex; gap: 8px; align-items: center; }
+@container (max-width: 680px) {
+  .prow { grid-template-columns: 96px minmax(0, 1fr); gap: 12px 14px; padding: 14px 16px; }
+  .thumb { width: 96px; }
+  .prow .acts { grid-column: 1 / -1; flex-wrap: wrap; }
+}
+
+/* Cartes */
+.card { display: flex; flex-direction: column; gap: 16px; padding: 20px; }
+.card h4 { font-size: var(--text-h3); line-height: 1.35; font-weight: var(--fw-semibold); letter-spacing: var(--ls-h3); }
+.card p { font-size: var(--text-small); line-height: 1.5; color: var(--ink-2); }
+.card .foot { margin-top: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+.pimg { flex: none; width: 72px; height: 72px; border-radius: var(--radius-md); background: var(--sunken); display: grid; place-items: center; }
+
+/* Bloc détaillé */
+.disc { border-top: var(--border); }
+.disc:first-child { border-top: 0; }
+.disc summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 52px; padding: 8px 20px; font-size: var(--text-label); font-weight: var(--fw-semibold); cursor: pointer; border-radius: var(--radius-md); }
+.disc summary::-webkit-details-marker { display: none; }
+.disc summary:hover { background: var(--bg); }
+.disc summary:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+.disc .chev { flex: none; transition: transform var(--dur-base) var(--ease); }
+.disc[open] .chev { transform: rotate(180deg); }
+.disc .body { padding: 4px 20px 20px; }
+.crit { display: grid; grid-template-columns: 1fr; gap: 6px; padding: 12px 0; border-top: var(--border); font-size: var(--text-small); line-height: 1.5; }
+.crit:first-child { border-top: 0; }
+.crit b { font-weight: var(--fw-semibold); }
+@media (min-width: 720px) { .crit { grid-template-columns: 170px 96px minmax(0, 1fr); gap: 16px; align-items: baseline; } }
+
+/* Message d'erreur et état vide */
+.alert { display: flex; gap: 12px; align-items: flex-start; padding: 16px 20px; border: 1.5px solid var(--ink); border-radius: var(--radius-md); background: var(--surface); }
+.alert svg { flex: none; margin-top: 2px; }
+.empty { padding: 40px 32px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+
+/* Tableaux de référence */
+.table { width: 100%; border-collapse: collapse; font-size: var(--text-small); line-height: 1.45; }
+.table th { text-align: left; font-weight: var(--fw-semibold); color: var(--ink-2); padding: 12px 16px; font-size: .8125rem; white-space: nowrap; }
+.table td { padding: 12px 16px; border-top: var(--border); vertical-align: middle; }
+.chipcolor { display: inline-flex; align-items: center; justify-content: center; height: 36px; min-width: 64px; border-radius: 8px; border: var(--border); font-weight: var(--fw-semibold); }
+.sw { display: flex; align-items: center; gap: 16px; padding: 12px 20px; border-top: var(--border); }
+.sw:first-child { border-top: 0; }
+.sw i { flex: none; width: 44px; height: 44px; border-radius: 10px; border: 1px solid #c7c7cc; }
+.sw .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sw .t b { font-weight: var(--fw-semibold); font-size: .9375rem; line-height: 1.3; }
+.sw .t span { font-size: .8125rem; color: var(--ink-2); line-height: 1.4; }
+.sw .v { flex: none; text-align: right; display: flex; flex-direction: column; gap: 2px; font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: .8125rem; }
+.sw .v span:last-child { font-size: .75rem; color: var(--ink-2); }
+
+/* Étiquettes à l'écran */
+.vframe { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #3a4a52; border-radius: 12px; overflow: hidden; container-type: inline-size; }
+.vframe .layer { position: absolute; }
+.lbl { position: absolute; left: 5%; top: 5%; display: inline-flex; align-items: center; gap: .55em; height: 5.6cqw; padding: 0 .8em 0 .55em; border-radius: .4em; background: var(--marker); color: var(--ink); font-size: 2.8cqw; font-weight: var(--fw-semibold); line-height: 1; white-space: nowrap; }
+.lbl svg { width: 1.2em; height: 1.2em; }
+.lower { position: absolute; left: 5%; bottom: 5%; display: inline-flex; align-items: center; gap: .65em; height: 6.2cqw; padding: 0 .9em 0 .65em; border-radius: .4em; background: var(--ink); color: #fff; font-size: 2.8cqw; font-weight: var(--fw-medium); line-height: 1; white-space: nowrap; }
+.lower svg { width: 1.2em; height: 1.2em; }
+.lbl-big { display: inline-flex; align-items: center; gap: 12px; height: 56px; padding: 0 22px 0 16px; border-radius: 10px; background: var(--marker); color: var(--ink); font-size: 1.5rem; font-weight: var(--fw-semibold); line-height: 1; }
+.slide { aspect-ratio: 16 / 9; background: #fff; border: var(--border); border-radius: 12px; padding: 5.5% 6.2% 4.5%; display: flex; flex-direction: column; justify-content: space-between; container-type: inline-size; }
+.slide h3 { font-size: 5.3cqw; line-height: 1.08; letter-spacing: -0.025em; font-weight: var(--fw-semibold); }
+.slide .strip { position: relative; height: 24px; }
+
+/* Faire / éviter */
+.topic { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+@media (min-width: 640px) { .topic { padding: 28px 32px; } }
+.cols { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; } }
+.col { display: flex; flex-direction: column; gap: 10px; }
+.col h4 { font-size: var(--text-small); line-height: 1.4; font-weight: var(--fw-semibold); padding-bottom: 8px; border-bottom: 1.5px solid var(--ink); }
+.col ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; font-size: var(--text-small); line-height: 1.5; color: var(--ink-2); }
+.col li { padding-left: 22px; position: relative; }
+.col.yes li::before { content: ""; position: absolute; left: 3px; top: .48em; width: 10px; height: 5px; border-left: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(-45deg); }
+.col.no li::before { content: ""; position: absolute; left: 2px; top: .72em; width: 11px; height: 0; border-top: 2px solid var(--ink); }
+
+/* Jetons */
+.codebox { position: relative; }
+.codebox pre { background: var(--surface); border: var(--border); border-radius: var(--radius-lg); padding: 24px; font-size: .8125rem; line-height: 1.65; overflow-x: auto; max-height: 560px; }
+.typo-out { min-height: 44px; padding: 10px 14px; border: var(--border-control); border-radius: var(--radius-md); background: var(--surface); font-size: var(--text-label); line-height: 1.5; }
+textarea.input { padding: 10px 14px; min-height: 88px; resize: vertical; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<header class="wrap top">
+  <svg viewBox="0 0 210 40" width="220" role="img" aria-label="SceneLine"><g transform="scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g><text x="52" y="31.6" font-family="Inter, -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="32" font-weight="600" fill="#1d1d1f" style="letter-spacing:-0.02em">SceneLine</text></svg>
+  <h1>Système de design</h1>
+  <p>L’IA propose, le créateur décide, le spectateur est informé. Identité et fondations d’interface d’un outil éthique de placement de produit virtuel pour la post-production de fiction. Thème clair uniquement.</p>
+  <nav class="toc" aria-label="Sections">
+    <a href="#logo">Logo</a><a href="#couleurs">Couleurs</a><a href="#typographie">Typographie</a><a href="#fondations">Fondations</a><a href="#composants">Composants</a><a href="#applications">Applications</a><a href="#regles">Règles</a><a href="#jetons">Jetons CSS</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+<!-- ===================== LOGO ===================== -->
+<section id="logo">
+  <div class="block">
+    <h2>Logo : le Cadre</h2>
+    <p>Un plan de film, une seule zone mise en évidence. L’IA ne touche qu’une région bornée de l’image, le reste appartient au créateur, et la modification se voit. Le même rectangle jaune sert de repère sur la frise et d’étiquette à l’écran. Je garde le jaune du provisoire mais je le rends repère (plus de pastille jaune), et le triangle de lecture disparaît : SceneLine n’invente pas de vidéo, il en annote une.</p>
+  </div>
+
+  <div class="panel logo-stage">
+    <svg viewBox="0 0 210 40" style="width:min(100%,560px)" role="img" aria-label="Logo SceneLine"><g transform="scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g><text x="52" y="31.6" font-family="Inter, -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="32" font-weight="600" fill="#1d1d1f" style="letter-spacing:-0.02em">SceneLine</text></svg>
+  </div>
+
+  <div class="block">
+    <h3>Quatre versions</h3>
+    <div class="versions">
+      <div><div class="vtile" style="background:#fff"><svg viewBox="0 0 210 40" width="200" role="img" aria-label="Couleur sur blanc"><g transform="scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g><text x="52" y="31.6" font-family="Inter, -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="32" font-weight="600" fill="#1d1d1f" style="letter-spacing:-0.02em">SceneLine</text></svg></div><p class="small" style="margin-top:8px">Couleur, sur blanc ou gris clair. Version par défaut.</p></div>
+      <div><div class="vtile" style="background:#f5f5f7"><svg viewBox="0 0 210 40" width="200" role="img" aria-label="Monochrome noir"><g transform="scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#000" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#000"/></g><text x="52" y="31.6" font-family="Inter, -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="32" font-weight="600" fill="#000" style="letter-spacing:-0.02em">SceneLine</text></svg></div><p class="small" style="margin-top:8px">Monochrome noir : impression en un ton, documents officiels.</p></div>
+      <div><div class="vtile" style="background:#1d1d1f;border-color:#1d1d1f"><svg viewBox="0 0 210 40" width="200" role="img" aria-label="Blanc et jaune sur encre"><g transform="scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#fff" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g><text x="52" y="31.6" font-family="Inter, -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="32" font-weight="600" fill="#fff" style="letter-spacing:-0.02em">SceneLine</text></svg></div><p class="small" style="margin-top:8px">Blanc et jaune sur l’encre : diaporama, générique.</p></div>
+      <div><div class="vtile" style="background:#0066cc;border-color:#0066cc"><svg viewBox="0 0 210 40" width="200" role="img" aria-label="Blanc sur bleu"><g transform="scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#fff" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#fff"/></g><text x="52" y="31.6" font-family="Inter, -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="32" font-weight="600" fill="#fff" style="letter-spacing:-0.02em">SceneLine</text></svg></div><p class="small" style="margin-top:8px">Tout blanc sur une couleur unie, ici le bleu d’action (5,6 : 1).</p></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="block">
+      <h3>Tailles, symbole seul</h3>
+      <div class="panel pad">
+        <div class="sizes">
+          <div><svg viewBox="0 0 64 64" width="128" height="128" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></svg><span class="cap tnum">128 px</span></div>
+          <div><svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></svg><span class="cap tnum">64 px</span></div>
+          <div><svg viewBox="0 0 64 64" width="32" height="32" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></svg><span class="cap tnum">32 px</span></div>
+          <div><svg viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></svg><span class="cap tnum">16 px</span></div>
+          <div><svg viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Icône d’application"><rect width="64" height="64" rx="14" fill="#1d1d1f"/><g transform="translate(12 12) scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#fff" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g></svg><span class="cap">Icône</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="block">
+      <h3>Zone de protection et tailles minimales</h3>
+      <div class="panel pad" style="display:flex;flex-direction:column;gap:16px">
+        <svg viewBox="0 0 246 76" style="width:min(100%,420px)" role="img" aria-label="Zone de protection : 2x autour du logo"><rect x="0.5" y="0.5" width="245" height="75" fill="none" stroke="#5b5b61" stroke-width="0.6" stroke-dasharray="2 2"/><rect x="18" y="18" width="210" height="40" fill="#f5f5f7"/><g transform="translate(18 18)"><g transform="scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g><text x="52" y="31.6" font-family="Inter, -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="32" font-weight="600" fill="#1d1d1f" style="letter-spacing:-0.02em">SceneLine</text></g><g font-family="Inter, sans-serif" font-size="7" fill="#5b5b61" text-anchor="middle"><text x="123" y="12">2x</text><text x="123" y="71">2x</text><text x="9" y="40.5">2x</text><text x="237" y="40.5">2x</text></g></svg>
+        <p class="small">x = hauteur du rectangle jaune (environ 22 % de la hauteur du symbole). Marge de 2x sur les quatre côtés. Symbole seul : 16 px à l’écran, 5 mm à l’impression. Logo complet : 96 px de large, 25 mm.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Ce qu’il ne faut pas faire</h3>
+    <div class="grid4" style="gap:16px">
+      <div><div class="vtile" style="background:#fff"><svg viewBox="0 0 64 64" width="80" height="80" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#0066cc"/></svg></div><p class="small" style="margin-top:8px">Ne pas changer la couleur du repère.</p></div>
+      <div><div class="vtile" style="background:#fff"><svg viewBox="0 0 64 64" width="120" height="52" preserveAspectRatio="none" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></svg></div><p class="small" style="margin-top:8px">Ne pas étirer, incliner ni tourner.</p></div>
+      <div><div class="vtile" style="background:#fff"><svg viewBox="0 0 64 64" width="80" height="80" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="14" y="18" width="36" height="28" rx="3" fill="#ffcc00"/></svg></div><p class="small" style="margin-top:8px">Ne pas agrandir la zone : le repère est discret par principe.</p></div>
+      <div><div class="vtile" style="background:#fff"><svg viewBox="0 0 64 64" width="80" height="80" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#ffcc00"/><rect x="11" y="15" width="42" height="34" rx="7" fill="none" stroke="#1d1d1f" stroke-width="5"/><rect x="31" y="29" width="14" height="12" rx="2.5" fill="#1d1d1f"/></svg></div><p class="small" style="margin-top:8px">Ne pas remettre le symbole sur une pastille jaune.</p></div>
+    </div>
+    <p class="note">Le wordmark est du texte Inter 600. Avant une diffusion en dehors de ce site, le convertir en tracés vectoriels.</p>
+  </div>
+</section>
+
+<!-- ===================== COULEURS ===================== -->
+<section id="couleurs">
+  <div class="block">
+    <h2>Couleurs : peu, et toujours fonctionnelles</h2>
+    <p>Garde : fond, surface, encre, gris secondaire, bleu d’action, jaune repère. Corrige : les remplissages de risque ne passaient pas 3 : 1 sur blanc (l’ambre faisait 2,0 : 1) ; ils sont assombris et ordonnés par luminosité, et le vert de texte passe de 4,5 à 5,2 : 1. Ajoute : un gris creux, un trait fort pour les champs, un gris de légende et trois fonds teintés de risque.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="block"><h3>Neutres, accent et repère</h3><div class="panel" id="sw-base"></div></div>
+    <div class="block"><h3>Risque du Guard</h3><div class="panel" id="sw-risk"></div><p class="note">Chaque niveau a trois couleurs : texte, remplissage et fond teinté. Le niveau est toujours écrit en toutes lettres à côté.</p></div>
+  </div>
+
+  <div class="block">
+    <h3>Frise de la vidéo</h3>
+    <div class="panel pad">
+      <div class="tl">
+        <div class="tl-ticks">
+          <button type="button" class="tick" style="left:5%" aria-label="Placement 00:06 – 00:12"></button>
+          <button type="button" class="tick is-selected" style="left:27%" aria-label="Placement 00:30 – 00:40, sélectionné"></button>
+          <button type="button" class="tick" style="left:49%" aria-label="Placement 00:58 – 01:04"></button>
+          <button type="button" class="tick" style="left:71%" aria-label="Placement 01:25 – 01:33"></button>
+          <button type="button" class="tick" style="left:89%" aria-label="Placement 01:46 – 01:52"></button>
+        </div>
+        <div class="tl-scenes">
+          <button type="button" class="sc sc-faible" style="flex:120" aria-label="Scène 1, risque faible"></button>
+          <button type="button" class="sc sc-moyen" style="flex:80" aria-label="Scène 2, risque moyen"></button>
+          <button type="button" class="sc sc-faible" style="flex:150" aria-label="Scène 3, risque faible"></button>
+          <button type="button" class="sc sc-eleve" style="flex:90" aria-label="Scène 4, risque élevé"></button>
+          <button type="button" class="sc sc-faible" style="flex:110" aria-label="Scène 5, risque faible"></button>
+          <button type="button" class="sc sc-moyen" style="flex:100" aria-label="Scène 6, risque moyen"></button>
+          <button type="button" class="sc sc-faible" style="flex:130" aria-label="Scène 7, risque faible"></button>
+          <button type="button" class="sc sc-eleve" style="flex:70" aria-label="Scène 8, risque élevé"></button>
+          <button type="button" class="sc sc-moyen" style="flex:80" aria-label="Scène 9, risque moyen"></button>
+          <button type="button" class="sc sc-faible" style="flex:70" aria-label="Scène 10, risque faible"></button>
+          <div class="playhead" style="left:57%"></div>
+        </div>
+        <div class="tl-axis"><span>00:00</span><span>00:30</span><span>01:00</span><span>01:30</span><span>02:00</span></div>
+      </div>
+      <div class="legend" style="margin-top:24px">
+        <span><i style="width:18px;height:8px;border-radius:2px;background:var(--risk-faible-fill)"></i>Risque faible</span>
+        <span><i style="width:18px;height:12px;border-radius:2px;background:var(--risk-moyen-fill)"></i>Risque moyen</span>
+        <span><i style="width:18px;height:16px;border-radius:2px;background:var(--risk-eleve-fill)"></i>Risque élevé (scène protégée)</span>
+        <span><i style="width:8px;height:16px;border:1.5px solid var(--ink);border-radius:2px;background:var(--marker)"></i>Placement proposé</span>
+        <span><i style="width:2px;height:16px;background:var(--ink)"></i>Tête de lecture</span>
+      </div>
+    </div>
+    <p class="note">Deux rangées : en bas les scènes, colorées par risque et de trois hauteurs (8, 12, 16 px) ; en haut les placements en jaune repère cerclés d’encre. Aucun placement sur un segment élevé. Tête de lecture en encre, 2 px. Segments posés sur la surface blanche pour garder 3 : 1.</p>
+  </div>
+
+  <div class="block">
+    <h3>Où chaque couleur a le droit d’apparaître</h3>
+    <div class="grid2">
+      <div class="panel pad" style="display:flex;flex-direction:column;gap:16px">
+        <h4 style="font-size:1rem">Oui</h4>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+          <span class="risk risk-eleve"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="currentColor"/></svg>Risque élevé</span>
+          <button type="button" class="btn btn-primary">Retenir ce placement</button>
+        </div>
+        <p class="small">Le rouge dit « élevé », avec le mot et une forme. Le bleu sert aux actions et à la sélection, rien d’autre.</p>
+      </div>
+      <div class="panel pad" style="display:flex;flex-direction:column;gap:16px">
+        <h4 style="font-size:1rem">Non</h4>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+          <span class="risk risk-faible">Étape terminée</span>
+          <button type="button" class="btn" style="background:var(--risk-eleve-fill);color:#fff">Refuser</button>
+          <span class="risk risk-moyen">Nouveau</span>
+        </div>
+        <p class="small">Pas de vert pour un succès, pas de bouton rouge, pas d’ambre pour une nouveauté. Les erreurs et actions destructrices s’écrivent en encre avec le mot « Erreur », un pictogramme et un trait d’encre.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Contrastes (WCAG 2.1 AA)</h3>
+    <div class="panel scroll"><table class="table" id="contrast-table"><thead><tr><th>Exemple</th><th>Paire</th><th>Rapport</th><th>Usage</th><th>Résultat</th></tr></thead><tbody></tbody></table></div>
+    <p class="note">Seuils : 4,5 : 1 pour le texte courant, 3 : 1 pour le texte de 24 px et plus et pour les éléments graphiques porteurs de sens. Le jaune seul sur blanc échoue (1,5 : 1) et c’est voulu : il est toujours cerné d’encre, jamais seul.</p>
+  </div>
+
+  <div class="block">
+    <h3>Daltonisme</h3>
+    <div class="grid2">
+      <div class="panel pad scroll"><div id="sims" style="display:grid;gap:12px;min-width:420px"></div></div>
+      <div class="block small">
+        <p>Simulation Machado, sévérité 100 %. Vert et rouge se rapprochent et l’ambre vire au jaune : la couleur ne suffit donc pas. Le système compense à cinq niveaux :</p>
+        <ol style="padding-left:20px;display:flex;flex-direction:column;gap:6px;margin:0">
+          <li>le niveau est toujours écrit : « faible », « moyen », « élevé » ;</li>
+          <li>chaque pastille porte une forme : rond, triangle, carré ;</li>
+          <li>les segments de frise ont trois hauteurs ;</li>
+          <li>la luminosité est ordonnée : élevé le plus sombre (0,11), puis faible (0,18), puis moyen (0,29) ;</li>
+          <li>le repère jaune est cerné d’encre et sur sa propre rangée.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TYPOGRAPHIE ===================== -->
+<section id="typographie">
+  <div class="block">
+    <h2>Typographie : une seule famille, Inter</h2>
+    <p>Inter est gratuite et libre (OFL), dessinée pour l’écran, lisible dès 12 px, complète pour le français (accents sur capitales, « œ », guillemets) et propose des chiffres tabulaires. La police système donnerait SF sur Mac et Segoe sur Windows, donc deux produits ; elle devient le repli. Pas de seconde famille : trois graisses suffisent.</p>
+  </div>
+
+  <div class="block">
+    <h3>Échelle typographique</h3>
+    <div class="panel scroll"><table class="table" id="scale-table"><thead><tr><th>Exemple</th><th>Réglages</th><th>Usage</th></tr></thead><tbody></tbody></table></div>
+    <p class="note">Base 16 px, jamais sous 12 px. Rapport d’environ 1,25. Titres à 24 caractères au plus avec <code>text-wrap: balance</code>. Texte courant à 65 caractères. Jamais de texte tout en capitales, ni de petite ligne en capitales au-dessus d’un titre.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="panel pad" style="display:flex;flex-direction:column;gap:12px">
+      <b style="font-size:.875rem">Chiffres proportionnels (par défaut)</b>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:.875rem;font-weight:500;font-variant-numeric:proportional-nums">
+        <span>00:08 – 00:14 · Risque faible · 6,1/10</span><span>00:11 – 00:18 · Risque moyen · 8,8/10</span><span>00:30 – 00:40 · Risque faible · 7,7/10</span><span>01:11 – 01:18 · Risque faible · 9,1/10</span>
+      </div>
+      <p class="small">Le « 1 » est plus étroit : les colonnes ondulent.</p>
+    </div>
+    <div class="panel pad" style="display:flex;flex-direction:column;gap:12px">
+      <b style="font-size:.875rem">Chiffres tabulaires (tnum)</b>
+      <div class="tnum" style="display:flex;flex-direction:column;gap:8px;font-size:.875rem;font-weight:500">
+        <span>00:08 – 00:14 · Risque faible · 6,1/10</span><span>00:11 – 00:18 · Risque moyen · 8,8/10</span><span>00:30 – 00:40 · Risque faible · 7,7/10</span><span>01:11 – 01:18 · Risque faible · 9,1/10</span>
+      </div>
+      <p class="small">Chaque chiffre a la même largeur : tout tombe à la verticale. À activer sur codes temporels, scores, pourcentages, compteurs.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>En situation, avec le vrai texte</h3>
+    <div class="panel pad" style="display:flex;flex-direction:column;gap:32px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h1>Analyser la vidéo</h1>
+        <p>SceneLine a compris 11&nbsp;scènes dans 48&nbsp;plans. Il propose 8&nbsp;placements et protège 4&nbsp;scènes.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <h2>Produits et placements</h2>
+        <div class="tnum" style="display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;font-size:.875rem;font-weight:500"><span>00:30&nbsp;–&nbsp;00:40</span><span>·</span><span>Risque faible</span><span>·</span><span style="font-size:1rem;font-weight:600">Plan de travail en inox</span><span>·</span><span>7,7/10</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <h3>Kit de génération</h3>
+        <p>L’action se passe en France (déclaré par le producteur). Boga Cidre est une marque tunisienne dont la campagne vise&nbsp;: Tunisie. Dans ce décor, elle ne correspondrait ni au lieu ni au public de l’œuvre.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Règles de typographie française</h3>
+    <div class="panel scroll"><table class="table" id="rules-table"><thead><tr><th>Signe</th><th>À éviter</th><th>Correct</th><th>Règle</th></tr></thead><tbody></tbody></table></div>
+    <p class="note">Dans l’interface, on utilise l’espace insécable ordinaire (U+00A0), le seul qui s’affiche bien partout. L’espace fine insécable (U+202F) est réservée aux diapositives et à l’impression.</p>
+  </div>
+
+  <div class="block">
+    <h3>Essayer la fonction typoFr()</h3>
+    <div class="panel pad" style="display:flex;flex-direction:column;gap:16px">
+      <div class="field"><label for="typo-in">Texte brut</label><textarea id="typo-in" class="input">Ajuster... l'action : 7.7/10 !
+"Placement virtuel" sur 48 plans, 22 %</textarea></div>
+      <div class="field"><span class="small" style="font-weight:500;color:var(--ink)">Résultat (les espaces insécables sont surlignées)</span><div id="typo-out" class="typo-out" aria-live="polite"></div></div>
+    </div>
+    <pre style="background:var(--surface);border:var(--border);border-radius:var(--radius-lg);padding:20px 24px;font-size:.8125rem;line-height:1.65;overflow-x:auto">// À appliquer à tout texte affiché (JavaScript, sans dépendance)
+const NBSP = ' ';
+function typoFr(texte) {
+  return texte
+    .replace(/\s+([:;!?»%])/g, NBSP + '$1')            // avant : ; ! ? » %
+    .replace(/(«)\s+/g, '$1' + NBSP)                   // après «
+    .replace(/(\d)\s+(?=[A-Za-zÀ-ÿ])/g, '$1' + NBSP)   // 48 plans, 10 s
+    .replace(/'/g, '’')                           // apostrophe
+    .replace(/\.\.\./g, '…');                     // points de suspension
+}</pre>
+  </div>
+</section>
+
+<!-- ===================== FONDATIONS ===================== -->
+<section id="fondations">
+  <div class="block">
+    <h2>Fondations de l’interface</h2>
+    <p>Une seule couche de panneaux blancs sur fond gris, des traits plutôt que des ombres, une grille de 4 px, et des mouvements si courts qu’on ne les remarque que s’ils manquent.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="block"><h3>Espacements</h3><div class="panel pad" id="space" style="display:flex;flex-direction:column;gap:12px"></div></div>
+    <div class="block"><h3>Rayons</h3>
+      <div class="panel pad" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:16px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center"><div style="width:72px;height:72px;border:1.5px solid var(--ink);background:var(--bg);border-radius:var(--radius-sm)"></div><code>--radius-sm</code><span class="cap">6 px · repères, jauges</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center"><div style="width:72px;height:72px;border:1.5px solid var(--ink);background:var(--bg);border-radius:var(--radius-md)"></div><code>--radius-md</code><span class="cap">10 px · boutons, champs</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center"><div style="width:72px;height:72px;border:1.5px solid var(--ink);background:var(--bg);border-radius:var(--radius-lg)"></div><code>--radius-lg</code><span class="cap">16 px · panneaux</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center"><div style="width:72px;height:72px;border:1.5px solid var(--ink);background:var(--bg);border-radius:36px"></div><code>--radius-pill</code><span class="cap">pastilles, puces</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="block"><div class="panel" style="height:96px"></div><p class="small"><b style="color:var(--ink)">Panneau.</b> Trait 1 px, aucune ombre. Un panneau n’en contient jamais un autre.</p></div>
+    <div class="block"><div style="height:96px;border-radius:var(--radius-md);background:var(--surface);border:var(--border-control)"></div><p class="small"><b style="color:var(--ink)">Champ, bouton.</b> Trait fort, 3,4 : 1.</p></div>
+    <div class="block"><div class="panel" style="height:96px;box-shadow:var(--shadow-pop)"></div><p class="small"><b style="color:var(--ink)">Menu flottant.</b> Seule vraie ombre du système.</p></div>
+  </div>
+
+  <div class="grid2">
+    <div class="block">
+      <h3>Anneau de focus</h3>
+      <div class="grid2" style="gap:16px">
+        <div class="panel" style="height:110px;display:flex;align-items:center;justify-content:center"><button type="button" class="btn btn-primary is-focus">Accepter</button></div>
+        <div style="height:110px;background:var(--ink);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center"><span class="btn" style="background:#fff;color:var(--ink);outline:2px solid #fff;outline-offset:2px">Accepter</span></div>
+      </div>
+      <p class="note">Contour plein de 2 px, décalé de 2 px, bleu d’action (5,6 : 1) ou blanc sur fond encre. Affiché au clavier (<code>:focus-visible</code>), jamais supprimé.</p>
+    </div>
+    <div class="block">
+      <h3>Mouvement et petits écrans</h3>
+      <div class="panel pad small" style="display:flex;flex-direction:column;gap:10px">
+        <p><b style="color:var(--ink)">120 ms</b> : survol, appui, couleur ou trait. <b style="color:var(--ink)">200 ms</b> : ouverture d’un bloc, largeur d’une jauge. Une seule courbe, cubic-bezier(0.2, 0, 0, 1). Jamais de rebond ni de cascade. <code>prefers-reduced-motion</code> supprime tout.</p>
+        <p><b style="color:var(--ink)">375 px</b> : base, marges de 16, stepper en 4 colonnes. <b style="color:var(--ink)">640</b> : marges de 24. <b style="color:var(--ink)">960</b> : deux colonnes. <b style="color:var(--ink)">1280</b> : contenu borné à 1200, marges de 32. Cibles de 44 px.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== COMPOSANTS ===================== -->
+<section id="composants">
+  <div class="block">
+    <h2>Composants</h2>
+    <p>Les états sont réels (<code>:hover</code>, <code>:focus-visible</code>, <code>:disabled</code>) : on peut tabuler et cliquer. Les classes <code>.is-hover</code> et <code>.is-focus</code> ne servent qu’à les figer ici.</p>
+  </div>
+
+  <div class="block">
+    <h3>Boutons</h3>
+    <div class="panel pad" style="display:flex;flex-direction:column;gap:20px">
+      <div class="btn-grid"><span class="cap">Principal · défaut</span><span class="cap">Survol</span><span class="cap">Focus clavier</span><span class="cap">Désactivé</span>
+        <button type="button" class="btn btn-primary">Retenir ce placement</button><button type="button" class="btn btn-primary is-hover">Retenir ce placement</button><button type="button" class="btn btn-primary is-focus">Retenir ce placement</button><button type="button" class="btn btn-primary" disabled>Retenir ce placement</button>
+        <button type="button" class="btn btn-secondary">Refuser</button><button type="button" class="btn btn-secondary is-hover">Refuser</button><button type="button" class="btn btn-secondary is-focus">Refuser</button><button type="button" class="btn btn-secondary" disabled>Refuser</button>
+        <button type="button" class="btn btn-quiet">Ajuster…</button><button type="button" class="btn btn-quiet is-hover">Ajuster…</button><button type="button" class="btn btn-quiet is-focus">Ajuster…</button><button type="button" class="btn btn-quiet" disabled>Ajuster…</button>
+        <button type="button" class="btn btn-destructive">Supprimer le projet</button><button type="button" class="btn btn-destructive is-hover">Supprimer le projet</button><button type="button" class="btn btn-destructive is-focus">Supprimer le projet</button><button type="button" class="btn btn-destructive" disabled>Supprimer le projet</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px"><button type="button" class="btn btn-primary">Préparer le kit de génération</button><button type="button" class="btn btn-secondary">Télécharger le kit (ZIP)</button></div>
+    </div>
+    <p class="note">Un seul bouton principal par écran. Le destructif est en encre pleine, pas en rouge, et n’apparaît que dans une confirmation.</p>
+  </div>
+
+  <div class="block">
+    <h3>Champ et liste déroulante</h3>
+    <div class="panel pad" style="display:flex;flex-direction:column;gap:28px">
+      <div class="states">
+        <div class="cell"><span class="cap">Défaut</span><div class="field"><label for="f1">Titre de l’œuvre</label><input id="f1" class="input" type="text" placeholder="Ex. : Les Nuits de Carthage"></div></div>
+        <div class="cell"><span class="cap">Survol</span><div class="field"><label for="f2">Titre de l’œuvre</label><input id="f2" class="input is-hover" type="text" value="Les Nuits de Carthage"></div></div>
+        <div class="cell"><span class="cap">Focus clavier</span><div class="field"><label for="f3">Titre de l’œuvre</label><input id="f3" class="input is-focus" type="text" value="Les Nuits de Carthage"></div></div>
+        <div class="cell"><span class="cap">Désactivé</span><div class="field"><label for="f4">Titre de l’œuvre</label><input id="f4" class="input" type="text" value="Les Nuits de Carthage" disabled></div></div>
+        <div class="cell"><span class="cap">Erreur</span><div class="field"><label for="f5">Lieu de l’action</label><input id="f5" class="input" type="text" aria-invalid="true" aria-describedby="f5e"><span id="f5e" class="msg-err"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#1d1d1f" stroke-width="1.5"/><path d="M8 4.5v4.2" stroke="#1d1d1f" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.2" r="0.9" fill="#1d1d1f"/></svg><span>Erreur&nbsp;: indiquez le lieu de l’action.</span></span></div></div>
+      </div>
+      <div class="states">
+        <div class="cell"><span class="cap">Liste, défaut</span><div class="field"><label for="s1">Pays de l’action</label><div class="select-wrap"><select id="s1" class="select"><option>France</option><option>Tunisie</option><option>Algérie</option></select><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" fill="none" stroke="#1d1d1f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div></div>
+        <div class="cell"><span class="cap">Liste, focus clavier</span><div class="field"><label for="s2">Pays de l’action</label><div class="select-wrap"><select id="s2" class="select is-focus"><option>France</option><option>Tunisie</option></select><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" fill="none" stroke="#1d1d1f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div></div>
+        <div class="cell"><span class="cap">Liste, désactivée</span><div class="field"><label for="s3">Pays de l’action</label><div class="select-wrap"><select id="s3" class="select" disabled><option>France</option></select><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" fill="none" stroke="#6e6e73" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div></div>
+      </div>
+    </div>
+    <p class="note">Le libellé est toujours visible. Une erreur combine trois signes : trait d’encre de 2 px, pictogramme et le mot « Erreur ».</p>
+  </div>
+
+  <div class="block">
+    <h3>Puces à cocher et contrôle segmenté</h3>
+    <div class="panel pad" style="display:flex;flex-direction:column;gap:28px">
+      <div class="states">
+        <div class="cell"><span class="cap">Défaut</span><label class="chip"><input type="checkbox"><svg class="tick-i" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Série</label></div>
+        <div class="cell"><span class="cap">Survol</span><label class="chip is-hover"><input type="checkbox"><svg class="tick-i" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Court métrage</label></div>
+        <div class="cell"><span class="cap">Coché</span><label class="chip"><input type="checkbox" checked><svg class="tick-i" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Film</label></div>
+        <div class="cell"><span class="cap">Focus clavier</span><label class="chip is-focus"><input type="checkbox"><svg class="tick-i" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Publicité</label></div>
+        <div class="cell"><span class="cap">Désactivé</span><label class="chip"><input type="checkbox" disabled><svg class="tick-i" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Clip</label></div>
+      </div>
+      <div class="states">
+        <div class="cell"><span class="cap">Original sélectionné</span><div class="segmented" role="radiogroup" aria-label="Version affichée A"><label><input type="radio" name="vA" checked>Original</label><label><input type="radio" name="vA">Version éditée</label></div></div>
+        <div class="cell"><span class="cap">Version éditée sélectionnée</span><div class="segmented" role="radiogroup" aria-label="Version affichée B"><label><input type="radio" name="vB">Original</label><label><input type="radio" name="vB" checked>Version éditée</label></div></div>
+        <div class="cell"><span class="cap">Focus clavier</span><div class="segmented" role="radiogroup" aria-label="Version affichée C"><label><input type="radio" name="vC" checked>Original</label><label class="is-focus"><input type="radio" name="vC">Version éditée</label></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Stepper, pastilles, progression</h3>
+    <div class="panel pad" style="display:flex;flex-direction:column;gap:28px">
+      <div class="cq"><ol class="stepper" aria-label="Étapes">
+        <li class="step is-done"><span class="n"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Analyse</li>
+        <li class="step is-done"><span class="n"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Produits</li>
+        <li class="step is-current" aria-current="step"><span class="n">3</span>Génération</li>
+        <li class="step"><span class="n">4</span>Intégration</li>
+      </ol></div>
+      <div class="grid2">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span class="cap">Pastilles neutres et de sélection</span>
+          <div style="display:flex;flex-wrap:wrap;gap:10px"><span class="badge">8 placements</span><span class="badge">4 scènes protégées</span><span class="badge badge-accent">Sélectionné</span></div>
+          <span class="cap">Pastilles de risque (mot, forme, couleur)</span>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            <span class="risk risk-faible"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4.2" fill="currentColor"/></svg>Risque faible</span>
+            <span class="risk risk-moyen"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><path d="M5 0.8L9.6 9.2H0.4Z" fill="currentColor"/></svg>Risque moyen</span>
+            <span class="risk risk-eleve"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="currentColor"/></svg>Risque élevé</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span class="cap">Progression</span>
+          <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;font-size:.875rem"><span>Analyse de la vidéo</span><b class="tnum">62&nbsp;%</b></div><div class="progress" role="progressbar" aria-label="Analyse de la vidéo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="62"><i style="width:62%"></i></div></div>
+          <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;font-size:.875rem"><span>Kit de génération</span><b class="tnum">100&nbsp;%</b></div><div class="progress" role="progressbar" aria-label="Kit de génération" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><i style="width:100%"></i></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Ligne de placement</h3>
+    <div class="panel cq">
+      <div class="prow">
+        <div class="thumb"><svg viewBox="0 0 64 64" width="32" height="32" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#8a8a93" stroke-width="5"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#8a8a93"/></svg></div>
+        <div><div class="meta"><span>00:30&nbsp;–&nbsp;00:40</span><span class="risk risk-faible"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4.2" fill="currentColor"/></svg>Risque faible</span><span>7,7/10</span></div><h4>Plan de travail en inox</h4><p>Plan fixe de 10 secondes, zone dégagée à droite de l’évier, aucun regard caméra.</p></div>
+        <div class="acts"><button type="button" class="btn btn-primary">Accepter</button><button type="button" class="btn btn-secondary">Refuser</button><button type="button" class="btn btn-quiet">Ajuster…</button></div>
+      </div>
+      <div class="prow is-selected">
+        <div class="thumb" style="background:#fff"><svg viewBox="0 0 64 64" width="32" height="32" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#8a8a93" stroke-width="5"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#8a8a93"/></svg></div>
+        <div><div class="meta"><span>00:08&nbsp;–&nbsp;00:14</span><span class="risk risk-moyen"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><path d="M5 0.8L9.6 9.2H0.4Z" fill="currentColor"/></svg>Risque moyen</span><span>6,1/10</span><span class="badge badge-accent">Sélectionné</span></div><h4>Étagère de la cuisine</h4><p>Arrière-plan légèrement flou : le produit reste discret, mais la scène est dramatique.</p></div>
+        <div class="acts"><button type="button" class="btn btn-primary">Accepter</button><button type="button" class="btn btn-secondary">Refuser</button><button type="button" class="btn btn-quiet">Ajuster…</button></div>
+      </div>
+      <div class="prow">
+        <div class="thumb"><svg viewBox="0 0 64 64" width="32" height="32" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#8a8a93" stroke-width="5"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#8a8a93"/></svg></div>
+        <div><div class="meta"><span>01:11&nbsp;–&nbsp;01:18</span><span class="risk risk-eleve"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="currentColor"/></svg>Risque élevé</span><span>Bloqué par le Guard</span></div><h4>Table du café</h4><p>Boga Cidre est une marque tunisienne, et l’action se passe en France. Voir la justification.</p></div>
+        <div class="acts"><button type="button" class="btn btn-primary" disabled>Accepter</button><button type="button" class="btn btn-secondary">Refuser</button><button type="button" class="btn btn-quiet">Ajuster…</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Carte produit et carte proposition</h3>
+    <div class="grid3" style="align-items:stretch">
+      <div class="panel card">
+        <div style="display:flex;gap:16px;align-items:center"><div class="pimg"><svg viewBox="0 0 32 48" width="26" height="40" aria-hidden="true"><path d="M12 3h8v7l3 6v26a3 3 0 0 1-3 3H12a3 3 0 0 1-3-3V16l3-6z" fill="none" stroke="#6e6e73" stroke-width="2" stroke-linejoin="round"/></svg></div><div style="display:flex;flex-direction:column;gap:4px"><h4>Boga Cidre</h4><p>Marque tunisienne, campagne&nbsp;: Tunisie</p></div></div>
+        <span class="risk risk-eleve" style="align-self:flex-start"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="currentColor"/></svg>Risque élevé</span>
+        <p style="color:var(--ink)">Dans ce décor, elle ne correspondrait ni au lieu ni au public de l’œuvre. Le Guard bloque ce placement.</p>
+        <div class="foot"><button type="button" class="btn btn-primary" disabled>Retenir ce placement</button></div>
+      </div>
+      <div class="panel card">
+        <div style="display:flex;gap:16px;align-items:center"><div class="pimg"><svg viewBox="0 0 32 48" width="26" height="40" aria-hidden="true"><path d="M12 3h8v7l3 6v26a3 3 0 0 1-3 3H12a3 3 0 0 1-3-3V16l3-6z" fill="none" stroke="#6e6e73" stroke-width="2" stroke-linejoin="round"/></svg></div><div style="display:flex;flex-direction:column;gap:4px"><h4>Eau pétillante française</h4><p>Proposée par le Guard en remplacement</p></div></div>
+        <span class="risk risk-faible" style="align-self:flex-start"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4.2" fill="currentColor"/></svg>Risque faible</span>
+        <p style="color:var(--ink)">Cohérente avec le lieu et le public : la scène se passe en France, la marque y est courante.</p>
+        <div class="foot"><button type="button" class="btn btn-primary">Retenir ce placement</button><button type="button" class="btn btn-quiet">Ajuster…</button></div>
+      </div>
+      <div class="panel card">
+        <div style="display:flex;flex-direction:column;gap:10px"><div class="tnum" style="display:flex;align-items:center;gap:12px;font-size:.875rem;font-weight:500"><span>00:30&nbsp;–&nbsp;00:40</span><span class="risk risk-faible"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4.2" fill="currentColor"/></svg>Risque faible</span></div><h4>Plan de travail en inox</h4></div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="meter"><span>Cohérence</span><div class="bar"><i style="width:80%"></i></div><b>8/10</b></div>
+          <div class="meter"><span>Discrétion</span><div class="bar"><i style="width:70%"></i></div><b>7/10</b></div>
+          <div class="meter"><span>Faisabilité</span><div class="bar"><i style="width:80%"></i></div><b>8/10</b></div>
+        </div>
+        <p>Score global : <b class="tnum" style="color:var(--ink)">7,7/10</b>. La moyenne des trois mesures, jamais une décision : c’est le créateur qui tranche.</p>
+        <div class="foot"><button type="button" class="btn btn-primary">Accepter</button><button type="button" class="btn btn-secondary">Refuser</button><button type="button" class="btn btn-quiet">Ajuster…</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Bloc détaillé, état vide, erreur</h3>
+    <div class="grid2">
+      <div class="panel" style="overflow:hidden">
+        <details class="disc" open>
+          <summary>Justification du Guard&nbsp;: cinq critères<svg class="chev" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" fill="none" stroke="#1d1d1f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+          <div class="body">
+            <div class="crit"><b>Historique</b><span class="risk risk-faible" style="justify-self:start"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4.2" fill="currentColor"/></svg>Faible</span><span>Aucun repère d’époque en conflit avec le produit.</span></div>
+            <div class="crit"><b>Culturel</b><span class="risk risk-eleve" style="justify-self:start"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="currentColor"/></svg>Élevé</span><span>L’action se passe en France (déclaré par le producteur). Boga Cidre vise la Tunisie.</span></div>
+            <div class="crit"><b>Cohérence narrative</b><span class="risk risk-eleve" style="justify-self:start"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" fill="currentColor"/></svg>Élevé</span><span>Dans ce décor, elle ne correspondrait ni au lieu ni au public de l’œuvre.</span></div>
+            <div class="crit"><b>Sensibilité</b><span class="risk risk-faible" style="justify-self:start"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4.2" fill="currentColor"/></svg>Faible</span><span>Aucun sujet sensible dans la scène.</span></div>
+            <div class="crit"><b>Intention artistique</b><span class="risk risk-moyen" style="justify-self:start"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><path d="M5 0.8L9.6 9.2H0.4Z" fill="currentColor"/></svg>Moyen</span><span>Le cadrage est très composé : un produit visible pourrait le déséquilibrer.</span></div>
+          </div>
+        </details>
+        <details class="disc">
+          <summary>Relevé des modifications<svg class="chev" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.5 6l4.5 4.5L12.5 6" fill="none" stroke="#1d1d1f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
+          <div class="body"><p class="small">Une modification : 00:30&nbsp;–&nbsp;00:40, plan de travail en inox.</p></div>
+        </details>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:24px">
+        <div class="panel empty"><h4 style="font-size:1.125rem">Aucun placement retenu</h4><p class="small" style="max-width:36ch">Acceptez au moins un placement pour préparer le kit de génération.</p><button type="button" class="btn btn-secondary" style="margin-top:8px">Voir les placements</button></div>
+        <div class="alert" role="alert"><svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="#1d1d1f" stroke-width="1.5"/><path d="M8 4.5v4.2" stroke="#1d1d1f" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="11.2" r="0.9" fill="#1d1d1f"/></svg>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start"><div><strong style="font-size:.9375rem;font-weight:600">Erreur&nbsp;: la vidéo n’a pas pu être lue.</strong><p class="small">Le format n’est pas pris en charge. Utilisez un fichier MP4 ou MOV.</p></div><button type="button" class="btn btn-secondary">Choisir un autre fichier</button></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>À 375 px</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start">
+      <div class="cq" style="width:375px;max-width:100%;background:var(--bg);border:1px solid var(--rule-strong);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:16px">
+        <ol class="stepper" aria-label="Étapes sur mobile">
+          <li class="step is-done"><span class="n"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Analyse</li>
+          <li class="step is-done"><span class="n"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Produits</li>
+          <li class="step is-current" aria-current="step"><span class="n">3</span>Génération</li>
+          <li class="step"><span class="n">4</span>Intégration</li>
+        </ol>
+        <div class="panel" style="overflow:hidden"><div class="prow">
+          <div class="thumb"><svg viewBox="0 0 64 64" width="28" height="28" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#8a8a93" stroke-width="5"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#8a8a93"/></svg></div>
+          <div><div class="meta"><span>00:30&nbsp;–&nbsp;00:40</span><span class="risk risk-faible"><svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4.2" fill="currentColor"/></svg>Risque faible</span></div><h4>Plan de travail en inox</h4><p>Zone dégagée à droite de l’évier.</p></div>
+          <div class="acts"><button type="button" class="btn btn-primary">Accepter</button><button type="button" class="btn btn-secondary">Refuser</button><button type="button" class="btn btn-quiet">Ajuster…</button></div>
+        </div></div>
+      </div>
+      <p class="note" style="flex:1;min-width:240px">Le stepper garde ses quatre étapes sur une ligne : pastille numérotée, libellé dessous. La ligne de placement empile ses actions sous le texte. Les composants réagissent à la largeur de leur conteneur (<code>@container</code>), pas à celle de la fenêtre.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== APPLICATIONS ===================== -->
+<section id="applications">
+  <div class="block">
+    <h2>Applications de la marque</h2>
+    <p>Les deux étiquettes à l’écran sont une exigence éthique : le spectateur doit savoir qu’une image a été modifiée. Elles sont grandes, contrastées, jamais cachées, et figurent dans le relevé des modifications.</p>
+  </div>
+
+  <div class="grid2" style="grid-template-columns:minmax(0,1fr)">
+    <div class="block">
+      <h3>Étiquette « Placement virtuel » et légende d’aperçu</h3>
+      <div class="vframe" role="img" aria-label="Image fictive avec les deux étiquettes">
+        <div class="layer" style="left:0;right:0;bottom:0;height:28%;background:#2b373d"></div>
+        <div class="layer" style="left:12%;top:28%;width:31%;height:35%;background:#4b5d66"></div>
+        <div class="layer" style="left:50%;right:0;bottom:28%;height:3.4%;background:#6d8089"></div>
+        <div class="layer" style="left:50%;right:0;bottom:0;height:28%;background:#34444b"></div>
+        <svg class="layer" viewBox="0 0 32 48" style="left:73%;bottom:31%;width:5.5%" aria-hidden="true"><path d="M12 3h8v7l3 6v26a3 3 0 0 1-3 3H12a3 3 0 0 1-3-3V16l3-6z" fill="#c9d3d8"/></svg>
+        <div class="lbl"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="7"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#1d1d1f"/></svg><span>Placement virtuel&nbsp;· Eau pétillante française</span></div>
+        <div class="lower"><svg viewBox="0 0 64 64" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#fff" stroke-width="7"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></svg><span>Aperçu illustratif réalisé avec un outil externe</span></div>
+      </div>
+      <p class="small">Image fictive pour la maquette. Les étiquettes se placent dans la zone de sécurité de 5 % et se dimensionnent en proportion de l’image.</p>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="block"><h3>Étiquette « Placement virtuel · [Produit] »</h3>
+      <ul class="small" style="padding-left:18px;display:flex;flex-direction:column;gap:6px">
+        <li>Fond jaune repère #ffcc00, texte encre en 600 : 11,1 : 1. Fond plein, jamais transparent.</li>
+        <li>Hauteur 5,5 % de l’image, texte 2,8 % (30 et 15 px sur 540 px de haut). En haut à gauche, à 5 % des bords.</li>
+        <li>Visible 0,5 s avant la modification et 0,5 s après, au moins 2 s, fondu de 200 ms.</li>
+        <li>Produit tronqué à 28 caractères avec « … ». Plusieurs produits : « 2 produits ».</li>
+      </ul>
+    </div>
+    <div class="block"><h3>Légende « Aperçu illustratif… »</h3>
+      <ul class="small" style="padding-left:18px;display:flex;flex-direction:column;gap:6px">
+        <li>Fond encre #1d1d1f, texte blanc en 500 : 16,8 : 1. En bas à gauche, pendant tout le plan réalisé avec l’outil externe.</li>
+        <li>Les sous-titres sont remontés au-dessus pendant sa durée.</li>
+        <li>Jamais : flou, transparence, texte sous 2,5 %, étiquette recouverte, étiquette sur la version originale.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Variantes de l’étiquette</h3>
+    <div class="panel pad" style="display:flex;flex-wrap:wrap;gap:24px 32px;align-items:center">
+      <div class="lbl-big"><svg viewBox="0 0 64 64" width="34" height="34" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="7"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#1d1d1f"/></svg><span>Placement virtuel&nbsp;· Eau pétillante française</span></div>
+      <div class="lbl-big"><svg viewBox="0 0 64 64" width="34" height="34" aria-hidden="true"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="7"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#1d1d1f"/></svg><span>Placement virtuel&nbsp;· 2 produits</span></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="block">
+      <h3>Diapositive de titre</h3>
+      <div class="slide">
+        <svg viewBox="0 0 210 40" style="width:17%;min-width:90px" role="img" aria-label="SceneLine"><g transform="scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g><text x="52" y="31.6" font-family="Inter, -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="32" font-weight="600" fill="#1d1d1f" style="letter-spacing:-0.02em">SceneLine</text></svg>
+        <h3>L’IA propose,<br>le créateur décide,<br>le spectateur est informé.</h3>
+        <div style="display:flex;flex-direction:column;gap:5cqw">
+          <div class="strip"><div style="position:absolute;left:0;right:0;top:9px;height:6px;border-radius:3px;background:var(--sunken)"></div><div style="position:absolute;left:64%;top:0;width:10px;height:24px;margin-left:-5px;border:2px solid var(--ink);border-radius:3px;background:var(--marker)"></div></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:1.6cqw;line-height:1.4;color:var(--ink-2)"><span>Placement de produit éthique pour la post-production de fiction</span><b style="color:var(--ink);font-weight:500;white-space:nowrap">IA Éthique 360</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="block">
+      <h3>Favicon et icône</h3>
+      <div class="panel pad" style="display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;align-items:center;gap:10px;align-self:flex-start;padding:10px 16px 10px 12px;border-radius:10px;background:var(--bg);border:var(--border)">
+          <svg viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1d1d1f"/><g transform="translate(12 12) scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#fff" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g></svg><span style="font-size:.8125rem;font-weight:500">SceneLine — Analyse</span>
+        </div>
+        <div class="sizes">
+          <div><svg viewBox="0 0 64 64" width="96" height="96" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1d1d1f"/><g transform="translate(12 12) scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#fff" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g></svg><span class="cap tnum">96 px</span></div>
+          <div><svg viewBox="0 0 64 64" width="48" height="48" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1d1d1f"/><g transform="translate(12 12) scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#fff" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g></svg><span class="cap tnum">48 px</span></div>
+          <div><svg viewBox="0 0 64 64" width="32" height="32" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1d1d1f"/><g transform="translate(12 12) scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#fff" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g></svg><span class="cap tnum">32 px</span></div>
+          <div><svg viewBox="0 0 64 64" width="16" height="16" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1d1d1f"/><g transform="translate(12 12) scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#fff" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g></svg><span class="cap tnum">16 px</span></div>
+        </div>
+        <p class="small">Pastille d’encre : visible sur un onglet clair comme sur un onglet sombre. Le favicon de cette page est ce même SVG, en ligne.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== RÈGLES ===================== -->
+<section id="regles">
+  <div class="block">
+    <h2>SceneLine en une page</h2>
+    <p>Le principe commande tout : l’IA propose, le créateur décide, le spectateur est informé. Chaque règle sert l’une de ces trois moitiés de phrase.</p>
+  </div>
+  <div class="grid2" style="align-items:stretch">
+    <div class="panel topic"><h3>Logo</h3><div class="cols">
+      <div class="col yes"><h4>Faire</h4><ul><li>Utiliser le Cadre : cadre d’encre, un seul rectangle jaune.</li><li>Laisser 2x de marge.</li><li>Symbole seul dès 16 px, logo complet dès 96 px.</li><li>Poser le logo sur un aplat uni.</li></ul></div>
+      <div class="col no"><h4>Éviter</h4><ul><li>Recolorer le repère, ajouter ombre, dégradé ou lueur.</li><li>Agrandir la zone jaune.</li><li>Remettre le symbole sur une pastille jaune.</li><li>Étirer, incliner, ou poser sur une image chargée.</li></ul></div></div></div>
+    <div class="panel topic"><h3>Couleur</h3><div class="cols">
+      <div class="col yes"><h4>Faire</h4><ul><li>Bleu #0066cc pour les actions et la sélection, rien d’autre.</li><li>Jaune #ffcc00 pour le repère seulement, cerné d’encre.</li><li>Neutres pour tout le reste.</li><li>4,5 : 1 pour le texte, 3 : 1 pour les formes.</li></ul></div>
+      <div class="col no"><h4>Éviter</h4><ul><li>Vert, ambre ou rouge hors du Guard.</li><li>Dégradés, halos, violet, néons, verre dépoli.</li><li>Une information portée par la couleur seule.</li><li>Du jaune en texte ou en fond de bouton.</li></ul></div></div></div>
+    <div class="panel topic"><h3>Risque et Guard</h3><div class="cols">
+      <div class="col yes"><h4>Faire</h4><ul><li>Dire le niveau : mot, forme et couleur.</li><li>Montrer les cinq critères derrière chaque niveau.</li><li>Proposer une alternative quand un placement est bloqué.</li><li>Laisser le créateur accepter, refuser ou ajuster.</li></ul></div>
+      <div class="col no"><h4>Éviter</h4><ul><li>Un score sans niveau, un niveau sans justification.</li><li>Un placement sur une scène à risque élevé.</li><li>Présenter la décision comme celle de l’IA.</li><li>Rouge, vert ou ambre pour décorer.</li></ul></div></div></div>
+    <div class="panel topic"><h3>Typographie et langue</h3><div class="cols">
+      <div class="col yes"><h4>Faire</h4><ul><li>Inter 400, 500, 600 ; chiffres tabulaires pour les valeurs.</li><li>65 caractères au plus par ligne.</li><li>Espace insécable avant : ; ! ? et autour de « ».</li><li>Apostrophe ’, point de suspension …, virgule décimale.</li></ul></div>
+      <div class="col no"><h4>Éviter</h4><ul><li>Tout en capitales, ou petite ligne en capitales au-dessus d’un titre.</li><li>Texte sous 12 px.</li><li>Guillemets droits, trois points, point décimal.</li><li>Une deuxième famille de caractères.</li></ul></div></div></div>
+    <div class="panel topic"><h3>Interface</h3><div class="cols">
+      <div class="col yes"><h4>Faire</h4><ul><li>Un seul bouton principal par écran.</li><li>Cibles de 44 px, focus visible au clavier.</li><li>Une seule couche de panneaux.</li><li>Mouvements de 120 à 200 ms, supprimés si l’on réduit les animations.</li></ul></div>
+      <div class="col no"><h4>Éviter</h4><ul><li>Une carte dans une carte, une ombre sur un panneau.</li><li>Un filet coloré d’un seul côté d’une carte.</li><li>Supprimer l’anneau de focus.</li><li>Tuiles de chiffres clés, icônes d’étincelle, de robot, de cerveau.</li></ul></div></div></div>
+    <div class="panel topic"><h3>Étiquettes à l’écran</h3><div class="cols">
+      <div class="col yes"><h4>Faire</h4><ul><li>« Placement virtuel · [Produit] » : jaune, en haut à gauche, 0,5 s avant et après.</li><li>« Aperçu illustratif réalisé avec un outil externe » : encre, en bas à gauche, pendant tout le plan.</li><li>Les inscrire au relevé des modifications.</li></ul></div>
+      <div class="col no"><h4>Éviter</h4><ul><li>Flouter, rendre transparent, rogner ou recouvrir.</li><li>Texte sous 2,5 % de la hauteur de l’image.</li><li>Une étiquette sur la version originale.</li></ul></div></div></div>
+    <div class="panel topic" style="grid-column:1/-1"><h3>Ton</h3><div class="cols">
+      <div class="col yes"><h4>Faire</h4><ul><li>Écrire calme, précis, au vouvoiement, en phrases courtes.</li><li>Dire ce que l’IA a fait et ce que le créateur décide : « SceneLine propose 8 placements ».</li><li>Avouer les limites : « aperçu illustratif », « réalisé avec un outil externe ».</li></ul></div>
+      <div class="col no"><h4>Éviter</h4><ul><li>« Magique », « révolutionnaire », « automatiquement », « l’IA choisit ».</li><li>Des promesses que le produit ne tient pas : SceneLine ne génère aucune vidéo.</li><li>Des points d’exclamation.</li></ul></div></div></div>
+  </div>
+</section>
+
+<!-- ===================== JETONS ===================== -->
+<section id="jetons">
+  <div class="block">
+    <h2>Jetons CSS à copier</h2>
+    <p>Ce bloc est lu directement depuis la feuille de style de cette page : ce que vous copiez est ce qui est utilisé.</p>
+  </div>
+  <div class="codebox">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button type="button" class="btn btn-primary" id="copy-tokens">Copier le bloc :root</button></div>
+    <pre id="tokens-pre" tabindex="0"></pre>
+    <p class="small" id="copy-status" role="status" style="margin-top:12px"></p>
+  </div>
+</section>
+
+</main>
+
+<footer class="wrap" style="padding:32px 16px 56px;border-top:1px solid var(--rule)">
+  <p class="small">SceneLine · système de design · thème clair uniquement. Aucune dépendance hors Inter (Google Fonts).</p>
+</footer>
+
+<script>
+(function () {
+  var NB = ' ';
+  var $ = function (s) { return document.querySelector(s); };
+
+  /* Pastilles de couleur */
+  function swatches(el, items) {
+    el.innerHTML = items.map(function (c) {
+      return '<div class="sw"><i style="background:' + c[1] + '"></i><div class="t"><b>' + c[0] + '</b><span>' + c[3] + '</span></div><div class="v"><span>' + c[1] + '</span><span>' + c[2] + '</span></div></div>';
+    }).join('');
+  }
+  swatches($('#sw-base'), [
+    ['Fond', '#f5f5f7', '--bg', 'Arrière-plan de l’application.'],
+    ['Surface', '#ffffff', '--surface', 'Panneaux, champs.'],
+    ['Creux', '#ececf0', '--sunken', 'Pistes de jauge, zones en retrait.'],
+    ['Trait', '#e3e3e8', '--rule', 'Séparateurs décoratifs.'],
+    ['Trait fort', '#8a8a93', '--rule-strong', 'Bords de champs et de contrôles.'],
+    ['Encre', '#1d1d1f', '--ink', 'Texte principal, tête de lecture.'],
+    ['Encre 2', '#5b5b61', '--ink-2', 'Texte secondaire.'],
+    ['Encre 3', '#6e6e73', '--ink-3', 'Légendes.'],
+    ['Accent', '#0066cc', '--accent', 'Boutons principaux, liens, sélection, focus.'],
+    ['Accent, survol', '#0058b0', '--accent-hover', 'Survol de l’accent.'],
+    ['Accent, fond', '#e8f1fb', '--accent-wash', 'Ligne ou puce sélectionnée.'],
+    ['Jaune repère', '#ffcc00', '--marker', 'Logo, placements, étiquette de vidéo modifiée.']
+  ]);
+  swatches($('#sw-risk'), [
+    ['Faible, texte', '#19732f', '--risk-faible-text', 'Mot « faible » dans la pastille.'],
+    ['Faible, remplissage', '#23873f', '--risk-faible-fill', 'Segments de frise, jauges.'],
+    ['Faible, fond', '#e6f4ea', '--risk-faible-wash', 'Fond de pastille.'],
+    ['Moyen, texte', '#8a5100', '--risk-moyen-text', 'Mot « moyen » dans la pastille.'],
+    ['Moyen, remplissage', '#d17f00', '--risk-moyen-fill', 'Segments de frise, jauges.'],
+    ['Moyen, fond', '#fdf1dc', '--risk-moyen-wash', 'Fond de pastille.'],
+    ['Élevé, texte', '#b81d22', '--risk-eleve-text', 'Mot « élevé » dans la pastille.'],
+    ['Élevé, remplissage', '#b81d22', '--risk-eleve-fill', 'Segments de frise, scènes protégées.'],
+    ['Élevé, fond', '#fdebec', '--risk-eleve-wash', 'Fond de pastille.']
+  ]);
+
+  /* Contrastes */
+  function r(x) { return String(x).replace(' : ', NB + ':' + NB); }
+  var C = [
+    ['Aa', '#1d1d1f', '#ffffff', 'Encre sur surface', '16,8 : 1', 'Texte principal', 1],
+    ['Aa', '#1d1d1f', '#f5f5f7', 'Encre sur fond', '15,5 : 1', 'Texte sur l’arrière-plan', 1],
+    ['Aa', '#5b5b61', '#ffffff', 'Encre 2 sur surface', '6,7 : 1', 'Texte secondaire', 1],
+    ['Aa', '#5b5b61', '#f5f5f7', 'Encre 2 sur fond', '6,2 : 1', 'Texte secondaire sur l’arrière-plan', 1],
+    ['Aa', '#5b5b61', '#ececf0', 'Encre 2 sur creux', '5,7 : 1', 'Texte en zone en retrait', 1],
+    ['Aa', '#6e6e73', '#ffffff', 'Encre 3 sur surface', '5,1 : 1', 'Légendes', 1],
+    ['Aa', '#6e6e73', '#f5f5f7', 'Encre 3 sur fond', '4,7 : 1', 'Légendes sur l’arrière-plan', 1],
+    ['Aa', '#0066cc', '#ffffff', 'Accent sur surface', '5,6 : 1', 'Liens, texte d’action', 1],
+    ['Aa', '#0066cc', '#e8f1fb', 'Accent sur son fond teinté', '4,9 : 1', 'Ligne sélectionnée', 1],
+    ['Aa', '#ffffff', '#0066cc', 'Blanc sur accent', '5,6 : 1', 'Bouton principal', 1],
+    ['Aa', '#ffffff', '#0058b0', 'Blanc sur accent, survol', '7,0 : 1', 'Bouton principal survolé', 1],
+    ['Aa', '#19732f', '#e6f4ea', 'Faible, texte sur son fond', '5,2 : 1', 'Pastille « Risque faible »', 1],
+    ['Aa', '#8a5100', '#fdf1dc', 'Moyen, texte sur son fond', '5,8 : 1', 'Pastille « Risque moyen »', 1],
+    ['Aa', '#b81d22', '#fdebec', 'Élevé, texte sur son fond', '5,6 : 1', 'Pastille « Risque élevé »', 1],
+    ['Aa', '#b81d22', '#f5f5f7', 'Élevé, texte sur fond', '6,0 : 1', 'Justification du Guard', 1],
+    ['Aa', '#1d1d1f', '#ffcc00', 'Encre sur jaune repère', '11,1 : 1', 'Étiquette « Placement virtuel »', 1],
+    ['Aa', '#ffcc00', '#1d1d1f', 'Jaune repère sur encre', '11,1 : 1', 'Logo sur fond encre, diaporama', 1],
+    ['', '#23873f', '#23873f', 'Faible, remplissage sur surface', '4,6 : 1', 'Segments, jauges (graphique, 3 : 1)', 1],
+    ['', '#d17f00', '#d17f00', 'Moyen, remplissage sur surface', '3,1 : 1', 'Segments, jauges (graphique, 3 : 1)', 1],
+    ['', '#b81d22', '#b81d22', 'Élevé, remplissage sur surface', '6,5 : 1', 'Segments, scènes protégées', 1],
+    ['', '#8a8a93', '#8a8a93', 'Trait fort sur surface', '3,4 : 1', 'Bords de champs et de contrôles', 1],
+    ['', '#ffcc00', '#ffcc00', 'Jaune repère sur surface', '1,5 : 1', 'Jamais seul : toujours cerné d’encre', 0],
+    ['', '#e3e3e8', '#e3e3e8', 'Trait sur surface', '1,3 : 1', 'Décoratif uniquement', 2]
+  ];
+  $('#contrast-table tbody').innerHTML = C.map(function (c) {
+    return '<tr><td><span class="chipcolor" style="background:' + c[2] + ';color:' + c[1] + '">' + c[0] + '</span></td><td>' + c[3] + '</td><td class="tnum" style="font-weight:600">' + r(c[4]) + '</td><td style="color:var(--ink-2)">' + r(c[5]) + '</td><td style="font-weight:600">' + (c[6] === 1 ? 'Réussi' : c[6] === 0 ? 'Échec' : 'Non requis') + '</td></tr>';
+  }).join('');
+
+  /* Daltonisme */
+  var S = [
+    ['Vision normale', '#23873f', '#d17f00', '#b81d22', '#ffcc00'],
+    ['Deutéranopie', '#7d7344', '#ad9a05', '#776a1a', '#f2d820'],
+    ['Protanopie', '#887b39', '#998600', '#514920', '#e6ca00']
+  ];
+  $('#sims').innerHTML = '<div style="display:grid;grid-template-columns:120px repeat(4,1fr);gap:12px" class="cap"><span></span><span>Faible</span><span>Moyen</span><span>Élevé</span><span>Repère</span></div>' + S.map(function (s) {
+    return '<div style="display:grid;grid-template-columns:120px repeat(4,1fr);gap:12px;align-items:center"><span style="font-size:.875rem">' + s[0] + '</span>' + [1, 2, 3].map(function (i) { return '<div style="height:40px;border-radius:8px;background:' + s[i] + '"></div>'; }).join('') + '<div style="height:40px;border-radius:8px;border:1.5px solid #1d1d1f;background:' + s[4] + '"></div></div>';
+  }).join('');
+
+  /* Échelle typographique */
+  var T = [
+    ['Display / H1', 'Analyser la vidéo', '2.5rem', 600, 1.15, '-0.02em', 'normal', '2,5 rem · 40 px (28 px au minimum) · 600 · interligne 1,15 · −0,02 em', 'Titre d’étape et de diapositive, une fois par écran.'],
+    ['H2', 'Produits et placements', '1.5rem', 600, 1.25, '-0.015em', 'normal', '1,5 rem · 24 px · 600 · 1,25 · −0,015 em', 'Sections d’une étape.'],
+    ['H3', 'Kit de génération', '1.125rem', 600, 1.35, '-0.01em', 'normal', '1,125 rem · 18 px · 600 · 1,35 · −0,01 em', 'Titre de carte, de placement, de proposition.'],
+    ['Corps', 'SceneLine a compris 11' + NB + 'scènes dans 48' + NB + 'plans. Il propose 8' + NB + 'placements et protège 4' + NB + 'scènes.', '1rem', 400, 1.6, '0', 'normal', '1 rem · 16 px · 400 · 1,6 · mesure 65 ch', 'Phrases, justifications du Guard, explications.'],
+    ['Libellé', 'Préparer le kit de génération', '0.9375rem', 500, 1.4, '0', 'normal', '0,9375 rem · 15 px · 500 · 1,4', 'Boutons, champs, onglets.'],
+    ['Petit', 'Relevé des modifications', '0.875rem', 400, 1.5, '0', 'normal', '0,875 rem · 14 px · 400 · 1,5 · mesure 65 ch', 'Descriptions secondaires, aides.'],
+    ['Légende', 'Aperçu illustratif réalisé avec un outil externe', '0.75rem', 500, 1.4, '0.01em', 'normal', '0,75 rem · 12 px · 500 · 1,4 · +0,01 em', 'Légendes, étiquettes, métadonnées. Plancher du système.'],
+    ['Code temporel', '00:30' + NB + '–' + NB + '00:40 · 7,7/10', '0.875rem', 500, 1.4, '0', 'tabular-nums', '0,875 rem · 14 px · 500 · chiffres tabulaires', 'Codes temporels, scores, pourcentages, compteurs.']
+  ];
+  $('#scale-table tbody').innerHTML = T.map(function (t) {
+    return '<tr><td style="min-width:240px;font-size:' + t[2] + ';font-weight:' + t[3] + ';line-height:' + t[4] + ';letter-spacing:' + t[5] + ';font-variant-numeric:' + t[6] + '">' + t[1] + '</td><td style="color:var(--ink-2);min-width:220px"><b style="color:var(--ink)">' + t[0] + '</b><br>' + t[7] + '</td><td style="color:var(--ink-2);min-width:200px">' + t[8] + '</td></tr>';
+  }).join('');
+
+  /* Règles françaises */
+  var R = [
+    ['Deux-points', 'Titre: sous-titre', 'Titre' + NB + ': sous-titre', 'Espace insécable avant.'],
+    ['Point-virgule, ! et ?', 'Quel risque ?', 'Quel risque' + NB + '?', 'Espace insécable avant, jamais en début de ligne.'],
+    ['Guillemets', '"Placement virtuel"', '«' + NB + 'Placement virtuel' + NB + '»', 'Guillemets français, espaces insécables à l’intérieur.'],
+    ['Apostrophe', "L'action", 'L’action', 'Apostrophe courbe U+2019.'],
+    ['Points de suspension', 'Ajuster...', 'Ajuster…', 'Un seul caractère U+2026, collé au mot.'],
+    ['Plage de temps', '00:30 - 00:40', '00:30' + NB + '–' + NB + '00:40', 'Tiret demi-cadratin, espaces insécables.'],
+    ['Décimales', '7.7/10', '7,7/10', 'Virgule décimale. À reporter dans le produit.'],
+    ['Nombre et unité', '48 plans, 22 %', '48' + NB + 'plans, 22' + NB + '%', 'Espace insécable entre nombre et unité.'],
+    ['Majuscules', 'Risque Élevé, RISQUE ÉLEVÉ', 'Risque élevé', 'Majuscule de phrase seule, accents conservés (É, À).']
+  ];
+  $('#rules-table tbody').innerHTML = R.map(function (x) {
+    return '<tr><td style="font-weight:600;white-space:nowrap">' + x[0] + '</td><td style="color:var(--ink-2);text-decoration:line-through;text-decoration-color:#8a8a93">' + x[1] + '</td><td style="font-weight:500">' + x[2] + '</td><td style="color:var(--ink-2)">' + x[3] + '</td></tr>';
+  }).join('');
+
+  /* typoFr en direct */
+  function typoFr(t) {
+    return t
+      .replace(/\s+([:;!?»%])/g, NB + '$1')
+      .replace(/(«)\s+/g, '$1' + NB)
+      .replace(/(\d)\s+(?=[A-Za-zÀ-ÿ])/g, '$1' + NB)
+      .replace(/'/g, '’')
+      .replace(/\.\.\./g, '…');
+  }
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+  function render() {
+    var out = typoFr($('#typo-in').value).split('\n').map(function (l) {
+      return esc(l).replace(/ /g, '<span style="background:var(--sunken);outline:1px solid var(--rule-strong)"> </span>');
+    }).join('<br>');
+    $('#typo-out').innerHTML = out;
+  }
+  $('#typo-in').addEventListener('input', render); render();
+
+  /* Espacements */
+  var sp = $('#space');
+  [4, 8, 12, 16, 24, 32, 48, 64].forEach(function (px, i) {
+    sp.insertAdjacentHTML('beforeend', '<div style="display:flex;align-items:center;gap:16px"><code style="width:100px;flex:none">--space-' + (i + 1) + '</code><span class="cap tnum" style="width:44px;flex:none">' + px + ' px</span><div style="height:16px;border-radius:3px;background:var(--accent);width:' + px + 'px"></div></div>');
+  });
+
+  /* Jetons */
+  var css = document.getElementById('tokens-css').textContent.trim();
+  $('#tokens-pre').textContent = css;
+  $('#copy-tokens').addEventListener('click', function () {
+    var st = $('#copy-status');
+    function ok() { st.textContent = 'Bloc :root copié.'; }
+    function ko() { st.textContent = 'Copie impossible ici : sélectionnez le bloc et copiez-le avec Ctrl+C.'; }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(css).then(ok, ko); } else { ko(); }
+  });
+})();
+</script>
+</body>
+</html>

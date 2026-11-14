@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>SceneLine</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231d1d1f'/%3E%3Cg transform='translate(12 12) scale(.625)'%3E%3Crect x='7' y='11' width='50' height='42' rx='9' fill='none' stroke='%23fff' stroke-width='6'/%3E%3Crect x='31' y='29' width='17' height='14' rx='3' fill='%23ffcc00'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/ui/style.css">
+<script src="/ui/app.js" defer></script>
+<script src="/ui/products.js" defer></script>
+<script src="/ui/compare.js" defer></script>
+<script src="/ui/ethics.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<header class="bar">
+  <a class="brand" href="/" aria-label="SceneLine, nouveau projet"><svg viewBox="0 0 210 40" width="150" height="29" aria-hidden="true"><g transform="scale(0.625)"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></g><text x="52" y="31.6" font-family="Inter, -apple-system, 'Segoe UI', system-ui, sans-serif" font-size="32" font-weight="600" fill="#1d1d1f" style="letter-spacing:-0.02em">SceneLine</text></svg></a>
+  <nav id="stepper" class="stepper" aria-label="Étapes du projet">
+    <button type="button" class="step-pill" data-step="1"><span class="dot">1</span><span class="lbl">Analyse</span></button>
+    <button type="button" class="step-pill" data-step="2"><span class="dot">2</span><span class="lbl">Produits</span></button>
+    <button type="button" class="step-pill" data-step="3"><span class="dot">3</span><span class="lbl">Génération</span></button>
+    <button type="button" class="step-pill" data-step="4"><span class="dot">4</span><span class="lbl">Intégration</span></button>
+  </nav>
+  <div class="links"><a id="lk-eth" href="#ethique-360">Éthique 360</a><a href="/">Nouveau projet</a></div>
+</header>
+
+<main id="main" tabindex="-1">
+
+<!-- ============ ÉTAPE 1 · ANALYSE ============ -->
+<section class="stage" id="stage-1" data-step="1">
+  <header class="stage-head">
+    <h1 tabindex="-1">Analyser la vidéo</h1>
+    <p class="lede">SceneLine comprend chaque scène, protège ce qui doit l’être, puis repère les meilleurs endroits pour placer un produit.</p>
+    <nav class="axes" data-axes="1" aria-label="Angles éthiques actifs à cette étape"></nav>
+  </header>
+
+  <form id="upload" class="card form-card">
+    <label class="dropzone" for="video">
+      <span class="drop-icon" aria-hidden="true"></span>
+      <strong id="filename">Choisir une vidéo</strong>
+      <span class="muted">MP4 · 512 Mo maximum</span>
+      <input id="video" name="video" type="file" accept=".mp4,video/mp4" required>
+    </label>
+
+    <div class="grid-2">
+      <label class="field"><span>Type d’œuvre</span>
+        <select id="work_type" name="work_type"><option>Série</option><option>Film</option><option>Court métrage</option><option>Documentaire</option><option>Autre</option></select></label>
+      <div class="field"><span>Langues parlées</span>
+        <div class="with-toggle"><input id="languages" name="languages" maxlength="200" placeholder="Ex. français, arabe tunisien"><label class="toggle"><input type="checkbox" name="languages_unknown" data-for="languages"> Inconnu</label></div></div>
+    </div>
+
+    <details class="disclosure">
+      <summary><span>Contexte et exclusions</span><span class="muted">facultatif</span></summary>
+      <div class="disclosure-body">
+        <p class="muted">Ces précisions aident le Cultural Integrity Guard. La langue parlée ne suffit jamais à situer l’histoire.</p>
+        <div class="grid-2">
+          <div class="field"><span>Lieu de l’action</span><div class="with-toggle"><input id="location" name="location" maxlength="200" placeholder="Ex. Tunis"><label class="toggle"><input type="checkbox" name="location_unknown" data-for="location"> Inconnu</label></div></div>
+          <div class="field"><span>Époque de l’action</span><div class="with-toggle"><input id="period" name="period" maxlength="200" placeholder="Ex. années 1990"><label class="toggle"><input type="checkbox" name="period_unknown" data-for="period"> Inconnu</label></div></div>
+        </div>
+        <div class="field"><span>Intention narrative</span><div class="with-toggle"><input id="intention" name="intention" maxlength="200" placeholder="Ex. comédie sociale en cuisine"><label class="toggle"><input type="checkbox" name="intention_unknown" data-for="intention"> Inconnu</label></div></div>
+        <div class="field"><span>Catégories de produits à exclure</span>
+          <div class="chips-check">
+            <label><input type="checkbox" name="excluded_categories" value="boisson_sans_alcool"><span>Boisson sans alcool</span></label>
+            <label><input type="checkbox" name="excluded_categories" value="boisson_alcoolisee"><span>Boisson alcoolisée</span></label>
+            <label><input type="checkbox" name="excluded_categories" value="alimentaire"><span>Alimentaire</span></label>
+            <label><input type="checkbox" name="excluded_categories" value="cuisine_ustensiles"><span>Matériel de cuisine</span></label>
+            <label><input type="checkbox" name="excluded_categories" value="entretien_menager"><span>Entretien ménager</span></label>
+            <label><input type="checkbox" name="excluded_categories" value="cosmetique_hygiene"><span>Cosmétique</span></label>
+            <label><input type="checkbox" name="excluded_categories" value="technologie"><span>Technologie</span></label>
+            <label><input type="checkbox" name="excluded_categories" value="mode_accessoires"><span>Mode</span></label>
+            <label><input type="checkbox" name="excluded_categories" value="tabac"><span>Tabac</span></label>
+            <label><input type="checkbox" name="excluded_categories" value="pharmacie_sante"><span>Santé</span></label>
+          </div></div>
+        <label class="field"><span>Intervalles à ne pas modifier</span><input id="excluded_intervals" name="excluded_intervals" maxlength="300" placeholder="Ex. 01:30-01:45, 03:19-04:08"></label>
+        <label class="field"><span>Précisions</span><textarea id="description" name="description" maxlength="1000" rows="3" placeholder="Traditions à protéger, scènes sensibles, consignes de la production."></textarea></label>
+      </div>
+    </details>
+
+    <div class="consents" role="group" aria-labelledby="consents-title">
+      <p id="consents-title" class="consents-title">Deux autorisations sont nécessaires</p>
+      <label class="check-row"><input type="checkbox" name="consent_processing" required><span>Je suis autorisé(e) à traiter et modifier cette vidéo (droits d’auteur, droit à l’image et à la voix).<span class="cap">Angle Droits</span></span></label>
+      <label class="check-row"><input type="checkbox" name="consent_provider" required><span>J’accepte l’envoi d’images échantillonnées et du dialogue voisin à Google Gemini. L’offre gratuite peut servir à améliorer leurs modèles.<span class="cap">Angle Données · le calcul des plans et la transcription restent locaux</span></span></label>
+    </div>
+
+    <div class="form-foot"><p id="status" class="status" role="status">Choisissez une vidéo pour commencer.</p><button id="submit" class="btn primary">Analyser la vidéo</button></div>
+  </form>
+
+  <div id="progress-card" class="card progress-card" hidden>
+    <div><h2 id="progress-title">Analyse en cours</h2>
+    <p id="progress-sub" class="muted">Cela prend quelques minutes. Vous pouvez garder cette page ouverte.</p></div>
+    <ol id="steps" class="progress-list" aria-label="Phases de l’analyse">
+      <li>Détection des plans</li><li>Transcription audio</li><li>Extraction des images</li><li>Scènes et contexte</li><li>Revue des zones</li><li>Vérification</li>
+    </ol>
+    <div class="bar-track" aria-hidden="true"><span id="progress-bar"></span></div>
+    <div class="progress-actions"><button id="resume" class="btn secondary" type="button" hidden>Reprendre l’analyse</button><a id="log" class="link" hidden>Afficher le journal</a></div>
+  </div>
+
+  <div id="results" hidden>
+    <section class="overview" aria-label="Vue d’ensemble">
+      <h2 id="overview-text" class="overview-text"></h2>
+      <div id="videomap" class="videomap" role="group" aria-label="Carte de la vidéo : scènes colorées par risque et placements proposés"></div>
+      <div id="videomap-legend" class="legend"></div>
+      <p id="overview-meta" class="meta-line"></p>
+    </section>
+
+    <section class="block">
+      <div class="block-head"><h2>Placements proposés</h2><p class="muted">Classés par score, chacun vérifié sur six images. Rien n’est modifié : ce sont des propositions que vous validerez à l’étape suivante. Ouvrez un placement pour voir l’avis du Cultural Integrity Guard.</p></div>
+      <div id="candidates" class="rows"></div>
+    </section>
+
+    <section id="guard-section" class="block" hidden>
+      <div class="block-head"><h2>Scènes protégées et à vérifier</h2><p class="muted">Le Cultural Integrity Guard évalue chaque scène avant toute proposition. Une scène à risque élevé ne reçoit aucun placement ; la décision finale reste au réalisateur.</p></div>
+      <div id="guard-scenes" class="rows"></div>
+    </section>
+
+    <section class="block" aria-label="Détails de l’analyse" style="gap:12px">
+      <details class="disclosure card-disclosure"><summary><span>Vidéo source</span><span class="muted">pour vérifier un intervalle</span></summary>
+        <div class="disclosure-body"><video id="player" controls preload="metadata"></video></div></details>
+      <details class="disclosure card-disclosure"><summary><span>Autres intervalles examinés</span><span id="others-count" class="muted"></span></summary>
+        <div class="disclosure-body"><div id="rejected" class="rows"></div></div></details>
+      <details class="disclosure card-disclosure"><summary><span>Scènes et contexte</span><span id="scenes-count" class="muted"></span></summary>
+        <div class="disclosure-body"><div id="scenes" class="list"></div></div></details>
+      <details class="disclosure card-disclosure"><summary><span>Transcription</span></summary>
+        <div class="disclosure-body"><div id="transcript" class="list"></div></div></details>
+      <details class="disclosure card-disclosure"><summary><span>Plans détectés</span></summary>
+        <div class="disclosure-body"><div id="shots" class="shots"></div></div></details>
+    </section>
+
+    <footer class="step-foot"><a id="download" class="link" download>Télécharger le résultat (JSON)</a><button type="button" class="btn primary" data-go="2">Continuer · Produits</button></footer>
+  </div>
+</section>
+
+<!-- ============ ÉTAPE 2 · PRODUITS ============ -->
+<section class="stage" id="stage-2" data-step="2">
+  <header class="stage-head">
+    <h1 tabindex="-1">Produits et placements</h1>
+    <p class="lede">Ajoutez les produits du sponsor. SceneLine propose où les placer et pourquoi. Vous décidez, et rien n’est modifié avant votre accord.</p>
+    <nav class="axes" data-axes="2" aria-label="Angles éthiques actifs à cette étape"></nav>
+  </header>
+
+  <section id="matching" class="card" hidden>
+    <div class="card-head"><h2>Catalogue</h2>
+      <div class="inline-actions"><button id="demo-products" type="button" class="link">Charger la démo</button><button id="toggle-add" type="button" class="btn secondary small">Ajouter un produit</button></div></div>
+
+    <section id="context-bar" class="context-bar" hidden>
+      <div class="context-line"><p id="context-text"></p><button id="edit-context" class="link" type="button">Modifier</button></div>
+      <form id="context-form" class="sheet" hidden>
+        <p class="muted" style="color:var(--ink)">Le lieu déclaré permet au Cultural Integrity Guard de vérifier la cohérence culturelle des produits. La langue parlée ne suffit jamais à situer l’histoire.</p>
+        <div class="grid-2"><label class="field"><span>Lieu de l’action</span><input name="location" maxlength="200" placeholder="Ex. Paris, France"></label>
+          <label class="field"><span>Époque de l’action</span><input name="period" maxlength="200" placeholder="Ex. contemporaine"></label></div>
+        <label class="field"><span>Intention narrative</span><input name="intention" maxlength="200" placeholder="Ex. comédie sociale en cuisine"></label>
+        <div class="sheet-foot"><button class="btn primary small">Enregistrer le contexte</button><button type="button" id="cancel-context" class="btn quiet small">Annuler</button></div>
+      </form>
+    </section>
+
+    <form id="product-form" class="sheet" hidden>
+      <h3>Nouveau produit</h3>
+      <div class="grid-2"><label class="field"><span>Nom</span><input name="name" required maxlength="80"></label>
+        <label class="field"><span>Catégorie</span><select name="category" id="pf-category"></select></label></div>
+      <label class="field"><span>Description</span><textarea name="description" rows="2" maxlength="1000"></textarea></label>
+      <div class="grid-2"><label class="field"><span>Taille</span><select name="size_class"><option value="petit">Petit</option><option value="moyen" selected>Moyen</option><option value="grand">Grand</option></select></label>
+        <label class="field"><span>Restrictions d’usage <em>(facultatif)</em></span><input name="exclusions" maxlength="500"></label></div>
+      <div class="field"><span>Modes d’intégration</span><div class="chips-check" id="pf-modes"></div></div>
+      <div class="grid-2"><label class="field"><span>Pays d’origine <em>(facultatif)</em></span><input name="origin" maxlength="80" placeholder="Ex. France"></label>
+        <label class="field"><span>Marchés visés par la campagne <em>(facultatif)</em></span><input name="markets" maxlength="200" placeholder="Ex. France, Belgique"></label></div>
+      <label class="field"><span>Provenance du visuel</span><input name="provenance" required maxlength="300" placeholder="Ex. photo de l’équipe, licence CC BY-SA"><em>Obligatoire : chaque visuel doit avoir une origine et une licence déclarées.</em></label>
+      <label class="dropzone compact" for="pf-image"><strong id="pf-file">Choisir le visuel (PNG, JPG, WebP)</strong><input id="pf-image" name="image" type="file" accept="image/png,image/jpeg,image/webp" required></label>
+      <div class="sheet-foot"><button class="btn primary small">Ajouter</button><button type="button" id="cancel-add" class="btn quiet small">Annuler</button></div>
+    </form>
+
+    <div id="catalog" class="product-grid"></div>
+    <div class="card-foot"><p id="match-status" class="status" role="status"></p><button id="run-match" type="button" class="btn primary">Lancer l’appariement</button></div>
+  </section>
+
+  <section id="proposals-card" class="block" hidden>
+    <div class="card-head"><h2>Propositions</h2>
+      <label class="who">Décisions au nom de <input id="reviewer" maxlength="80" placeholder="Votre nom"></label></div>
+    <div id="proposals" class="stack"></div>
+    <div id="unmatched" class="list"></div>
+    <details class="disclosure card-disclosure"><summary><span>Paires écartées par les règles</span></summary><div class="disclosure-body"><div id="exclusions" class="list"></div></div></details>
+    <details class="disclosure card-disclosure"><summary><span>Journal des décisions</span></summary><div class="disclosure-body"><div id="journal" class="list"></div></div></details>
+  </section>
+
+  <footer class="step-foot"><button type="button" class="btn quiet" data-go="1">← Retour à l’analyse</button><button type="button" class="btn primary" data-go="3" data-needs="3">Continuer · Génération</button></footer>
+</section>
+
+<!-- ============ ÉTAPE 3 · GÉNÉRATION ============ -->
+<section class="stage" id="stage-3" data-step="3">
+  <header class="stage-head">
+    <h1 tabindex="-1">Kit de génération</h1>
+    <p class="lede"><strong>SceneLine ne génère pas la vidéo.</strong> Il prépare la scène, l’asset du produit et le prompt : donnez-les à l’outil de génération vidéo de votre choix.</p>
+    <nav class="axes" data-axes="3" aria-label="Angles éthiques actifs à cette étape"></nav>
+  </header>
+  <div id="kit-list" class="stack"></div>
+  <footer class="step-foot"><button type="button" class="btn quiet" data-go="2">← Retour aux produits</button><p id="step3-why" class="status step-why" role="status"></p><button type="button" id="go-integration" class="btn primary" data-go="4" disabled>Continuer · Intégration</button></footer>
+</section>
+
+<!-- ============ ÉTAPE 4 · INTÉGRATION ============ -->
+<section class="stage" id="stage-4" data-step="4">
+  <header class="stage-head">
+    <h1 tabindex="-1">Intégrer le résultat</h1>
+    <p class="lede">Importez la vidéo produite par l’outil. SceneLine la replace sur l’intervalle approuvé, garde l’audio d’origine et l’original, puis prépare la comparaison.</p>
+    <nav class="axes" data-axes="4" aria-label="Angles éthiques actifs à cette étape"></nav>
+  </header>
+  <div id="integrate-list" class="stack"></div>
+
+  <section id="cmp-player" class="card compare" hidden aria-labelledby="t-cmp">
+    <div class="card-head"><h2 id="t-cmp">Comparaison</h2><a id="cmp-log" class="link" download>Relevé des modifications</a></div>
+    <div class="compare-bar">
+      <select id="cmp-select" aria-label="Placement à comparer"></select>
+      <div class="segmented" role="radiogroup" aria-label="Version affichée">
+        <label><input type="radio" name="cmp-mode" value="original" checked><span>Original</span></label>
+        <label><input type="radio" name="cmp-mode" value="edited"><span>Version éditée</span></label>
+      </div>
+    </div>
+    <div class="stage-video"><video id="cmp-video" controls preload="metadata"></video><span id="cmp-now" class="tag-now" hidden></span></div>
+    <div id="cmp-track" class="track" role="group" aria-label="Chronologie de l’extrait"></div>
+    <p id="cmp-caption" class="caption"></p>
+    <div id="cmp-fiche" class="fiche"></div>
+  </section>
+
+  <footer class="step-foot"><button type="button" class="btn quiet" data-go="3">← Retour au kit</button><span class="muted">Projet terminé quand la comparaison vous convient.</span></footer>
+</section>
+
+<!-- ============ ÉTHIQUE 360 ============ -->
+<section class="stage" id="stage-0" data-step="0">
+  <header class="stage-head">
+    <h1 tabindex="-1">Éthique 360</h1>
+    <p class="lede">Les six angles du cahier des charges, et ce que SceneLine fait réellement pour chacun.</p>
+  </header>
+  <section id="ethics-list" aria-label="Six angles"></section>
+  <section class="card" aria-labelledby="t-nope">
+    <h2 id="t-nope">Ce que SceneLine ne fait pas</h2>
+    <ul class="axbody" id="ethics-nope" style="gap:8px"></ul>
+  </section>
+  <footer class="step-foot"><button type="button" id="ethics-back" class="btn primary">Retour au projet</button></footer>
+</section>
+
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -1,0 +1,4 @@
+faster-whisper==1.2.1
+scenedetect==0.7.3
+opencv-python
+Flask==3.1.3

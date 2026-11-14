@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: block; src: url('assets/fonts/inter-latin.woff2') format('woff2'); }
+        #root { position: absolute; inset: 0; background: #f5f5f7; font-family: 'Inter', sans-serif; color: #1d1d1f; overflow: hidden; }
+        #s5-stage { position: absolute; inset: 0; }
+        #s5-lines { position: absolute; left: 0; right: 0; top: 300px; display: flex; flex-direction: column; align-items: center; gap: 34px; }
+        .ln { display: flex; align-items: center; gap: 30px; font-size: 96px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; }
+        .ln i { display: block; width: 44px; height: 36px; border-radius: 8px; background: #ffcc00; }
+        #s5-end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #s5-lock { display: flex; align-items: center; gap: 30px; }
+        #s5-mark { width: 170px; height: 143px; overflow: visible; }
+        #s5-word { font-size: 120px; font-weight: 600; letter-spacing: -0.035em; }
+        #s5-sub { margin-top: 40px; font-size: 40px; font-weight: 600; letter-spacing: -0.01em; }
+        #s5-foot { margin-top: 16px; font-size: 28px; color: #5b5b61; }
+      </style>
+      <div id="root" data-composition-id="s5" data-width="1920" data-height="1080">
+        <div id="s5-stage">
+          <div id="s5-lines">
+            <div class="ln" id="s5-l1"><i></i>L’IA propose.</div>
+            <div class="ln" id="s5-l2"><i></i>Le créateur décide.</div>
+            <div class="ln" id="s5-l3"><i></i>Le spectateur est informé.</div>
+          </div>
+          <div id="s5-end">
+            <div id="s5-lock">
+              <svg id="s5-mark" viewBox="0 0 64 64">
+                <rect id="s5-frame" x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6" pathLength="100" stroke-dasharray="100 120" stroke-dashoffset="110" />
+                <rect id="s5-chip" x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00" />
+              </svg>
+              <div id="s5-word">SceneLine</div>
+            </div>
+            <div id="s5-sub">IA éthique 360</div>
+            <div id="s5-foot">Hackathon IA Éthique 360 · 2026</div>
+          </div>
+        </div>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        const E = "power3.out";
+        [0.27, 1.73, 3.05].forEach((t, i) => {
+          const id = "#s5-l" + (i + 1);
+          tl.fromTo(id, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, t);
+          tl.fromTo(id + " i", { scale: 0, rotation: -12 }, { scale: 1, rotation: 0, duration: 0.45, ease: "back.out(2.6)" }, t + 0.08);
+        });
+        tl.to("#s5-lines", { opacity: 0, y: -40, duration: 0.45, ease: "power2.in" }, 4.86);
+        tl.set(["#s5-word", "#s5-sub", "#s5-foot", "#s5-chip"], { opacity: 0 }, 0);
+        tl.fromTo("#s5-frame", { attr: { "stroke-dashoffset": 110 } }, { attr: { "stroke-dashoffset": 0 }, duration: 0.8, ease: "power2.inOut" }, 5.18);
+        tl.fromTo("#s5-chip", { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "back.out(2.2)" }, 5.68);
+        tl.fromTo("#s5-word", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.5, ease: E }, 5.91);
+        tl.fromTo("#s5-sub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 6.23);
+        tl.fromTo("#s5-foot", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 6.45);
+        window.__timelines["s5"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

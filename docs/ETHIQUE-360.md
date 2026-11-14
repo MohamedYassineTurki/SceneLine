@@ -1,0 +1,88 @@
+# Éthique 360 · six angles, des mécanismes concrets
+
+SceneLine n'ajoute pas l'éthique après coup : chaque angle du cahier des charges correspond à un
+**comportement du code**, visible dans l'interface. Chaque étape affiche en tête les angles qu'elle sollicite,
+et la page **Éthique 360** de l'application relie chaque engagement à l'endroit où le vérifier.
+
+```mermaid
+flowchart LR
+    subgraph E1["1 · Analyse"]
+      D1[Données] --- R1[Droits] --- C1[Cultures] --- P1[Planète]
+    end
+    subgraph E2["2 · Produits"]
+      CR2[Créateurs] --- C2[Cultures] --- R2[Droits] --- D2[Données]
+    end
+    subgraph E3["3 · Génération"]
+      CR3[Créateurs] --- R3[Droits] --- P3[Planète]
+    end
+    subgraph E4["4 · Intégration"]
+      T4[Transparence] --- CR4[Créateurs] --- R4[Droits]
+    end
+    E1 --> E2 --> E3 --> E4
+```
+
+---
+
+## 1 · Les créateurs : *qui garde la main ?*
+
+| Mécanisme | Où dans le code |
+|---|---|
+| Rien n'est modifié sans l'accord du producteur : Accepter, Refuser, Ajuster, Retenir, Choisir une autre surface | [`decisions.py`](../decisions.py) · `decide()` |
+| Le producteur exclut des catégories et des intervalles, et déclare le contexte | [`context.py`](../context.py) |
+| Chaque décision est **signée, datée, liée à une révision par empreinte SHA-256**, dans un journal | [`decisions.py`](../decisions.py) · `digest()` |
+| La vidéo originale n'est **jamais modifiée** ; une révision modifiée après approbation doit être décidée à nouveau | [`render.py`](../render.py) |
+| Les règles de décision sont du code lisible, pas le texte libre d'un modèle | [`understand.py`](../understand.py) · `classify()` |
+
+## 2 · Les droits : *consentement, droits d'auteur, droit à l'image*
+
+| Mécanisme | Où dans le code |
+|---|---|
+| **Deux autorisations obligatoires** à l'import (traiter l'œuvre ; envoyer des images à Gemini), horodatées | [`context.py`](../context.py), [`web/index.html`](../web/index.html) |
+| Chaque visuel de produit exige une **provenance et une licence déclarées** | [`catalog.py`](../catalog.py) |
+| Envoi à Kling : **accord par placement**, vérifié côté serveur | [`kling.py`](../kling.py) · `start()` |
+| Le relevé rappelle qu'il ne remplace pas les obligations légales de signalement | [`render.py`](../render.py) |
+
+## 3 · Les données : *d'où viennent-elles, où vont-elles ?*
+
+| Mécanisme | Où dans le code |
+|---|---|
+| Plans, transcription et images sont calculés **en local** ; seules des images échantillonnées et le dialogue voisin partent vers Gemini | [`analyze.py`](../analyze.py), [`understand.py`](../understand.py) |
+| Les **scènes protégées ne sont jamais envoyées** à la recherche de surface | [`understand.py`](../understand.py) |
+| Le modèle utilisé, le nombre d'appels et d'images envoyées sont **affichés** | `metrics` dans `sceneline.json` |
+| La clé Kling reste **en mémoire**, jamais sur disque ni dans un journal ; le plan n'est servi que par un lien aléatoire éphémère | [`kling.py`](../kling.py), [`app.py`](../app.py) · `before_request` |
+| Tous les fichiers restent dans le dossier du projet | `output/web-runs/<id>/` |
+
+## 4 · Cultures et langues : *quelles cultures le modèle met-il en avant, ou efface-t-il ?*
+
+| Mécanisme | Où dans le code |
+|---|---|
+| **Cultural Integrity Guard** : cinq critères (historique, culturel, narratif, sensibilité, intention artistique), risque faible / moyen / élevé, justification pour chacun | [`guard.py`](../guard.py) · `assess()` |
+| Scènes sacrées, traditionnelles, commémoratives, sensibles, titres et génériques **protégés** : aucun placement | [`guard.py`](../guard.py) · `assess_scene()` |
+| **Cohérence géographique** : le lieu est déclaré, chaque produit porte une origine et des marchés visés ; un produit hors marché est écarté | [`guard.py`](../guard.py) · `geographic()` |
+| **La langue parlée ne décide jamais du pays** de l'histoire : une œuvre francophone peut se passer à Tunis, Dakar ou Montréal | [`guard.py`](../guard.py) · `setting_country()` |
+| Une scène est protégée seulement au moment sensible, pas sur tout le thème de l'œuvre | prompt de scènes, [`understand.py`](../understand.py) |
+
+## 5 · La transparence : *le public sait-il ce qui a été généré ?*
+
+| Mécanisme | Où dans le code |
+|---|---|
+| Étiquette **« Placement virtuel · [Produit] »** dans le lecteur pendant toute la durée du placement | [`web/compare.js`](../web/compare.js) |
+| **Relevé des modifications** : produit, intervalle, empreinte, approbateur, date, outil, audio, avertissements, `generated_by_sceneline: false` | [`render.py`](../render.py) |
+| Repères jaunes sur la frise : où la vidéo a été modifiée | [`web/compare.js`](../web/compare.js) |
+| Chaque proposition explique **pourquoi** cette surface, ce produit, ce risque | [`web/products.js`](../web/products.js) |
+| L'application dit aussi **ce qu'elle ne fait pas** (page Éthique 360) | [`web/ethics.js`](../web/ethics.js) |
+
+## 6 · La planète : *quel coût énergétique pour quel bénéfice ?*
+
+| Mécanisme | Où dans le code |
+|---|---|
+| **Aucune génération spéculative** : une vidéo n'est générée que pour un placement approuvé, un par un | [`kling.py`](../kling.py), [`kit.py`](../kit.py) |
+| Le travail lourd est **local** ; le modèle léger traite les appels nombreux ; le modèle complet ne sert qu'au contexte | [`understand.py`](../understand.py) |
+| Un appel par intervalle, **scores mis en cache** : un nouveau sponsor ne recalcule que les paires nouvelles | [`matching.py`](../matching.py) |
+| Les scènes protégées et les intervalles exclus ne coûtent aucun appel | [`understand.py`](../understand.py) |
+| Le nombre d'appels et d'images envoyées est affiché | `metrics` |
+
+---
+
+## En une phrase
+> **L'IA propose. Le créateur décide. Le spectateur est informé.**

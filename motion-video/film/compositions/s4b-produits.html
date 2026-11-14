@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="fr">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <!-- Généré par tools/build-demo.mjs : modifier tools/demo-scenes.mjs puis relancer. -->
+    <template>
+      <style>
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: block; src: url('assets/fonts/inter-latin.woff2') format('woff2'); }
+#root { position: absolute; inset: 0; background: #f5f5f7; font-family: 'Inter', sans-serif; color: #1d1d1f; overflow: hidden; }
+.stage { position: absolute; inset: 0; }
+.mk { background-image: linear-gradient(#ffcc00, #ffcc00); background-repeat: no-repeat; background-size: 0% 100%; -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 0 3px; border-radius: 4px; }
+.top { position: absolute; left: 0; right: 0; top: 0; height: 88px; background: #fff; border-bottom: 1px solid #e3e3e8; display: flex; align-items: center; padding: 0 56px; }
+.top .logo { display: flex; align-items: center; gap: 12px; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; width: 360px; }
+.top .logo svg { width: 40px; height: 40px; }
+.steps { flex: 1; display: flex; justify-content: center; }
+.steps .rail { display: flex; gap: 6px; background: #ececf0; border-radius: 999px; padding: 6px; }
+.step { display: flex; align-items: center; gap: 10px; padding: 10px 24px; border-radius: 999px; font-size: 22px; font-weight: 500; color: #5b5b61; }
+.step .num { width: 28px; height: 28px; border-radius: 50%; background: #0066cc; color: #fff; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+
+.step .num svg { width: 16px; height: 16px; }
+.step.todo .num { background: #fff; color: #6e6e73; border: 1px solid #8a8a93; }
+.step.cur { background: #fff; color: #1d1d1f; box-shadow: 0 1px 2px rgba(29,29,31,.12); }
+.top .links { width: 360px; text-align: right; font-size: 22px; color: #1d1d1f; }
+.axes { position: absolute; left: 0; right: 0; top: 112px; display: flex; justify-content: center; align-items: center; gap: 12px; }
+.axes .lbl { font-size: 21px; font-weight: 600; color: #5b5b61; margin-right: 8px; letter-spacing: .04em; text-transform: uppercase; }
+.axc { position: relative; display: flex; align-items: center; gap: 10px; padding: 9px 18px; border-radius: 999px; border: 1px solid #e3e3e8; background: #fff; font-size: 22px; font-weight: 500; color: #6e6e73; }
+.axc .d { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #b4b4bb; box-sizing: border-box; }
+.axc .on { position: absolute; inset: -1px; border-radius: 999px; background: #1d1d1f; display: flex; align-items: center; gap: 10px; padding: 9px 18px; color: #fff; font-size: 22px; font-weight: 500; opacity: 0; }
+.axc .on .d { border: 0; background: #ffcc00; }
+.app { position: absolute; left: 110px; top: 186px; width: 1150px; height: 860px; background: #fff; border: 1px solid #e3e3e8; border-radius: 20px; box-shadow: 0 1px 2px rgba(29,29,31,.08), 0 18px 50px rgba(29,29,31,.07); padding: 44px 52px; overflow: hidden; }
+.app h1 { font-size: 46px; font-weight: 600; letter-spacing: -0.025em; margin: 0; }
+.app .lede { margin-top: 10px; font-size: 24px; color: #5b5b61; line-height: 1.4; }
+.cos { position: absolute; left: 1320px; top: 250px; width: 520px; }
+.stepno { font-size: 22px; font-weight: 600; color: #0066cc; letter-spacing: .06em; text-transform: uppercase; }
+.co { position: relative; margin-top: 30px; padding-left: 26px; font-size: 40px; font-weight: 600; line-height: 1.22; letter-spacing: -0.02em; color: #1d1d1f; }
+.co::before { content: ""; position: absolute; left: 0; top: 8px; width: 8px; height: 34px; border-radius: 3px; background: #ffcc00; }
+.cursor { position: absolute; left: 0; top: 0; width: 34px; height: 34px; z-index: 50; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
+.chk { flex: none; width: 30px; height: 30px; border-radius: 7px; border: 2px solid #8a8a93; background: #fff; position: relative; box-sizing: border-box; }
+.chk .tick { position: absolute; inset: -2px; border-radius: 7px; background: #0066cc; display: flex; align-items: center; justify-content: center; opacity: 0; }
+.chk .tick svg { width: 20px; height: 20px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 56px; padding: 0 28px; border-radius: 12px; font-size: 23px; font-weight: 600; background: #0066cc; color: #fff; }
+.btn.sec { background: #fff; color: #1d1d1f; border: 1px solid #8a8a93; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 999px; font-size: 19px; font-weight: 600; }
+.pill.hi { background: #fdebec; color: #b81d22; } .pill.mid { background: #fdf1dc; color: #8a5100; } .pill.lo { background: #e6f4ea; color: #19732f; }
+.pill .sq { width: 11px; height: 11px; border-radius: 2px; background: currentColor; }
+
+#s4b-scroll { position: relative; }
+#s4b-ctx { margin-top: 22px; padding: 14px 18px; border-radius: 12px; background: #f5f5f7; font-size: 22px; color: #5b5b61; }
+#s4b-ctx b { color: #1d1d1f; font-weight: 600; }
+#s4b-cat { display: flex; gap: 22px; margin-top: 22px; }
+.pc { width: 300px; border: 1px solid #e3e3e8; border-radius: 14px; padding: 14px; }
+.pc .im { height: 170px; border-radius: 10px; background: #f5f5f7; display: flex; align-items: center; justify-content: center; }
+.pc .im img { max-height: 150px; max-width: 220px; }
+.pc b { display: block; margin-top: 12px; font-size: 22px; font-weight: 600; }
+.pc span { display: inline-block; margin-top: 8px; margin-right: 6px; font-size: 16px; padding: 3px 10px; border-radius: 999px; background: #ececf0; color: #5b5b61; }
+#s4b-h2 { margin-top: 40px; font-size: 32px; font-weight: 600; letter-spacing: -0.02em; }
+#s4b-prop { display: flex; gap: 30px; margin-top: 18px; }
+#s4b-th { position: relative; flex: none; width: 440px; height: 248px; border-radius: 12px; overflow: hidden; }
+#s4b-th img { width: 100%; height: 100%; object-fit: cover; object-position: left center; display: block; }
+#s4b-th .rect { position: absolute; left: 34px; top: 112px; width: 80px; height: 104px; border: 3px solid #ffcc00; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0,0,0,.35); }
+#s4b-th .score { position: absolute; right: 12px; top: 12px; background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 18px; font-weight: 600; }
+#s4b-pr b { font-size: 28px; font-weight: 600; }
+#s4b-pr .where { margin-top: 10px; font-size: 20px; color: #5b5b61; }
+#s4b-pr .where em { font-style: normal; color: #0066cc; background: #e8f1fb; padding: 3px 10px; border-radius: 6px; font-weight: 600; margin-right: 8px; }
+.mt { display: grid; grid-template-columns: 150px 330px 60px; align-items: center; gap: 14px; margin-top: 14px; font-size: 19px; }
+.mt .tr { height: 8px; border-radius: 4px; background: #ececf0; overflow: hidden; }
+.mt .fl { display: block; height: 100%; background: #1d1d1f; border-radius: 4px; transform-origin: left center; }
+#s4b-guard { margin-top: 26px; border: 1.5px solid #1d1d1f; border-radius: 14px; padding: 20px 24px; }
+#s4b-guard .gt { font-size: 22px; font-weight: 600; }
+#s4b-guard .gl { margin-top: 4px; font-size: 18px; color: #5b5b61; }
+#s4b-cmp { display: flex; align-items: center; gap: 18px; margin-top: 16px; }
+#s4b-cmp .bi { width: 74px; height: 74px; border-radius: 10px; background: #f5f5f7; display: flex; align-items: center; justify-content: center; }
+#s4b-cmp .bi img { max-height: 62px; filter: grayscale(1); opacity: .7; }
+#s4b-cmp .nm { font-size: 21px; font-weight: 600; display: flex; flex-direction: column; gap: 6px; width: 180px; }
+.bx { border: 1px solid #8a8a93; border-radius: 10px; padding: 10px 16px; min-width: 200px; }
+.bx small { display: block; font-size: 15px; color: #5b5b61; }
+.bx b { font-size: 22px; font-weight: 600; }
+#s4b-ne { width: 120px; text-align: center; font-size: 17px; font-weight: 600; color: #b81d22; line-height: 1.2; }
+#s4b-prio { margin-top: 16px; display: flex; gap: 14px; align-items: center; padding: 12px 16px; border-radius: 10px; background: #fff8d6; font-size: 20px; font-weight: 600; color: #1d1d1f; }
+#s4b-prio .bar { flex: none; width: 6px; height: 30px; border-radius: 3px; background: #ffcc00; transform-origin: top; }
+#s4b-acts { display: flex; gap: 14px; align-items: center; margin-top: 22px; height: 56px; position: relative; }
+#s4b-ok { position: absolute; left: 0; top: 0; height: 56px; display: inline-flex; align-items: center; gap: 10px; padding: 0 22px; border-radius: 12px; border: 1px solid #0066cc; background: #e8f1fb; color: #0058b0; font-size: 22px; font-weight: 600; opacity: 0; }
+#s4b-ok svg { width: 22px; height: 22px; }
+      </style>
+      <div id="root" data-composition-id="s4b" data-width="1920" data-height="1080">
+        <div id="s4b-stage" class="stage">
+          <div class="top">
+            <div class="logo"><svg viewBox="0 0 64 64"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></svg>SceneLine</div>
+            <div class="steps"><div class="rail"><div class="step done"><span class="num"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Analyse</div><div class="step cur"><span class="num">2</span>Produits</div><div class="step done"><span class="num"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Génération</div><div class="step done"><span class="num"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Intégration</div></div></div>
+            <div class="links">Éthique 360</div>
+          </div>
+          <div class="axes"><span class="lbl">Éthique 360</span><div class="axc" id="s4b-ax-createurs"><span class="d"></span>Créateurs<div class="on"><span class="d"></span>Créateurs</div></div><div class="axc" id="s4b-ax-droits"><span class="d"></span>Droits<div class="on"><span class="d"></span>Droits</div></div><div class="axc" id="s4b-ax-donnees"><span class="d"></span>Données<div class="on"><span class="d"></span>Données</div></div><div class="axc" id="s4b-ax-cultures"><span class="d"></span>Cultures et langues<div class="on"><span class="d"></span>Cultures et langues</div></div><div class="axc" id="s4b-ax-transparence"><span class="d"></span>Transparence<div class="on"><span class="d"></span>Transparence</div></div><div class="axc" id="s4b-ax-planete"><span class="d"></span>Planète<div class="on"><span class="d"></span>Planète</div></div></div>
+          <div class="app" id="s4b-app">
+            <div id="s4b-scroll">
+            <h1>Produits et placements</h1>
+            <div id="s4b-ctx"><b>Contexte de l’œuvre</b> · Lieu : <b>Paris, France</b> · Époque : contemporaine</div>
+            <div id="s4b-cat">
+              <div class="pc" id="s4b-boga"><div class="im"><img src="assets/img/boga-cidre.png" alt="" /></div><b>Boga Cidre</b><span>Boisson sans alcool</span><span>Tunisie</span></div>
+              <div class="pc" id="s4b-badoit"><div class="im"><img src="assets/img/badoit.png" alt="" /></div><b>Badoit 1 L</b><span>Boisson sans alcool</span><span>France</span></div>
+            </div>
+            <div id="s4b-h2">Propositions</div>
+            <div id="s4b-prop">
+              <div id="s4b-th"><img src="assets/img/cuisine-still.jpg" alt="" /><div class="rect" id="s4b-rect"></div><div class="score">7,7/10</div></div>
+              <div id="s4b-pr"><b>Badoit 1 L</b>
+                <div class="where"><em>00:30 – 00:40</em>Plan de travail en inox</div>
+                <div class="mt"><span>Cohérence</span><span class="tr"><span class="fl" style="width:80%"></span></span><b>8/10</b></div>
+                <div class="mt"><span>Discrétion</span><span class="tr"><span class="fl" style="width:70%"></span></span><b>7/10</b></div>
+                <div class="mt"><span>Faisabilité</span><span class="tr"><span class="fl" style="width:80%"></span></span><b>8/10</b></div>
+              </div>
+            </div>
+            <div id="s4b-guard">
+              <div class="gt">Produit écarté par le Cultural Integrity Guard</div>
+              <div class="gl">SceneLine ne le propose pas pour ce placement. Le réalisateur peut en décider autrement.</div>
+              <div id="s4b-cmp">
+                <div class="bi"><img src="assets/img/boga-cidre.png" alt="" /></div>
+                <div class="nm">Boga Cidre<span class="pill hi"><span class="sq"></span>Risque élevé</span></div>
+                <div class="bx" id="s4b-bx1"><small>Lieu de l’action</small><b>Paris, France</b></div>
+                <div id="s4b-ne">ne correspond pas à</div>
+                <div class="bx" id="s4b-bx2"><small>Marché visé par Boga Cidre</small><b>Tunisie</b></div>
+              </div>
+              <div id="s4b-prio"><span class="bar"></span>Priorité à la culture de la scène : seuls les produits qui la respectent sont proposés.</div>
+            </div>
+            <div id="s4b-acts"><span class="btn" id="s4b-acc">Accepter</span><span class="btn sec">Refuser</span><span class="btn sec">Ajuster…</span>
+              <span id="s4b-ok"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#0058b0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Approuvé · par Producteur</span></div>
+            </div>
+          </div>
+          <div class="cos" id="s4b-cos"><div class="stepno">Étape 2 · Produits</div><p class="co" id="s4b-co0">Le Cultural Integrity Guard vérifie chaque produit.</p><p class="co" id="s4b-co1">Boga Cidre écartée : elle ne correspond ni au lieu ni au public de l’œuvre.</p><p class="co" id="s4b-co2">La culture de la scène passe en priorité.</p><p class="co" id="s4b-co3">Rien n’est modifié sans votre accord.</p></div>
+          <svg class="cursor" id="s4b-cur" viewBox="0 0 24 24"><path d="M3 2l17 9.5-7.4 1.6L9 21z" fill="#1d1d1f" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        const E = "power3.out";
+        const TICK = "<svg viewBox=\"0 0 20 20\"><path d=\"M4 10.5l4 4 8-9\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>";
+        tl.fromTo("#s4b-app", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 0.05);
+        tl.fromTo("#s4b-cos .stepno", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: E }, 0.15);
+        tl.fromTo(["#s4b-ax-createurs .on", "#s4b-ax-cultures .on"], { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2)", stagger: 0.12 }, 0.3);
+        tl.fromTo("#s4b-co0", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 2.18);
+        tl.fromTo("#s4b-co1", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 5.58);
+        tl.to("#s4b-co0", { color: "#8a8a93", duration: 0.3 }, 5.58);
+        tl.fromTo("#s4b-co2", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 12.74);
+        tl.to("#s4b-co1", { color: "#8a8a93", duration: 0.3 }, 12.74);
+        tl.fromTo("#s4b-co3", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 18.61);
+        tl.to("#s4b-co2", { color: "#8a8a93", duration: 0.3 }, 18.61);
+        
+        tl.set("#s4b-cur", { x: 900, y: 1100 }, 0);
+        tl.fromTo("#s4b-ctx", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: E }, 0.4);
+        tl.fromTo(["#s4b-boga", "#s4b-badoit"], { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: E, stagger: 0.25 }, 0.8);
+        tl.to("#s4b-scroll", { y: -372, duration: 0.9, ease: "power3.inOut" }, 1.88);
+        tl.fromTo("#s4b-th", { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.5, ease: E }, 2.28);
+        tl.fromTo("#s4b-rect", { opacity: 0, scale: 1.3 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" }, 2.88);
+        tl.fromTo("#s4b-pr", { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.5, ease: E }, 2.58);
+        tl.fromTo("#s4b-pr .fl", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power2.out", stagger: 0.15 }, 3.68);
+        tl.fromTo("#s4b-guard", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 5.58);
+        tl.fromTo(["#s4b-bx1", "#s4b-ne", "#s4b-bx2"], { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: E, stagger: 0.25 }, 5.98);
+        tl.to("#s4b-bx2", { borderColor: "#b81d22", backgroundColor: "#fdebec", duration: 0.3 }, 9.18);
+        tl.to("#s4b-bx1", { borderColor: "#1d1d1f", duration: 0.3 }, 9.18);
+        tl.to("#s4b-boga", { opacity: 0.45, filter: "grayscale(1)", duration: 0.4 }, 9.18);
+        tl.to("#s4b-ne", { scale: 1.15, duration: 0.15, yoyo: true, repeat: 1 }, 9.18);
+        tl.fromTo("#s4b-prio", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 12.74);
+        tl.fromTo("#s4b-prio .bar", { scaleY: 0 }, { scaleY: 1, duration: 0.35, ease: E }, 12.84);
+        tl.to("#s4b-badoit", { borderColor: "#ffcc00", boxShadow: "0 0 0 3px #ffcc00", duration: 0.3 }, 15.74);
+        tl.fromTo("#s4b-acts", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 17.71);
+        tl.to("#s4b-cur", { x: 250, y: 942, duration: 0.45, ease: "power2.inOut" }, 18.16);
+        tl.to("#s4b-cur", { scale: 0.82, duration: 0.08, yoyo: true, repeat: 1 }, 18.61);
+        tl.to("#s4b-acts .btn", { opacity: 0, duration: 0.15 }, 18.71);
+        tl.to("#s4b-ok", { opacity: 1, duration: 0.25 }, 18.71);
+        tl.to("#s4b-cur", { opacity: 0, duration: 0.3 }, 19.31);
+        window.__timelines["s4b"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

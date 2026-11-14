@@ -1,0 +1,10 @@
+{
+  "note": "Annotation manuelle approximative sur BALTRINGUE #1, à affiner. Temps en secondes sur la vidéo originale.",
+  "exclure": [
+    {"debut": 17, "fin": 29, "raison": "Générique de début (titre animé)"},
+    {"debut": 248, "fin": 278.4, "raison": "Générique de fin"}
+  ],
+  "pistes": [
+    {"debut": 30, "fin": 35, "raison": "Plan large de cuisine, panneau métallique à droite, hors de l'action (à contrôler)"}
+  ]
+}

@@ -1,0 +1,41 @@
+# Environnement Python
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets : jamais versionnés
+.env
+.gemini-keys
+motion-video/.env
+
+# Données de travail et projets analysés
+output/
+Assets/
+Video/
+kling-pack/
+
+# Outils locaux et notes de travail
+.claude/
+AGENT-CONTEXT.md
+node_modules/
+
+# Vidéo de présentation : extraits sous droits, caches et brouillons
+motion-video/assets/footage/
+motion-video/film/assets/footage/
+motion-video/**/renders/
+motion-video/film/snapshots/
+motion-video/film/.hyperframes/
+motion-video/film/.thumbnails/
+motion-video/film/.transcode-cache/
+motion-video/film/.waveform-cache/
+motion-video/film/AGENTS.md
+motion-video/film/CLAUDE.md
+motion-video/assets/sfx/
+motion-video/assets/sfx-v2/
+motion-video/assets/vo/
+motion-video/vo/old-daniel/
+motion-video/vo/samples/
+motion-video/interview/*.jpg
+
+validation/phase1-demo.md
+motion-video/interview/transcription-base.txt

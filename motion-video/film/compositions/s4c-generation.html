@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="fr">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <!-- Généré par tools/build-demo.mjs : modifier tools/demo-scenes.mjs puis relancer. -->
+    <template>
+      <style>
+@font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: block; src: url('assets/fonts/inter-latin.woff2') format('woff2'); }
+#root { position: absolute; inset: 0; background: #f5f5f7; font-family: 'Inter', sans-serif; color: #1d1d1f; overflow: hidden; }
+.stage { position: absolute; inset: 0; }
+.mk { background-image: linear-gradient(#ffcc00, #ffcc00); background-repeat: no-repeat; background-size: 0% 100%; -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 0 3px; border-radius: 4px; }
+.top { position: absolute; left: 0; right: 0; top: 0; height: 88px; background: #fff; border-bottom: 1px solid #e3e3e8; display: flex; align-items: center; padding: 0 56px; }
+.top .logo { display: flex; align-items: center; gap: 12px; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; width: 360px; }
+.top .logo svg { width: 40px; height: 40px; }
+.steps { flex: 1; display: flex; justify-content: center; }
+.steps .rail { display: flex; gap: 6px; background: #ececf0; border-radius: 999px; padding: 6px; }
+.step { display: flex; align-items: center; gap: 10px; padding: 10px 24px; border-radius: 999px; font-size: 22px; font-weight: 500; color: #5b5b61; }
+.step .num { width: 28px; height: 28px; border-radius: 50%; background: #0066cc; color: #fff; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+
+.step .num svg { width: 16px; height: 16px; }
+.step.todo .num { background: #fff; color: #6e6e73; border: 1px solid #8a8a93; }
+.step.cur { background: #fff; color: #1d1d1f; box-shadow: 0 1px 2px rgba(29,29,31,.12); }
+.top .links { width: 360px; text-align: right; font-size: 22px; color: #1d1d1f; }
+.axes { position: absolute; left: 0; right: 0; top: 112px; display: flex; justify-content: center; align-items: center; gap: 12px; }
+.axes .lbl { font-size: 21px; font-weight: 600; color: #5b5b61; margin-right: 8px; letter-spacing: .04em; text-transform: uppercase; }
+.axc { position: relative; display: flex; align-items: center; gap: 10px; padding: 9px 18px; border-radius: 999px; border: 1px solid #e3e3e8; background: #fff; font-size: 22px; font-weight: 500; color: #6e6e73; }
+.axc .d { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #b4b4bb; box-sizing: border-box; }
+.axc .on { position: absolute; inset: -1px; border-radius: 999px; background: #1d1d1f; display: flex; align-items: center; gap: 10px; padding: 9px 18px; color: #fff; font-size: 22px; font-weight: 500; opacity: 0; }
+.axc .on .d { border: 0; background: #ffcc00; }
+.app { position: absolute; left: 110px; top: 186px; width: 1150px; height: 860px; background: #fff; border: 1px solid #e3e3e8; border-radius: 20px; box-shadow: 0 1px 2px rgba(29,29,31,.08), 0 18px 50px rgba(29,29,31,.07); padding: 44px 52px; overflow: hidden; }
+.app h1 { font-size: 46px; font-weight: 600; letter-spacing: -0.025em; margin: 0; }
+.app .lede { margin-top: 10px; font-size: 24px; color: #5b5b61; line-height: 1.4; }
+.cos { position: absolute; left: 1320px; top: 250px; width: 520px; }
+.stepno { font-size: 22px; font-weight: 600; color: #0066cc; letter-spacing: .06em; text-transform: uppercase; }
+.co { position: relative; margin-top: 30px; padding-left: 26px; font-size: 40px; font-weight: 600; line-height: 1.22; letter-spacing: -0.02em; color: #1d1d1f; }
+.co::before { content: ""; position: absolute; left: 0; top: 8px; width: 8px; height: 34px; border-radius: 3px; background: #ffcc00; }
+.cursor { position: absolute; left: 0; top: 0; width: 34px; height: 34px; z-index: 50; filter: drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
+.chk { flex: none; width: 30px; height: 30px; border-radius: 7px; border: 2px solid #8a8a93; background: #fff; position: relative; box-sizing: border-box; }
+.chk .tick { position: absolute; inset: -2px; border-radius: 7px; background: #0066cc; display: flex; align-items: center; justify-content: center; opacity: 0; }
+.chk .tick svg { width: 20px; height: 20px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; height: 56px; padding: 0 28px; border-radius: 12px; font-size: 23px; font-weight: 600; background: #0066cc; color: #fff; }
+.btn.sec { background: #fff; color: #1d1d1f; border: 1px solid #8a8a93; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 999px; font-size: 19px; font-weight: 600; }
+.pill.hi { background: #fdebec; color: #b81d22; } .pill.mid { background: #fdf1dc; color: #8a5100; } .pill.lo { background: #e6f4ea; color: #19732f; }
+.pill .sq { width: 11px; height: 11px; border-radius: 2px; background: currentColor; }
+
+#s4c-scroll { position: relative; }
+#s4c-sub { margin-top: 8px; font-size: 22px; color: #5b5b61; }
+#s4c-opt { margin-top: 24px; border: 2px solid #0066cc; background: #f3f8fd; border-radius: 14px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; }
+#s4c-opt b { font-size: 26px; font-weight: 600; }
+#s4c-opt small { display: block; margin-top: 4px; font-size: 18px; color: #5b5b61; }
+.live { display: inline-flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 600; color: #19732f; background: #e6f4ea; padding: 6px 14px; border-radius: 999px; }
+.live i { width: 10px; height: 10px; border-radius: 50%; background: #23873f; }
+#s4c-panel { margin-top: 18px; background: #f5f5f7; border-radius: 14px; padding: 22px 24px; }
+.sec-t { font-size: 22px; font-weight: 600; }
+.send { display: flex; align-items: center; gap: 16px; margin-top: 12px; font-size: 21px; }
+.send .ic { width: 84px; height: 52px; border-radius: 8px; background: #fff; border: 1px solid #e3e3e8; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #6e6e73; font-weight: 600; }
+.send .ic img { width: 100%; height: 100%; object-fit: cover; object-position: left center; }
+.send .ic img.p { width: auto; height: 46px; object-fit: contain; }
+#s4c-cons { display: flex; gap: 16px; align-items: flex-start; margin-top: 18px; background: #fff; border: 1px solid #8a8a93; border-radius: 12px; padding: 16px 18px; font-size: 21px; }
+#s4c-cons small { display: block; margin-top: 4px; font-size: 16px; color: #5b5b61; }
+#s4c-go { margin-top: 16px; position: relative; }
+#s4c-go .btn { transition: none; }
+#s4c-prog { margin-top: 22px; }
+.ps { display: flex; align-items: center; gap: 14px; height: 46px; font-size: 22px; color: #8a8a93; }
+.ps .c { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #b4b4bb; box-sizing: border-box; position: relative; }
+.ps .c .f { position: absolute; inset: -2px; border-radius: 50%; background: #23873f; opacity: 0; display: flex; align-items: center; justify-content: center; }
+.ps .c .f svg { width: 18px; height: 18px; }
+#s4c-ban { margin-top: 16px; display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-radius: 14px; background: #e6f4ea; border: 1px solid #23873f; }
+#s4c-ban b { font-size: 24px; font-weight: 600; color: #19732f; }
+      </style>
+      <div id="root" data-composition-id="s4c" data-width="1920" data-height="1080">
+        <div id="s4c-stage" class="stage">
+          <div class="top">
+            <div class="logo"><svg viewBox="0 0 64 64"><rect x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6"/><rect x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00"/></svg>SceneLine</div>
+            <div class="steps"><div class="rail"><div class="step done"><span class="num"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Analyse</div><div class="step done"><span class="num"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Produits</div><div class="step cur"><span class="num">3</span>Génération</div><div class="step done"><span class="num"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Intégration</div></div></div>
+            <div class="links">Éthique 360</div>
+          </div>
+          <div class="axes"><span class="lbl">Éthique 360</span><div class="axc" id="s4c-ax-createurs"><span class="d"></span>Créateurs<div class="on"><span class="d"></span>Créateurs</div></div><div class="axc" id="s4c-ax-droits"><span class="d"></span>Droits<div class="on"><span class="d"></span>Droits</div></div><div class="axc" id="s4c-ax-donnees"><span class="d"></span>Données<div class="on"><span class="d"></span>Données</div></div><div class="axc" id="s4c-ax-cultures"><span class="d"></span>Cultures et langues<div class="on"><span class="d"></span>Cultures et langues</div></div><div class="axc" id="s4c-ax-transparence"><span class="d"></span>Transparence<div class="on"><span class="d"></span>Transparence</div></div><div class="axc" id="s4c-ax-planete"><span class="d"></span>Planète<div class="on"><span class="d"></span>Planète</div></div></div>
+          <div class="app" id="s4c-app">
+            <div id="s4c-scroll">
+            <h1>Kit de génération</h1>
+            <div id="s4c-sub">Badoit 1 L · 00:30 – 00:40 · Plan de travail en inox · placement approuvé</div>
+            <div id="s4c-opt"><div><b>Automatique avec Kling AI</b><small>SceneLine envoie le plan, le produit et le prompt, puis récupère la vidéo.</small></div><span class="live"><i></i>Connecté à Kling AI</span></div>
+            <div id="s4c-panel">
+              <div class="sec-t">Ce qui sera envoyé à Kling</div>
+              <div class="send"><span class="ic">Prompt</span>Le prompt du kit, en anglais</div>
+              <div class="send"><span class="ic"><img class="p" src="assets/img/badoit.png" alt="" /></span>L’image du produit, sur fond blanc</div>
+              <div class="send"><span class="ic"><img src="assets/img/cuisine-still.jpg" alt="" /></span>Le plan vidéo, sans audio, par un lien temporaire</div>
+              <div id="s4c-cons"><span class="chk" id="s4c-c1"><span class="tick"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><span>J’autorise l’envoi de ces éléments à Kling AI pour ce placement.<small>Angles Droits et Données · rien ne part sans cette autorisation</small></span></div>
+              <div id="s4c-go"><span class="btn" id="s4c-btn">Générer avec Kling et intégrer</span></div>
+              <div id="s4c-prog">
+                <div class="ps" id="s4c-p0"><span class="c"><span class="f"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>Envoi à Kling</div><div class="ps" id="s4c-p1"><span class="c"><span class="f"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>Génération chez Kling</div><div class="ps" id="s4c-p2"><span class="c"><span class="f"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>Téléchargement</div><div class="ps" id="s4c-p3"><span class="c"><span class="f"><svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>Intégration dans la vidéo</div>
+              </div>
+              <div id="s4c-ban"><b>✓ Vidéo générée par Kling et intégrée</b><span class="btn sec">Voir la comparaison</span></div>
+            </div>
+            </div>
+          </div>
+          <div class="cos" id="s4c-cos"><div class="stepno">Étape 3 · Génération</div><p class="co" id="s4c-co0">Rien ne part sans votre autorisation.</p><p class="co" id="s4c-co1">Généré directement depuis SceneLine.</p><p class="co" id="s4c-co2">Seulement pour les placements approuvés.</p></div>
+          <svg class="cursor" id="s4c-cur" viewBox="0 0 24 24"><path d="M3 2l17 9.5-7.4 1.6L9 21z" fill="#1d1d1f" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        const E = "power3.out";
+        const TICK = "<svg viewBox=\"0 0 20 20\"><path d=\"M4 10.5l4 4 8-9\" fill=\"none\" stroke=\"#fff\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>";
+        tl.fromTo("#s4c-app", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: E }, 0.05);
+        tl.fromTo("#s4c-cos .stepno", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4, ease: E }, 0.15);
+        tl.fromTo(["#s4c-ax-createurs .on", "#s4c-ax-droits .on", "#s4c-ax-donnees .on", "#s4c-ax-planete .on"], { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2)", stagger: 0.12 }, 0.3);
+        tl.fromTo("#s4c-co0", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 2.36);
+        tl.fromTo("#s4c-co1", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 4.04);
+        tl.to("#s4c-co0", { color: "#8a8a93", duration: 0.3 }, 4.04);
+        tl.fromTo("#s4c-co2", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 8.35);
+        tl.to("#s4c-co1", { color: "#8a8a93", duration: 0.3 }, 8.35);
+        
+        tl.set("#s4c-cur", { x: 900, y: 1100 }, 0);
+        tl.set(["#s4c-prog", "#s4c-ban"], { opacity: 0 }, 0);
+        tl.set("#s4c-btn", { backgroundColor: "#a9c4e3" }, 0);
+        tl.to("#s4c-cur", { x: 210, y: 742, duration: 0.45, ease: "power2.inOut" }, 1.91);
+        tl.to("#s4c-cur", { scale: 0.82, duration: 0.08, yoyo: true, repeat: 1 }, 2.36);
+        tl.to("#s4c-cur", { x: 330, y: 835, duration: 0.45, ease: "power2.inOut" }, 2.96);
+        tl.to("#s4c-cur", { scale: 0.82, duration: 0.08, yoyo: true, repeat: 1 }, 3.41);
+        tl.to("#s4c-c1 .tick", { opacity: 1, duration: 0.1 }, 2.36);
+        tl.to("#s4c-btn", { backgroundColor: "#0066cc", duration: 0.2 }, 2.41);
+        tl.to("#s4c-btn", { scale: 0.96, duration: 0.08, yoyo: true, repeat: 1 }, 3.41);
+        tl.to("#s4c-cur", { opacity: 0, duration: 0.3 }, 3.76);
+        tl.to("#s4c-scroll", { y: -300, duration: 0.8, ease: "power3.inOut" }, 3.74);
+        tl.to("#s4c-prog", { opacity: 1, duration: 0.3 }, 4.04);
+        [4.64,5.56,6.49,7.41].forEach((t, i) => {
+          tl.to("#s4c-p" + i, { color: "#1d1d1f", duration: 0.2 }, t - 0.6);
+          tl.fromTo("#s4c-p" + i + " .f", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(2.5)" }, t);
+        });
+        tl.fromTo("#s4c-ban", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.45, ease: E }, 8.35);
+        window.__timelines["s4c"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

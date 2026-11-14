@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fr">
+  <head><meta charset="UTF-8" /></head>
+  <body>
+    <template>
+      <style>
+        @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: block; src: url('assets/fonts/inter-latin.woff2') format('woff2'); }
+        #root { position: absolute; inset: 0; background: #f5f5f7; font-family: 'Inter', sans-serif; color: #1d1d1f; overflow: hidden; }
+        .mk { background-image: linear-gradient(#ffcc00, #ffcc00); background-repeat: no-repeat; background-size: 0% 100%; -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 0 4px; border-radius: 4px; }
+
+        #s3-stage { position: absolute; inset: 0; }
+        #s3-brand { position: absolute; left: 0; right: 0; top: 330px; display: flex; flex-direction: column; align-items: center; }
+        #s3-lockup { display: flex; align-items: center; gap: 34px; }
+        #s3-mark { width: 200px; height: 168px; display: block; overflow: visible; }
+        #s3-word { font-size: 132px; font-weight: 600; letter-spacing: -0.035em; line-height: 1; }
+        #s3-tag { margin-top: 56px; max-width: 1300px; text-align: center; font-size: 46px; line-height: 1.35; font-weight: 500; color: #1d1d1f; letter-spacing: -0.01em; }
+
+        #s3-title { position: absolute; left: 0; right: 0; top: 96px; text-align: center; font-size: 64px; font-weight: 600; letter-spacing: -0.03em; }
+        .ax { position: absolute; width: 520px; display: flex; gap: 22px; align-items: flex-start; background: #fff; border: 1px solid #e3e3e8; border-radius: 18px; padding: 26px 30px; box-shadow: 0 1px 2px rgba(29,29,31,.08), 0 12px 34px rgba(29,29,31,.06); }
+        .ax .n { flex: none; width: 52px; height: 52px; border-radius: 14px; background: #1d1d1f; color: #ffcc00; font-size: 26px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+        .ax b { display: block; font-size: 34px; font-weight: 600; letter-spacing: -0.015em; }
+        .ax span { display: block; margin-top: 6px; font-size: 27px; color: #5b5b61; }
+        #s3-a1 { left: 110px; top: 300px; } #s3-a2 { left: 110px; top: 530px; } #s3-a3 { left: 110px; top: 760px; }
+        #s3-a4 { right: 110px; top: 300px; } #s3-a5 { right: 110px; top: 530px; } #s3-a6 { right: 110px; top: 760px; }
+      </style>
+      <div id="root" data-composition-id="s3" data-width="1920" data-height="1080">
+        <div id="s3-stage" class="clip" data-start="0" data-duration="11.4" data-track-index="0">
+          <div id="s3-brand">
+            <div id="s3-lockup">
+              <svg id="s3-mark" viewBox="0 0 64 64">
+                <rect id="s3-frame" x="7" y="11" width="50" height="42" rx="9" fill="none" stroke="#1d1d1f" stroke-width="6" pathLength="100" stroke-dasharray="100 120" stroke-dashoffset="110" />
+                <rect id="s3-chip" x="31" y="29" width="17" height="14" rx="3" fill="#ffcc00" />
+              </svg>
+              <div id="s3-word">SceneLine</div>
+            </div>
+            <p id="s3-tag">Le placement de produit virtuel, conçu pour préserver <span id="s3-m1" class="mk">l’authenticité culturelle et artistique</span> des œuvres audiovisuelles.</p>
+          </div>
+
+          <div id="s3-title">Une IA éthique à 360°</div>
+          <div id="s3-a1" class="ax"><div class="n">1</div><div><b>Créateurs</b><span>Qui garde la main ?</span></div></div>
+          <div id="s3-a2" class="ax"><div class="n">2</div><div><b>Droits</b><span>Qui a consenti ?</span></div></div>
+          <div id="s3-a3" class="ax"><div class="n">3</div><div><b>Données</b><span>D’où viennent-elles ?</span></div></div>
+          <div id="s3-a4" class="ax"><div class="n">4</div><div><b>Cultures et langues</b><span>Quelle culture montre-t-on ?</span></div></div>
+          <div id="s3-a5" class="ax"><div class="n">5</div><div><b>Transparence</b><span>Le public est-il informé ?</span></div></div>
+          <div id="s3-a6" class="ax"><div class="n">6</div><div><b>Planète</b><span>Pour quel coût ?</span></div></div>
+        </div>
+      </div>
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        const E = "power3.out";
+        // Logo forms: frame draws, yellow chip lands
+        tl.fromTo("#s3-frame", { attr: { "stroke-dashoffset": 110 } }, { attr: { "stroke-dashoffset": 0 }, duration: 0.85, ease: "power2.inOut" }, 0.05);
+        tl.fromTo("#s3-chip", { y: -46, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "back.out(2.2)" }, 0.75);
+        tl.fromTo("#s3-word", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.5, ease: E }, 1.15);
+        tl.fromTo("#s3-tag", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: E }, 2.0);
+        tl.to("#s3-m1", { backgroundSize: "100% 100%", duration: 1.5, ease: "power1.inOut" }, 3.8);
+        // Move to the axes layout
+        tl.to("#s3-tag", { opacity: 0, y: -10, duration: 0.35, ease: "power2.in" }, 6.0);
+        tl.to("#s3-brand", { y: 70, scale: 0.62, duration: 0.6, ease: "power3.inOut" }, 6.05);
+        tl.fromTo("#s3-title", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.4, ease: E }, 6.3);
+        ["#s3-a1", "#s3-a2", "#s3-a3", "#s3-a4", "#s3-a5", "#s3-a6"].forEach((id, i) => {
+          const fromX = i < 3 ? -40 : 40;
+          tl.fromTo(id, { opacity: 0, x: fromX, scale: 0.96 }, { opacity: 1, x: 0, scale: 1, duration: 0.35, ease: "back.out(1.6)" }, 6.9 + i * 0.4);
+        });
+        window.__timelines["s3"] = tl;
+      </script>
+    </template>
+  </body>
+</html>
