@@ -426,6 +426,7 @@ function showResults(job, result, complete) {
     button.prepend(image);
     return button;
   }));
+  if (window.renderOpportunityReport) window.renderOpportunityReport(job, result);
   view("results");
 }
 

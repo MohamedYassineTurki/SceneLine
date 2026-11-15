@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from product_matcher.catalog import CATEGORIES
 
 WORK_TYPES = ["Série", "Film", "Court métrage", "Documentaire", "Autre"]
+PARCOURS = ["placement_contrat", "recherche_opportunites"]
 TEXT_FIELDS = {"location": "Lieu de l'action", "period": "Époque de l'action",
                "languages": "Langues parlées", "intention": "Intention narrative"}
 INTERVAL = re.compile(r"(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})")
@@ -29,7 +30,8 @@ def build_context(form):
     if form.get("consent_provider") != "on":
         raise ValueError("Confirmez l'envoi d'images et de dialogue au fournisseur d'analyse (Gemini).")
     unknown = []
-    context = {"work_type": form.get("work_type") if form.get("work_type") in WORK_TYPES else "Autre"}
+    context = {"work_type": form.get("work_type") if form.get("work_type") in WORK_TYPES else "Autre",
+               "parcours": form.get("parcours") if form.get("parcours") in PARCOURS else "placement_contrat"}
     for key in TEXT_FIELDS:
         if form.get(key + "_unknown") == "on" or not form.get(key, "").strip():
             context[key] = "Inconnu"

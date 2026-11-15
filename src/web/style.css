@@ -243,6 +243,13 @@ p.badge, p.badge.uncertain, p.badge.reject { display: flex; gap: 10px; align-ite
 .key i.tick::before { display: none; }
 .meta-line { font-size: .75rem; line-height: 1.4; font-weight: 500; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 
+/* ---------- rapport d'opportunités : indicateurs ---------- */
+.kpi-row { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 720px) { .kpi-row { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.kpi { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border: var(--border); border-radius: var(--radius-lg); background: var(--surface); }
+.kpi-value { font-size: 1.5rem; font-weight: 600; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.kpi-label { font-size: .8125rem; color: var(--ink-2); }
+
 /* ---------- lignes de placements et de scènes ---------- */
 .rows { background: var(--surface); border: var(--border); border-radius: var(--radius-lg); overflow: hidden; }
 .rows:empty { display: none; }
@@ -310,6 +317,12 @@ p.badge, p.badge.uncertain, p.badge.reject { display: flex; gap: 10px; align-ite
 @media (max-width: 560px) { .blocked-cmp { grid-template-columns: minmax(0, 1fr); } .blocked-vs { max-width: none; text-align: left; } }
 .blocked-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .blocked-head b { font-weight: 600; }
+
+/* ---------- rapport d'opportunités : annonceurs ---------- */
+.advertiser-block { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border: var(--border); border-radius: var(--radius-md); background: var(--bg); }
+.advertiser-match { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: var(--border); font-size: .875rem; line-height: 1.5; }
+.advertiser-match:first-of-type { border-top: 0; padding-top: 0; }
+.advertiser-match p { font-size: .875rem; color: var(--ink-2); }
 
 /* ---------- étape 2 : contexte, catalogue, propositions ---------- */
 .context-bar { display: flex; flex-direction: column; gap: 12px; }
