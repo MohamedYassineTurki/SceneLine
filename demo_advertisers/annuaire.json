@@ -1,0 +1,62 @@
+[
+  {
+    "id": "fraicheur-atlas",
+    "name": "Fraîcheur Atlas",
+    "description": "Marque fictive de boissons et de produits alimentaires du quotidien, orientée cuisine et convivialité.",
+    "categories": ["boisson_sans_alcool", "alimentaire"],
+    "markets": ["France", "Belgique", "Tunisie"],
+    "work_types": ["Série", "Film", "Court métrage", "Documentaire"],
+    "budget_min": 800,
+    "budget_max": 4000,
+    "currency": "EUR",
+    "provenance": "Annuaire de démonstration — FICTIF : aucune entreprise réelle, aucun partenariat."
+  },
+  {
+    "id": "atelier-lumen",
+    "name": "Atelier Lumen",
+    "description": "Marque fictive d'ustensiles de cuisine et d'accessoires de mode haut de gamme, discrète à l'écran.",
+    "categories": ["cuisine_ustensiles", "mode_accessoires"],
+    "markets": ["France", "Suisse", "Canada"],
+    "work_types": ["Série", "Film", "Court métrage", "Documentaire", "Autre"],
+    "budget_min": 1200,
+    "budget_max": 6000,
+    "currency": "EUR",
+    "provenance": "Annuaire de démonstration — FICTIF : aucune entreprise réelle, aucun partenariat."
+  },
+  {
+    "id": "novatech-studio",
+    "name": "NovaTech Studio",
+    "description": "Marque fictive d'objets technologiques grand public (casques, enceintes, accessoires connectés).",
+    "categories": ["technologie"],
+    "markets": ["France", "Belgique", "Canada"],
+    "work_types": ["Série", "Film"],
+    "budget_min": 2000,
+    "budget_max": 9000,
+    "currency": "EUR",
+    "provenance": "Annuaire de démonstration — FICTIF : aucune entreprise réelle, aucun partenariat."
+  },
+  {
+    "id": "verdura-soins",
+    "name": "Verdura Soins",
+    "description": "Marque fictive de cosmétique et de produits de pharmacie douce, à base d'ingrédients naturels.",
+    "categories": ["cosmetique_hygiene", "pharmacie_sante"],
+    "markets": ["Tunisie", "Maroc", "Algérie", "France"],
+    "work_types": ["Série", "Film", "Court métrage", "Documentaire"],
+    "budget_min": 600,
+    "budget_max": 3000,
+    "currency": "EUR",
+    "provenance": "Annuaire de démonstration — FICTIF : aucune entreprise réelle, aucun partenariat."
+  },
+  {
+    "id": "maison-pure",
+    "name": "Maison Pure",
+    "description": "Marque fictive d'entretien ménager et de produits alimentaires du foyer, positionnement familial.",
+    "categories": ["entretien_menager", "alimentaire"],
+    "markets": ["France", "Belgique", "Suisse"],
+    "work_types": ["Série", "Documentaire"],
+    "budget_min": 500,
+    "budget_max": 2500,
+    "currency": "EUR",
+    "provenance": "Annuaire de démonstration — FICTIF : aucune entreprise réelle, aucun partenariat."
+  }
+]
