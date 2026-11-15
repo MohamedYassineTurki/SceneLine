@@ -13,7 +13,7 @@
 [![Kling AI](https://img.shields.io/badge/Kling%20AI-4.0-0066cc)](src/generation/kling.py)
 [![FFmpeg](https://img.shields.io/badge/FFmpeg-local-0066cc?logo=ffmpeg&logoColor=white)](src/integration/render.py)
 
-[Démo](#-démonstration-réelle) · [Le problème](#-le-problème) · [Les 4 étapes](#-les-4-étapes) · [Architecture](#-architecture) · [Éthique 360](#-éthique-360) · [Stack](#-stack-technique) · [Lancer](#-lancer-sceneline)
+[Démo](#-démonstration-réelle) · [Le problème](#-le-problème) · [Les 4 étapes](#-les-4-étapes) · [Architecture](#-architecture) · [Éthique 360](#-éthique-360) · [Stack](#-stack-technique) · [Vision](#-vision--la-suite) · [Lancer](#-lancer-sceneline)
 
 </div>
 
@@ -99,7 +99,7 @@ flowchart LR
 
 | Étape | Ce que fait SceneLine | Technologie | Documentation |
 |---|---|---|---|
-| **1 · Analyse** | Détecte les plans, transcrit le dialogue, comprend chaque scène (lieu, époque, ton, sensibilité), **protège** les scènes sensibles, cherche des surfaces **de coupe à coupe**, applique des **règles écrites**, vérifie les finalistes sur six images. Deux parcours au choix : **Placement après contrat** (par défaut) ou **Recherche d'opportunités**, pour un créateur qui n'a pas encore de sponsor | PySceneDetect, faster-whisper, FFmpeg (local) · Gemini Flash et Flash-Lite | [Étape 1](docs/etapes/1-analyse.md) |
+| **1 · Analyse** | Détecte les plans, transcrit le dialogue, comprend chaque scène (lieu, époque, ton, sensibilité), **protège** les scènes sensibles, cherche des surfaces **de coupe à coupe**, applique des **règles écrites**, vérifie les finalistes sur six images. | PySceneDetect, faster-whisper, FFmpeg (local) · Gemini Flash et Flash-Lite | [Étape 1](docs/etapes/1-analyse.md) |
 | **2 · Produits** | Catalogue avec origine, marchés et **provenance obligatoire** du visuel ; règles d'appariement ; **Cultural Integrity Guard** (5 critères) ; Accepter / Refuser / Ajuster, **signé et daté** | Python, Gemini Flash-Lite, SHA-256 | [Étape 2](docs/etapes/2-produits-et-guard.md) |
 | **3 · Génération** | Kit complet (plan, asset, prompt FR/EN, prompt négatif) ; génération **Kling AI** avec la clé du créateur, **en mémoire seulement**, et son **accord pour ce placement** | Kling AI 4.0 API, lien public éphémère | [Étape 3](docs/etapes/3-generation.md) |
 | **4 · Intégration** | Retrait des bandes noires, **recalage temporel par programmation dynamique**, assemblage avec l'**audio d'origine**, comparaison Original / Version éditée, étiquette, relevé | OpenCV, NumPy, FFmpeg | [Étape 4](docs/etapes/4-integration.md) |
@@ -158,13 +158,34 @@ engagement à l'endroit où le vérifier).
 | Couche | Technologie | Rôle |
 |---|---|---|
 | Serveur | **Python 3.11+**, **Flask 3.1** | API REST, file de travaux, reprise après interruption |
-| Rapport d'opportunités | **fpdf2** | Dossier de présentation PDF du parcours Recherche d'opportunités |
+| Dossier de présentation | **fpdf2** | PDF du parcours *Recherche d'opportunités* (en développement) |
 | Vidéo locale | **FFmpeg / FFprobe**, **PySceneDetect 0.7**, **OpenCV**, **NumPy** | Coupes, images, recadrage, recalage, assemblage |
 | Parole locale | **faster-whisper 1.2** | Transcription horodatée, sur la machine |
 | Compréhension | **Google Gemini** 3.5 Flash · 3.1 Flash-Lite | Scènes, surfaces, vérification, produits ; sorties JSON contraintes par schéma |
 | Génération | **Kling AI 4.0** (API Omni-Video) | Régénération du plan avec le produit, à la demande |
 | Interface | **HTML, CSS, JavaScript** sans framework | Lisible, auditable, sans compilation ; police Inter ; thème clair |
 | Vidéo de présentation | **HyperFrames**, **GSAP**, Gemini TTS, ElevenLabs Sound Effects | La vidéo est elle-même du code ([`docs/VIDEO.md`](docs/VIDEO.md)) |
+
+---
+
+## 🔭 Vision : la suite
+
+SceneLine sert aujourd'hui les productions qui ont **déjà** un sponsor. Notre vision est d'accompagner aussi les
+créateurs **avant** le contrat, sur les mêmes garanties éthiques.
+
+### Recherche d'opportunités · *en développement*
+Pour un créateur qui n'a pas encore de sponsor, SceneLine relit l'analyse de l'étape 1 sous l'angle du financement :
+emplacements possibles, durée totale à l'écran, catégories de produits compatibles avec ses scènes, avis du
+Cultural Integrity Guard, types de partenaires à démarcher, et un **dossier de présentation PDF** à remettre aux
+annonceurs. Une première version est intégrée à l'application (choix du parcours à l'import, module
+[`src/opportunity_finder`](src/opportunity_finder)) ; nous continuons à l'enrichir.
+
+Mêmes principes que le reste de SceneLine : aucun appel supplémentaire à un modèle, aucune garantie de revenu
+présentée comme un fait, aucun nom d'entreprise réelle cité sans son inscription.
+
+**Prochaines étapes :** un annuaire d'annonceurs volontaires, inscrits et vérifiés, à la place de l'annuaire de
+démonstration · le passage d'un parcours à l'autre sur une même analyse · un dossier PDF multilingue, dont l'arabe ·
+la mise en relation directe créateur-annonceur, toujours avec l'accord du créateur.
 
 ---
 
@@ -216,12 +237,12 @@ SceneLine/
 │   ├── producer_review/         Étape 2 · propositions, révisions, décisions signées
 │   ├── generation/              Étape 3 · kit de génération, Kling AI avec accord par placement
 │   ├── integration/             Étape 4 · recalage temporel, assemblage, relevé des modifications
-│   ├── opportunity_finder/      Étape 1 (parcours Recherche d'opportunités) · rapport, annuaire, media kit PDF
+│   ├── opportunity_finder/      En développement · Recherche d'opportunités pour les créateurs sans sponsor
 │   ├── evaluation/              Mesure de la qualité face à une annotation manuelle
 │   └── web/                     Interface HTML · CSS · JS, sans framework
 ├── docs/                        Architecture, une page par étape, Éthique 360, vidéo, médias
 ├── demo_products/               Catalogue de démonstration, provenance de chaque visuel
-├── demo_advertisers/            Annuaire d'annonceurs de démonstration (recherche d'opportunités)
+├── demo_advertisers/            Annuaire d'annonceurs de démonstration (Recherche d'opportunités)
 ├── validation/                  Annotation de référence de l'épisode de test
 ├── design/                      Système de design et prototype de l'interface
 ├── motion-video/                Vidéo de présentation, écrite en code (HyperFrames)
@@ -237,7 +258,7 @@ SceneLine/
 | `producer_review` | [src/producer_review](src/producer_review) | 2 · Décisions |
 | `generation` | [src/generation](src/generation) | 3 · Génération |
 | `integration` | [src/integration](src/integration) | 4 · Intégration |
-| `opportunity_finder` | [src/opportunity_finder](src/opportunity_finder) | 1 · Recherche d'opportunités |
+| `opportunity_finder` | [src/opportunity_finder](src/opportunity_finder) | Vision · Recherche d'opportunités (en développement) |
 | `web` | [src/web](src/web) | Interface |
 
 ---

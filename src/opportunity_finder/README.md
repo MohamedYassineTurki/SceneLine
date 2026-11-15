@@ -1,5 +1,8 @@
 # `opportunity_finder/` · Recherche d'opportunités
 
+> 🔭 **En développement · vision de SceneLine.** Une première version est intégrée à l'application ;
+> nous continuons à l'enrichir (voir [Prochaines étapes](#prochaines-étapes)).
+
 > Pour un créateur qui n'a **pas encore** de sponsor : quels emplacements de son œuvre permettraient
 > de financer sa production, avant même de démarcher un annonceur.
 
@@ -27,3 +30,10 @@
   revenus dépendent des accords conclus avec les annonceurs.
 
 📖 Détails : [docs/ETHIQUE-360.md](../../docs/ETHIQUE-360.md)
+
+## Prochaines étapes
+- **Annuaire réel** : annonceurs volontaires, inscrits et vérifiés, à la place de l'annuaire de démonstration.
+- **Une analyse, deux lectures** : passer du parcours « Placement après contrat » au rapport d'opportunités sans
+  relancer l'analyse.
+- **Dossier PDF multilingue**, dont l'arabe, avec une police et une mise en forme adaptées.
+- **Mise en relation** créateur-annonceur, toujours à l'initiative et avec l'accord du créateur.
