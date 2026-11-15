@@ -9,6 +9,7 @@ l'avertissement.
 """
 
 import json
+import unicodedata
 
 from fpdf import FPDF
 from PIL import Image
@@ -22,6 +23,38 @@ INK = (29, 29, 31)
 MUTED = (91, 91, 97)
 MARKER = (255, 204, 0)
 RISK_COLORS = {"faible": (25, 115, 47), "moyen": (138, 81, 0), "eleve": (184, 29, 34)}
+
+
+PDF_ENCODING = "cp1252"  # polices de base du PDF : couvre le français (œ, €, « »), pas l'arabe
+
+
+def pdf_safe(text):
+    """Texte que les polices de base savent écrire, sans jamais faire échouer le PDF.
+
+    Les formes typographiques (espace fine insécable, ligatures…) deviennent leur équivalent simple ;
+    un passage que la police ne sait pas écrire (arabe, emoji, caractère illisible) devient « … »."""
+    text = unicodedata.normalize("NFKC", str(text))
+    out, spaces, missing = [], "", False
+    for char in text:
+        if char.isspace():
+            spaces += char  # gardés en attente : un passage illisible peut contenir des espaces
+            continue
+        try:
+            char.encode(PDF_ENCODING)
+        except UnicodeEncodeError:
+            if not missing:  # un seul « … » pour tout le passage illisible
+                out.append(spaces + "…")
+                missing = True
+            spaces = ""
+            continue
+        out.append(spaces + char)
+        spaces, missing = "", False
+    return "".join(out) + spaces
+
+
+class _PDF(FPDF):
+    def normalize_text(self, text):
+        return super().normalize_text(pdf_safe(text))
 
 
 def clock(ms):
@@ -174,8 +207,8 @@ def _closing(pdf, data):
 def build_pdf(folder):
     data = report.build(folder)
     sceneline = json.loads((folder / "sceneline.json").read_text(encoding="utf-8"))
-    pdf = FPDF(orientation="P", unit="mm", format="A4")
-    pdf.core_fonts_encoding = "cp1252"  # polices de base : couvre le français (œ, €, « »), pas besoin d'une police TTF
+    pdf = _PDF(orientation="P", unit="mm", format="A4")
+    pdf.core_fonts_encoding = PDF_ENCODING
     pdf.set_margins(PAGE_MARGIN, PAGE_MARGIN, PAGE_MARGIN)
     pdf.set_auto_page_break(auto=True, margin=PAGE_MARGIN)
     _cover(pdf, sceneline, data)
