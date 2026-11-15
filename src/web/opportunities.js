@@ -13,8 +13,8 @@
 
   function advertiserBlock(item) {
     const box = node("div", null, "advertiser-block");
+    box.append(node("p", "Annonceurs inscrits compatibles :", "surface-title"));
     if (item.advertiser_matches.length) {
-      box.append(node("p", "Annonceurs inscrits compatibles :", "surface-title"));
       for (const match of item.advertiser_matches) {
         const row = node("div", null, "advertiser-match");
         const head = node("div", null, "blocked-head");
@@ -24,12 +24,13 @@
         box.append(row);
       }
     } else {
-      box.append(node("p", "Aucun annonceur inscrit ne correspond pour l’instant. Types de partenaires à démarcher :", "surface-title"));
-      const list = node("ul", null, "axbody");
-      (item.advertiser_fallback.length ? item.advertiser_fallback
-        : ["Aucune catégorie compatible relevée pour cet emplacement."]).forEach(text => list.append(node("li", text)));
-      box.append(list);
+      box.append(node("p", "Aucun annonceur inscrit ne correspond pour l’instant.", "muted"));
     }
+    box.append(node("p", "Types de partenaires à démarcher :", "surface-title"));
+    const list = node("ul", null, "axbody");
+    (item.advertiser_fallback.length ? item.advertiser_fallback
+      : ["Aucune catégorie compatible relevée pour cet emplacement."]).forEach(text => list.append(node("li", text)));
+    box.append(list);
     return box;
   }
 

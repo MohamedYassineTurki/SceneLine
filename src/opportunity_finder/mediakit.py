@@ -129,15 +129,24 @@ def _opportunity_page(pdf, folder, item):
     pdf.ln(2)
     pdf.set_font("Helvetica", "B", 10)
     pdf.set_text_color(*MUTED)
-    label = "Annonceurs inscrits compatibles" if item["advertiser_matches"] else "Types de partenaires à démarcher"
-    pdf.cell(0, 6, label, new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 6, "Annonceurs inscrits compatibles", new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "", 10)
     pdf.set_text_color(*INK)
     if item["advertiser_matches"]:
         for match in item["advertiser_matches"]:
             pdf.multi_cell(0, 6, f"- {match['name']} ({match['provenance']}) · {match['why']}",
                           new_x="LMARGIN", new_y="NEXT")
-    elif item["advertiser_fallback"]:
+    else:
+        pdf.multi_cell(0, 6, "- Aucun annonceur inscrit ne correspond pour l'instant.",
+                       new_x="LMARGIN", new_y="NEXT")
+
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.set_text_color(*MUTED)
+    pdf.cell(0, 6, "Types de partenaires à démarcher", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 10)
+    pdf.set_text_color(*INK)
+    if item["advertiser_fallback"]:
         for text in item["advertiser_fallback"]:
             pdf.multi_cell(0, 6, f"- {text}", new_x="LMARGIN", new_y="NEXT")
     else:

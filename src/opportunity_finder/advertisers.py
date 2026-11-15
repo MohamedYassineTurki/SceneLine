@@ -2,8 +2,10 @@
 
 L'annuaire (`demo_advertisers/annuaire.json`) est une liste statique, en lecture seule, d'annonceurs
 qui se sont déclarés volontaires. Elle est marquée « Annuaire de démonstration » : aucun des
-annonceurs n'est une entreprise réelle. Si aucun annonceur inscrit ne correspond à une opportunité,
-`match()` renvoie des types de partenaires génériques, jamais le nom d'une entreprise non inscrite.
+annonceurs n'est une entreprise réelle. `match()` renvoie toujours deux listes : les annonceurs
+inscrits compatibles, et des types de partenaires génériques à démarcher (jamais le nom d'une
+entreprise non inscrite) — les seconds s'affichent même quand des annonceurs inscrits existent déjà,
+pour ne jamais limiter le créateur aux seuls annonceurs de la démonstration.
 
 Aucun appel à un modèle ici : on ne fait que croiser des catégories, des marchés et des types
 d'œuvre déjà déclarés, exactement comme `cultural_guard.guard` croise des signaux déjà calculés.
@@ -53,15 +55,17 @@ def _texts_mention_any(label, avoid_texts):
 
 
 def match(opportunity, scene, context, directory):
-    """Annonceurs inscrits compatibles avec cette opportunité, et des types de repli sinon.
+    """Annonceurs inscrits compatibles avec cette opportunité, et types de partenaires à démarcher.
 
-    Retourne (matches, fallback) :
+    Retourne toujours (matches, fallback), les deux pouvant être non vides en même temps :
       - matches : [{advertiser, why}], annonceurs inscrits dont au moins une catégorie correspond
         aux catégories jugées compatibles par la revue de l'intervalle (et aucune aux catégories à
         éviter), et dont le type d'œuvre et le marché déclarés, s'ils existent, ne contredisent pas
         le projet ;
-      - fallback : [str], types de partenaires à démarcher, construits uniquement à partir des
-        catégories compatibles déjà relevées (jamais un nom d'entreprise non inscrite)."""
+      - fallback : [str], types de partenaires génériques à démarcher, construits uniquement à
+        partir des catégories compatibles déjà relevées (jamais un nom d'entreprise non inscrite) ;
+        calculé indépendamment des annonceurs trouvés, pour ne jamais limiter le créateur à
+        l'annuaire de démonstration."""
     compatible = opportunity.get("compatible_categories") or []
     avoid = opportunity.get("avoid_categories") or []
     work_type = (context or {}).get("work_type")
@@ -92,13 +96,12 @@ def match(opportunity, scene, context, directory):
         })
 
     fallback = []
-    if not matches:
-        seen = set()
-        for text in compatible:
-            label = text.strip().rstrip(". ")
-            if not label or label.lower() in seen or _texts_mention_any(label, avoid):
-                continue
-            seen.add(label.lower())
-            suffix = f" visant le marché {country}" if country else ""
-            fallback.append(f"Marque ou annonceur du secteur « {label} »{suffix}.")
+    seen = set()
+    for text in compatible:
+        label = text.strip().rstrip(". ")
+        if not label or label.lower() in seen or _texts_mention_any(label, avoid):
+            continue
+        seen.add(label.lower())
+        suffix = f" visant le marché {country}" if country else ""
+        fallback.append(f"Marque ou annonceur du secteur « {label} »{suffix}.")
     return matches, fallback
