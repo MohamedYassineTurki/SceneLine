@@ -6,6 +6,8 @@ __pycache__/
 # Secrets : jamais versionnés
 .env
 .gemini-keys
+.kling-key
+.sceneline-public-url
 motion-video/.env
 
 # Données de travail et projets analysés

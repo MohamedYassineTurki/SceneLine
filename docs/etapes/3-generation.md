@@ -10,7 +10,7 @@
 | | **Automatique avec Kling AI** | **Manuelle, avec l'outil de votre choix** |
 |---|---|---|
 | Principe | SceneLine envoie le plan, le produit et le prompt à Kling AI, suit la tâche, récupère la vidéo et l'intègre | SceneLine prépare un kit complet (ZIP) ; le créateur génère dans Google Flow, Kling, Runway… puis importe le résultat |
-| Clé | La clé d'API du créateur, **en mémoire seulement** | Aucune clé |
+| Clé | **Aucune pour le créateur** : SceneLine génère avec son propre compte Kling (clé sur le serveur). Sans clé serveur, le créateur peut connecter la sienne, **en mémoire seulement** | Aucune clé |
 | Accord | Case à cocher **par placement**, vérifiée **côté serveur** | Le créateur envoie lui-même |
 | Code | [`generation/kling.py`](../../src/generation/kling.py) | [`generation/kit.py`](../../src/generation/kit.py) |
 
@@ -42,9 +42,20 @@ sequenceDiagram
     S->>S: Ferme le lien, télécharge, intègre (étape 4)
 ```
 
+### Configuration du serveur
+Le compte Kling de SceneLine se configure sur le serveur, jamais dans l'interface :
+
+| Réglage | Variable d'environnement | ou fichier (non versionné) |
+|---|---|---|
+| Clé d'API Kling de SceneLine | `KLING_API_KEY` | `.kling-key` |
+| Adresse publique du serveur (https), par laquelle Kling télécharge le plan | `SCENELINE_PUBLIC_URL` | `.sceneline-public-url` |
+
+Sur un poste local, l'adresse publique est celle d'un tunnel (par exemple `cloudflared tunnel --url http://localhost:8002`) ; le fichier est relu à chaque génération, il suffit donc de le mettre à jour quand l'adresse du tunnel change.
+
 ### Sécurité et vie privée, par conception
-- **La clé** reste dans la mémoire du serveur : jamais écrite sur disque, jamais dans un journal, envoyée
-  uniquement à l'API de Kling. Un bouton la fait oublier immédiatement.
+- **La clé** de SceneLine reste sur le serveur : jamais affichée, jamais dans un journal, jamais versionnée,
+  envoyée uniquement à l'API de Kling. Une clé personnelle, si un créateur en connecte une, reste en mémoire
+  et un bouton la fait oublier immédiatement.
 - **Rien ne part sans accord** : chaque placement demande sa propre autorisation, vérifiée côté serveur
   (une requête sans accord est refusée).
 - **Ce qui sera envoyé est listé** avant l'envoi : le plan, l'image du produit, le prompt.

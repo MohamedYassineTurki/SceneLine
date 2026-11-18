@@ -114,6 +114,12 @@
     if (!response.ok) throw Error(body.message || "Requête impossible.");
     return body;
   }
+  let platformKling = false;      // SceneLine génère avec son propre compte Kling : aucune clé demandée
+  const PLATFORM_TEXT = "SceneLine envoie le plan, le produit et le prompt à Kling AI, récupère la vidéo et l’intègre à votre place. Aucune clé à fournir.";
+  provider("").then(account => {
+    platformKling = Boolean(account.managed);
+    if (platformKling) document.querySelectorAll("[data-auto-text]").forEach(el => { el.textContent = PLATFORM_TEXT; });
+  }).catch(() => {});
   const jsonBody = (method, body) => ({method, headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
   const ACTIVE = ["submitting", "processing", "downloading", "integrating"];
   const PHASES = [["submitting", "Envoi à Kling"], ["processing", "Génération chez Kling"], ["downloading", "Téléchargement de la vidéo"], ["integrating", "Intégration dans la vidéo d’origine"]];
@@ -133,6 +139,15 @@
     const heading = (text) => node("h4", text, "nh");
 
     const paintConnection = () => {
+      if (account.managed) {
+        connection.replaceChildren(heading("1 · Génération par SceneLine"));
+        const row = node("div", null, "gen-row");
+        row.append(node("span", "Kling AI · compte SceneLine", "chip accent live"),
+          node("span", "Aucune clé ni aucun compte à fournir : SceneLine génère le plan pour vous.", "muted"));
+        connection.append(row);
+        if (!account.public_ready) connection.append(alertBox("Génération indisponible.", "Le serveur SceneLine n’a pas d’adresse publique configurée pour l’instant."));
+        return;
+      }
       connection.replaceChildren(heading("1 · Votre compte Kling AI"));
       if (account.connected) {
         const row = node("div", null, "gen-row");
@@ -180,6 +195,7 @@
       select.onchange = () => { state.model = select.value; };
       model.append(select);
       options.append(model);
+      if (account.public_ready) return;     // l'adresse publique est configurée sur le serveur
       const f = node("label", null, "field"); f.append(node("span", "Adresse publique de SceneLine (https)"));
       const input = node("input"); input.type = "text"; input.placeholder = "Ex. https://mon-tunnel.example.org"; input.value = state.base; input.spellcheck = false; input.inputMode = "url";
       input.oninput = () => { state.base = input.value.trim(); updateButton(); };
@@ -190,7 +206,8 @@
     let button, why;
     const reason = () => !account.connected ? "Connectez d’abord votre compte Kling AI."
       : !state.consent ? "Cochez l’autorisation d’envoi pour continuer."
-      : !/^https:\/\/[^\s/]+/.test(state.base) ? "Indiquez l’adresse publique (https) de SceneLine." : "";
+      : account.managed && !account.public_ready ? "Génération momentanément indisponible."
+      : !account.public_ready && !/^https:\/\/[^\s/]+/.test(state.base) ? "Indiquez l’adresse publique (https) de SceneLine." : "";
     const updateButton = () => {
       if (!button) return;
       const text = reason();
@@ -209,7 +226,8 @@
       const list = node("ul", null, "sendlist"); list.setAttribute("aria-label", "Éléments envoyés à Kling");
       for (const line of ["Le prompt du kit, en anglais", "L’image du produit, sur fond blanc",
         "Le plan vidéo, sans audio, par un lien temporaire"]) list.append(node("li", line));
-      sending.append(list, node("p", "Chaque génération consomme des crédits de votre compte Kling. Le plan montre des visages : Kling les traite selon ses propres conditions.", "ink-note"));
+      sending.append(list, node("p", (account.managed ? "La génération passe par le compte Kling de SceneLine : vous n’avez rien à payer à Kling. "
+        : "Chaque génération consomme des crédits de votre compte Kling. ") + "Le plan montre des visages : Kling les traite selon ses propres conditions.", "ink-note"));
       const consent = node("label", null, "check-row");
       const check = node("input"); check.type = "checkbox"; check.checked = state.consent; check.disabled = active();
       check.onchange = () => { state.consent = check.checked; updateButton(); };
@@ -288,13 +306,16 @@
     const state = genState(proposal.id);
     const wrap = node("div", null, "option-cards"); wrap.setAttribute("role", "radiogroup"); wrap.setAttribute("aria-label", "Comment produire la vidéo");
     for (const [value, title, text, tag, tagClass] of [
-      ["auto", "Automatique avec Kling AI", "Connectez votre clé d’API : SceneLine envoie le plan, le produit et le prompt, récupère la vidéo et l’intègre à votre place.", "Automatisé", "chip accent"],
+      ["auto", "Automatique avec Kling AI", platformKling ? PLATFORM_TEXT
+        : "Connectez votre clé d’API : SceneLine envoie le plan, le produit et le prompt, récupère la vidéo et l’intègre à votre place.", "Automatisé", "chip accent"],
       ["manual", "Manuelle, avec l’outil de votre choix", "Copiez le prompt ou téléchargez le kit, générez la vidéo dans Google Flow, Kling, Runway…, puis importez-la à l’étape 4.", "Sans clé d’API", "chip out"]]) {
       const label = node("label", null, "option-card");
       const input = node("input"); input.type = "radio"; input.name = "gen-" + proposal.id; input.value = value; input.checked = state.choice === value;
       input.onchange = () => { state.choice = value; show(); if (lastData) step3Gate(lastData); };
       const top = node("span", null, "oc-top"); top.append(node("span", tag, tagClass), node("span", null, "oc-ck"));
-      label.append(input, top, node("span", title, "oc-title"), node("span", text, "oc-text"));
+      const description = node("span", text, "oc-text");
+      if (value === "auto") description.dataset.autoText = "";
+      label.append(input, top, node("span", title, "oc-title"), description);
       wrap.append(label);
     }
     return wrap;

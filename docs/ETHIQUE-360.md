@@ -50,7 +50,7 @@ flowchart LR
 | Plans et images sont calculés **en local**, comme la transcription du français ; vers Gemini ne partent que des images échantillonnées, le dialogue voisin et, **si le producteur choisit la darija ou l'arabe**, la piste audio à transcrire | [`video_analyzer/analyze.py`](../src/video_analyzer/analyze.py), [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) |
 | Les **scènes protégées ne sont jamais envoyées** à la recherche de surface | [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) |
 | Le modèle utilisé, le nombre d'appels et d'images envoyées sont **affichés** | `metrics` dans `sceneline.json` |
-| La clé Kling reste **en mémoire**, jamais sur disque ni dans un journal ; le plan n'est servi que par un lien aléatoire éphémère | [`generation/kling.py`](../src/generation/kling.py), [`server/app.py`](../src/server/app.py) · `before_request` |
+| La clé Kling de SceneLine reste **sur le serveur**, jamais affichée ni dans un journal ni dans le dépôt (une clé personnelle reste **en mémoire**) ; le plan n'est servi que par un lien aléatoire éphémère | [`generation/kling.py`](../src/generation/kling.py), [`server/app.py`](../src/server/app.py) · `before_request` |
 | Tous les fichiers restent dans le dossier du projet | `output/web-runs/<id>/` |
 
 ## 4 · Cultures et langues : *quelles cultures le modèle met-il en avant, ou efface-t-il ?*

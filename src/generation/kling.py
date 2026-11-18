@@ -1,6 +1,11 @@
 """SceneLine · génération automatique avec l'API de Kling AI (option de l'étape 3).
 
-L'utilisateur connecte SON compte Kling (clé d'API). SceneLine envoie alors le plan, l'image du produit et le
+Deux modes :
+  - plateforme : SceneLine utilise SON compte Kling. La clé est lue sur le serveur (variable KLING_API_KEY ou
+    fichier .kling-key, jamais versionné) ; l'utilisateur n'a ni clé ni compte à fournir. L'adresse publique
+    par laquelle Kling télécharge le plan vient de SCENELINE_PUBLIC_URL ou du fichier .sceneline-public-url ;
+  - personnel : sans clé sur le serveur, l'utilisateur connecte son propre compte Kling.
+En mode personnel, l'utilisateur connecte SON compte Kling (clé d'API). SceneLine envoie alors le plan, l'image du produit et le
 prompt du kit, attend la vidéo, puis l'intègre comme un résultat importé à la main (étape 4). SceneLine ne
 génère toujours rien lui-même : l'image vient de Kling, et le relevé des modifications le dit.
 
@@ -26,6 +31,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
+from pathlib import Path
+
 from integration import render
 from producer_review.decisions import read
 from video_analyzer.review import replace_json
@@ -41,8 +48,27 @@ TIMEOUT_S = 25 * 60
 ACTIVE = {"submitting", "processing", "downloading", "integrating"}
 AUTH_CODES = {1000, 1001, 1002, 1003, 1004}
 
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def _secret(env, filename):
+    value = os.environ.get(env, "").strip()
+    if not value:
+        try:
+            value = (ROOT / filename).read_text(encoding="utf-8").strip()
+        except OSError:
+            value = ""
+    return value or None
+
+
 LOCK = threading.RLock()
-_KEY = {"value": None}
+PLATFORM_KEY = _secret("KLING_API_KEY", ".kling-key")     # compte Kling de SceneLine (mode plateforme)
+_KEY = {"value": PLATFORM_KEY}
+
+
+def platform_url():
+    """Adresse publique du serveur, relue à chaque génération : l'adresse d'un tunnel change à chaque lancement."""
+    return _secret("SCENELINE_PUBLIC_URL", ".sceneline-public-url")
 _RUNNING = set()          # (dossier, proposition) dont un fil de génération tourne
 _TOKENS = {}              # jeton aléatoire -> (dossier, nom du plan)
 
@@ -69,7 +95,9 @@ def clean(text):
 
 def status():
     key = _KEY["value"]
-    return {"connected": bool(key), "hint": key[-4:] if key else None,
+    managed = bool(PLATFORM_KEY)
+    return {"connected": bool(key), "managed": managed, "hint": key[-4:] if key and not managed else None,
+            "public_ready": public_url_ok(platform_url()),
             "models": {k: v["label"] for k, v in MODELS.items()}, "modes": MODES}
 
 
@@ -97,6 +125,8 @@ def api(method, path, body=None, timeout=60, key=None):
 
 def connect(api_key):
     """Enregistre la clé en mémoire après une vérification qui ne consomme aucun crédit."""
+    if PLATFORM_KEY:
+        raise KlingError("SceneLine génère avec son propre compte Kling : aucune clé à fournir.", 409)
     key = (api_key or "").strip()
     if len(key) < 8 or any(c.isspace() for c in key):
         raise KlingError("Collez la clé d’API Kling telle quelle, sans espace.")
@@ -109,6 +139,8 @@ def connect(api_key):
 
 
 def disconnect():
+    if PLATFORM_KEY:
+        raise KlingError("Le compte Kling de SceneLine se gère sur le serveur.", 409)
     with LOCK:
         _KEY["value"] = None
     return status()
@@ -149,7 +181,9 @@ def build_request(folder, proposal_id, model, mode, public_base=None, token=None
     elif len(prompt) > spec["prompt_max"]:
         raise KlingError(f"Le prompt dépasse la limite de {spec['label']} ({spec['prompt_max']} caractères). Choisissez Kling 4.0.")
     if not public_url_ok(public_base):
-        raise KlingError("Indiquez l’adresse publique (https) de votre tunnel : Kling doit pouvoir télécharger le plan.")
+        raise KlingError("L’adresse publique du serveur n’est pas configurée : la génération est momentanément indisponible."
+                         if PLATFORM_KEY else
+                         "Indiquez l’adresse publique (https) de votre tunnel : Kling doit pouvoir télécharger le plan.", 503 if PLATFORM_KEY else 400)
     asset = {"type": "refer_image", "url": b64(folder / kit["asset"]), "id": "image_1"}
     sent = ["Le prompt du kit (anglais)", "L’image du produit, sur fond blanc",
             "Le plan vidéo source, sans audio (via un lien temporaire à usage unique)"]
@@ -199,6 +233,7 @@ def start(folder, proposal_id, model, mode, public_base, consent):
         raise KlingError("Connectez d’abord votre clé d’API Kling.", 409)
     if get_generation(folder, proposal_id)["state"] in ACTIVE:
         raise KlingError("Une génération est déjà en cours pour ce placement.", 409)
+    public_base = (public_base or "").strip() or platform_url()
     token = secrets.token_hex(16)
     payload, sent, kit = build_request(folder, proposal_id, model, mode, public_base, token)   # valide avant d'envoyer
     if token:

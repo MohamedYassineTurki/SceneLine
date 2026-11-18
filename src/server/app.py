@@ -491,7 +491,10 @@ def kling_connect():
 
 @app.delete("/api/providers/kling/key")
 def kling_disconnect():
-    return jsonify(kling.disconnect())
+    try:
+        return jsonify(kling.disconnect())
+    except kling.KlingError as error:
+        return jsonify(message=str(error)), error.status
 
 
 @app.post("/api/jobs/<job_id>/proposals/<proposal_id>/generate")
