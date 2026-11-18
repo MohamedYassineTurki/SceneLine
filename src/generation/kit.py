@@ -507,7 +507,7 @@ def build_kit(folder, proposal_id, client=None):
     for _ in range(3):   # une réponse illisible ou un fournisseur saturé : on réessaie avant d'abandonner
         try:
             plan = placement.scale_plan(placement.measure(frame_jpeg, resized_file(folder / f"{stem}-produit.png", 512),
-                                                          product, revision, measurer), first.shape[0])
+                                                          product, revision, measurer), first.shape[0], first.shape[1])
         except Exception:
             plan = None
         if plan:

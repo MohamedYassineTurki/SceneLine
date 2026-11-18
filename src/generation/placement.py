@@ -75,7 +75,7 @@ def measure(frame_jpeg, product_jpeg, product, revision, client):
     return values
 
 
-def scale_plan(m, frame_h):
+def scale_plan(m, frame_h, frame_w=None):
     """La taille apparente du produit, calculée par le code à partir de la mesure (jamais estimée par le modèle)."""
     if not m:
         return None
@@ -87,6 +87,16 @@ def scale_plan(m, frame_h):
         base_y = m["reference_bottom"]
     ref_pct = (m["reference_bottom"] - m["reference_top"]) * 100
     target_pct = max(0.5, min(60.0, ratio * ref_pct))
+    # Le produit ne cache jamais l'objet repère : s'il le chevauche, il est posé juste à côté, du côté le plus
+    # proche du point mesuré (et qui reste dans l'image).
+    base_x = m["base_x"]
+    if frame_w and "reference_left" in m:
+        half = (m["product_width_cm"] / m["product_height_cm"]) * (target_pct / 100 * frame_h) / 2 / frame_w
+        gap = 0.006
+        if base_x - half < m["reference_right"] + gap and base_x + half > m["reference_left"] - gap:
+            sides = [x for x in (m["reference_right"] + gap + half, m["reference_left"] - gap - half) if half < x < 1 - half]
+            if sides:
+                base_x = min(sides, key=lambda x: abs(x - m["base_x"]))
     near = min(FRACTIONS, key=lambda f: abs(f[0] - ratio))
     if abs(near[0] - ratio) / ratio > 0.15:
         near = None
@@ -96,7 +106,8 @@ def scale_plan(m, frame_h):
         "reference_height_cm": round(m["reference_height_cm"], 1), "ratio": round(ratio, 2),
         "reference_pct": round(ref_pct, 1), "target_pct": round(target_pct, 1),
         "target_px": round(target_pct / 100 * frame_h), "frame_h": frame_h,
-        "base_x": round(m["base_x"], 3), "base_y": round(base_y, 3), "model": m["model"],
+        "base_x": round(base_x, 3), "base_y": round(base_y, 3), "model": m["model"],
+        "base_x_measured": round(m["base_x"], 3),
         "reference_bottom": round(m["reference_bottom"], 3), "base_y_measured": round(m["base_y"], 3),
         "ratio_en": (near[1] + " the height" if near and near[0] != 1 else "the same height") if near else f"{ratio:.1f} times the height",
         "ratio_fr": (near[2] + " de la hauteur" if near and near[0] != 1 else "la même hauteur") if near else f"{ratio:.1f} fois la hauteur",
