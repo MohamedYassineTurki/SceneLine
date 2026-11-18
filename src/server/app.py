@@ -294,11 +294,23 @@ def edit_context(job_id):
     folder = job_folder(job_id)
     return jsonify(project_context.update_context(folder, request.get_json(silent=True) or {}))
 
+def hard_rejection(item, scene):
+    """Limites que personne ne lève : titre ou générique, scène protégée, aucune surface localisée.
+    Les autres refus (score, visibilité, gêne pour l'action) sont un avis : le producteur peut passer outre."""
+    if scene.get("protection") == "protected":
+        return "Scène protégée : aucun placement n’y est possible."
+    if item.get("continuity") == "title_or_credits":
+        return "Titre ou générique dans l’intervalle : aucun placement n’y est possible."
+    if item.get("surface_type") == "aucune" or item.get("placement_mode") == "aucun" or not item.get("region"):
+        return "Aucune surface localisée dans l’intervalle : rien à retenir."
+    return None
+
 @app.post("/api/jobs/<job_id>/opportunities/<key>/retain")
 def retain_opportunity(job_id, key):
-    """Le producteur retient un placement que SceneLine avait laissé en réserve ou jugé incertain.
+    """Le producteur retient un placement que SceneLine avait laissé en réserve, jugé incertain ou écarté.
 
-    Un placement écarté par une règle (titre, scène protégée, absence de surface) ne peut pas être retenu."""
+    Un placement écarté sur avis (score, visibilité) peut être retenu avec une confirmation explicite,
+    enregistrée. Un titre, une scène protégée ou l'absence de surface ne peuvent jamais être retenus."""
     from datetime import datetime, timezone
     folder = ready_job(job_id)
     reviewer = ((request.get_json(silent=True) or {}).get("reviewer") or "").strip()[:80] or "Producteur"
@@ -311,15 +323,21 @@ def retain_opportunity(job_id, key):
         if item.get("decision") == "keep":
             return jsonify(item)
         scene = next((s for s in data["scenes"] if s["id"] == item["scene_id"]), {})
-        if item.get("decision") == "reject" or scene.get("protection") == "protected":
-            return jsonify(message="Ce placement a été écarté par une règle (titre, scène protégée ou surface absente) : il ne peut pas être retenu."), 409
-        labels = {"reserve": "en réserve", "uncertain": "incertain"}
+        blocked = hard_rejection(item, scene)
+        if blocked:
+            return jsonify(message=blocked), 409
+        overridden = item.get("decision") == "reject"
+        if overridden and (request.get_json(silent=True) or {}).get("override") is not True:
+            return jsonify(message="SceneLine a écarté ce placement : confirmez que vous le retenez malgré son avis."), 409
+        labels = {"reserve": "en réserve", "uncertain": "incertain", "reject": "écarté"}
         previous = item.get("decision")
         rank = max([o.get("rank") or 0 for o in data["opportunities"] if o.get("decision") == "keep"] + [0]) + 1
         item.update(decision="keep", rank=rank,
                     retained={"by": reviewer, "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                              "was": previous, "note": item.get("decision_note", "")},
-                    decision_note=f"Retenu par le producteur ({reviewer}) ; SceneLine l’avait classé {labels.get(previous, previous)}.")
+                              "was": previous, "note": item.get("decision_note", ""), "override": overridden},
+                    decision_note=(f"Retenu par le producteur ({reviewer}) malgré l’avis de SceneLine, qui l’avait écarté : "
+                                   f"{item.get('decision_note', '')}" if overridden else
+                                   f"Retenu par le producteur ({reviewer}) ; SceneLine l’avait classé {labels.get(previous, previous)}."))
         replace_json(path, data)
     return jsonify(item)
 
@@ -333,8 +351,8 @@ def find_surfaces(job_id, key):
     if not item:
         abort(404)
     scene = next((s for s in data["scenes"] if s["id"] == item["scene_id"]), {})
-    if item.get("decision") == "reject" or scene.get("protection") == "protected":
-        return jsonify(message="Intervalle écarté par une règle : SceneLine n'y cherche pas de surface."), 409
+    if scene.get("protection") == "protected" or item.get("continuity") == "title_or_credits":
+        return jsonify(message="Scène protégée ou générique : SceneLine n'y cherche pas de surface."), 409
     try:
         client = understand.Gemini(understand.BACKUP_MODEL, understand.PRIMARY_MODEL, understand.Metrics())
         options = understand.alternative_surfaces(item, scene, data, folder / "source.mp4", client)

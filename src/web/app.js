@@ -250,11 +250,14 @@ function seekTo(ms) {
   player.scrollIntoView({block: "center", behavior: "smooth"});
 }
 
-async function retain(item, button) {
+async function retain(item, button, override = false) {
+  if (override && !confirm("SceneLine a écarté ce placement : " + item.decision_note +
+      "\n\nLe retenir quand même ? Votre choix sera enregistré dans le journal des décisions.")) return;
   button.disabled = true;
   try {
     const response = await fetch("/api/jobs/" + S.job + "/opportunities/" + item.key + "/retain", {method: "POST",
-      headers: {"Content-Type": "application/json"}, body: JSON.stringify({reviewer: localStorage.getItem("sceneline-reviewer") || ""})});
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({reviewer: localStorage.getItem("sceneline-reviewer") || "", override})});
     const answer = await response.json();
     if (!response.ok) throw Error(answer.message || "Impossible de retenir ce placement.");
     await poll(S.job);
@@ -309,6 +312,8 @@ function surfacePicker(item, base) {
   return box;
 }
 
+let currentScenes = [];
+
 function placeRow(item, base) {
   const labels = {keep: "Proposé", reserve: "En réserve", uncertain: "Incertain", reject: "Écarté"};
   const modes = {affiche_murale: "Affiche murale", signaletique: "Signalétique", objet_pose: "Objet posé", aucun: "Aucun"};
@@ -337,7 +342,10 @@ function placeRow(item, base) {
   if (item.decision === "keep" && item.product_example) inner.append(node("p", "Exemple d’objet : " + item.product_example));
   inner.append(node("p", item.decision_note));
   if (verdict && item.decision === "keep") inner.append(guardBlock(verdict));
-  if (item.decision !== "reject") inner.append(surfacePicker(item, base));
+  const scene = currentScenes.find(sc => sc.id === item.scene_id) || {};
+  const overridable = item.decision === "reject" && item.region && item.surface_type !== "aucune"
+    && item.placement_mode !== "aucun" && item.continuity !== "title_or_credits" && scene.protection !== "protected";
+  if (item.decision !== "reject" || overridable) inner.append(surfacePicker(item, base));
   details.append(inner);
   body.append(details);
   row.append(body);
@@ -345,6 +353,11 @@ function placeRow(item, base) {
     const button = node("button", "Retenir ce placement", "btn secondary small");
     button.type = "button";
     button.onclick = () => retain(item, button);
+    row.append(button);
+  } else if (overridable) {
+    const button = node("button", "Retenir malgré l’avis de SceneLine", "btn secondary small");
+    button.type = "button";
+    button.onclick = () => retain(item, button, true);
     row.append(button);
   }
   return row;
@@ -385,6 +398,7 @@ function showResults(job, result, complete) {
   get("download").href = base + (result.pipeline_version ? "sceneline.json" : "analysis.json");
   const items = (result.opportunities || []).filter(item => item.decision);
   const scenes = result.scenes || [];
+  currentScenes = scenes;
   const kept = items.filter(item => item.decision === "keep").sort((a, b) => a.rank - b.rank);
   const others = items.filter(item => item.decision !== "keep");
   const metrics = result.metrics || {};
@@ -409,7 +423,7 @@ function showResults(job, result, complete) {
   get("guard-scenes").replaceChildren(...flagged.map(scene => guardSceneRow(scene, currentGuard.scenes[scene.id], base, shotById)));
   const rank = {reserve: 0, uncertain: 1, reject: 2};
   get("rejected").replaceChildren(...others.sort((a, b) => rank[a.decision] - rank[b.decision] || b.overall_score - a.overall_score).map(item => placeRow(item, base)));
-  get("others-count").textContent = others.length + " intervalles, dont " + others.filter(o => o.decision !== "reject").length + " que vous pouvez retenir";
+  get("others-count").textContent = others.length + " intervalles, dont " + others.filter(o => o.decision !== "reject" || (o.region && o.continuity !== "title_or_credits")).length + " que vous pouvez retenir";
   get("scenes").replaceChildren(...scenes.map(sceneItem));
   get("scenes-count").textContent = scenes.length + " scènes";
   get("transcript").replaceChildren(...result.transcript.map(line => {
