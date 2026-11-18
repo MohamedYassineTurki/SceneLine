@@ -5,6 +5,39 @@
 
 ![Étape 3](../media/etape-3.jpg)
 
+## Placement mesuré et image de référence
+
+Un outil vidéo à qui l'on laisse deviner la taille et la lumière rend un produit trop grand, trop net, trop
+lumineux, « collé ». SceneLine ne lui laisse plus deviner :
+
+```mermaid
+flowchart LR
+    F[Première image du plan] --> M[Mesure Gemini<br/>objet repère + point de pose]
+    M --> C[Taille apparente<br/>calculée par le code]
+    C --> A[Produit accordé à la scène<br/>lumière · couleur · netteté · grain]
+    A --> Q[Maquette sur la première image<br/>ombre de contact]
+    Q -.->|facultatif| I[Outil d'image<br/>rendu photoréaliste]
+    I --> R[Image de référence]
+    Q --> V[Outil vidéo]
+    R --> V
+```
+
+1. **Mesure.** Gemini repère un objet voisin de taille connue (sa boîte dans l'image, sa taille réelle) et le
+   point où poser le produit. Le **code** calcule la taille apparente : taille du produit ÷ taille du repère ×
+   hauteur du repère dans l'image. Exemple : une canette de 11,5 cm à côté d'une cafetière de 22 cm qui occupe
+   10,7 % de l'image doit occuper **5,6 %** (environ 60 px sur 1 080).
+2. **Accord avec la scène.** Le visuel est réduit à cette taille (il perd le détail que la caméra ne verrait
+   pas), puis sa luminosité, sa dominante, sa saturation, sa netteté et son grain sont alignés sur la zone de pose.
+3. **Maquette.** Le produit accordé est posé sur la première image, avec une ombre de contact.
+4. **Image de référence (facultative, recommandée).** SceneLine fournit un prompt pour un outil d'image
+   (ChatGPT, Gemini…) qui rend la maquette photoréaliste sans changer ni taille ni position. L'image importée
+   (cadrage vérifié) est envoyée à l'outil vidéo comme **première image attendue** ; sans elle, la maquette fixe
+   la taille et la position.
+
+Le prompt vidéo reprend la taille chiffrée, le point de pose, la lumière, l'ombre et le rendu de caméra, et
+demande un objet posé comme un vrai accessoire (tourné, jamais face caméra comme une publicité). Une **version
+courte** (moins de 3 000 caractères) est prête pour Kling 3.0 Omni, dont la limite est de 3 072 caractères.
+
 ## Deux façons de produire le plan
 
 | | **Automatique avec Kling AI** | **Manuelle, avec l'outil de votre choix** |

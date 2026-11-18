@@ -179,7 +179,10 @@ def build_request(folder, proposal_id, model, mode, public_base=None, token=None
     if len(prompt) + len(extra) <= spec["prompt_max"]:
         prompt += extra
     elif len(prompt) > spec["prompt_max"]:
-        raise KlingError(f"Le prompt dépasse la limite de {spec['label']} ({spec['prompt_max']} caractères). Choisissez Kling 4.0.")
+        # Prompt trop long pour ce modèle : la version compacte du kit garde taille, position, lumière et références.
+        prompt = kit.get("prompt_short_en") or ""
+        if not prompt or len(prompt) > spec["prompt_max"]:
+            raise KlingError(f"Le prompt dépasse la limite de {spec['label']} ({spec['prompt_max']} caractères). Refaites le kit.")
     if not public_url_ok(public_base):
         raise KlingError("L’adresse publique du serveur n’est pas configurée : la génération est momentanément indisponible."
                          if PLATFORM_KEY else
@@ -192,6 +195,13 @@ def build_request(folder, proposal_id, model, mode, public_base=None, token=None
             "Le plan vidéo source, sans audio (via un lien temporaire à usage unique)"]
     if views:
         sent.insert(2, "La planche d’angles du produit")
+    # Image guide : l'image de référence importée (première image avec le produit en place) ou, à défaut, la maquette
+    # mesurée par SceneLine. Elle fixe la taille, la position et le rendu attendus.
+    guide = kit.get("guide")
+    if guide and (folder / guide["file"]).is_file():
+        views.append({"type": "refer_image", "url": b64(folder / guide["file"]), "id": guide["id"]})
+        sent.insert(len(sent) - 1, "L’image de référence du placement" if guide["kind"] == "reference"
+                    else "La maquette du placement (taille et position mesurées)")
     contents = [{"type": "prompt", "text": prompt}, asset, *views,
                 {"type": "base_video", "url": public_base.rstrip("/") + f"/pub/{token}/plan.mp4", "id": "video_1"}]
     low, high = spec["seconds"]

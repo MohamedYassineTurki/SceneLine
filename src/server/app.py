@@ -438,6 +438,24 @@ def build_kit(job_id, proposal_id):
     except Exception as error:   # indisponibilité du fournisseur d'analyse, fichier illisible, etc.
         return jsonify(message="Impossible de préparer le kit : " + str(error)), 502
 
+@app.post("/api/jobs/<job_id>/proposals/<proposal_id>/reference")
+def import_reference(job_id, proposal_id):
+    """Image de référence : la maquette du kit rendue photoréaliste par un outil d'image (facultatif)."""
+    image = request.files.get("image")
+    if not image:
+        return jsonify(message="Ajoutez l'image de référence."), 400
+    try:
+        return jsonify(kit.set_reference(ready_job(job_id), proposal_id, image.read()))
+    except render.RenderError as error:
+        return jsonify(message=str(error)), error.status
+
+@app.delete("/api/jobs/<job_id>/proposals/<proposal_id>/reference")
+def remove_reference(job_id, proposal_id):
+    try:
+        return jsonify(kit.set_reference(ready_job(job_id), proposal_id, None))
+    except render.RenderError as error:
+        return jsonify(message=str(error)), error.status
+
 @app.post("/api/jobs/<job_id>/proposals/<proposal_id>/export")
 def export_source(job_id, proposal_id):
     try:
@@ -477,7 +495,7 @@ def modifications(job_id):
 @app.get("/api/jobs/<job_id>/files/<name>")
 def job_file(job_id, name):
     folder = job_folder(job_id)
-    if not re.fullmatch(r"(?:source\.mp4|plan-\d+\.jpg|win-\d+-\d+\.jpg|analysis\.json|sceneline\.json|run\.log|product-[a-z0-9-]+\.(?:png|jpe?g|webp)|(?:render|export)-p-\d+-\d+-r\d+(?:-original|-edited)?\.mp4|kit-p-\d+-\d+-r\d+(?:-plan\.mp4|-(?:debut|fin)(?:-16x9)?\.png|-produit\.png|-angles\.png|-prompt-(?:en|fr)\.txt|-LISEZ-MOI\.md|\.zip))", name):
+    if not re.fullmatch(r"(?:source\.mp4|plan-\d+\.jpg|win-\d+-\d+\.jpg|analysis\.json|sceneline\.json|run\.log|product-[a-z0-9-]+\.(?:png|jpe?g|webp)|(?:render|export)-p-\d+-\d+-r\d+(?:-original|-edited)?\.mp4|kit-p-\d+-\d+-r\d+(?:-plan\.mp4|-(?:debut|fin)(?:-16x9)?\.png|-produit\.png|-angles\.png|-maquette\.png|-reference\.png|-prompt-(?:image-|court-)?(?:en|fr)\.txt|-LISEZ-MOI\.md|\.zip))", name):
         abort(404)
     return send_from_directory(folder, name)
 

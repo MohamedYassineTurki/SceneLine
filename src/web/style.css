@@ -516,3 +516,7 @@ fieldset.plain > legend { padding: 0 0 6px; font-size: .875rem; font-weight: 500
 .views-form input, .views-form select { font: inherit; font-size: .8125rem; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0; }
 .product .views .view { margin: 0 0 8px; text-align: center; }
 .product .views .view img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; border: var(--border); border-radius: 8px; }
+
+/* Étape 3 · image de référence du placement */
+.reference-block { margin-top: 18px; padding-top: 14px; border-top: var(--border); display: grid; gap: 8px; }
+.reference-steps { margin: 0; padding-left: 20px; font-size: .875rem; color: var(--ink-2); display: grid; gap: 2px; }

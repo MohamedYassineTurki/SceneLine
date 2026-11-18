@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 import cv2
 import numpy as np
 
+from generation import placement
 from integration import render
 from product_matcher.catalog import MODES, effective, load_catalog
 from producer_review.decisions import digest, read
@@ -150,15 +151,18 @@ def position_phrase(revision, text, lang):
     return f"Placez-le à environ {cx} % du bord gauche de l'image, dans le {part} du cadre, sa base posée sur la surface"
 
 
-def realism(block, lang, views):
-    """Taille, échelle, lumière, ombre et rendu de caméra : ce qui fait qu'un objet ajouté paraît tourné avec le plan."""
+def realism(block, lang, views, plan=None, name="", guide=None):
+    """Taille, échelle, lumière, ombre et rendu de caméra : ce qui fait qu'un objet ajouté paraît tourné avec le plan.
+
+    Avec une mesure (plan), la taille est chiffrée par le code et remplace l'estimation libre du modèle."""
     none = {"rien", "aucun", "aucune", "nothing", "none", "no", "non"}
     occluded = block.get("occlusion") and block["occlusion"].strip(" .").lower() not in none
     if lang == "en":
         parts = [
-            f"Real size: {block['real_size']}." if block.get("real_size") else "",
-            f"Scale in this shot: {block['scale_in_frame']}. Respect the perspective: the object shrinks with "
-            "distance exactly like the objects around it." if block.get("scale_in_frame") else "",
+            placement.size_text(plan, name, "en") if plan else
+            (f"Real size: {block['real_size']}." if block.get("real_size") else ""),
+            "" if plan else (f"Scale in this shot: {block['scale_in_frame']}. Respect the perspective: the object shrinks with "
+            "distance exactly like the objects around it." if block.get("scale_in_frame") else ""),
             f"Light: {block['light_on_object']}." if block.get("light_on_object") else "",
             f"Shadow: {block['shadow']}." if block.get("shadow") else "",
             f"Camera look: {block['camera_look']}. The object has exactly the same sharpness, depth of field, "
@@ -167,12 +171,15 @@ def realism(block, lang, views):
             f"Occlusion: {block['occlusion']}; whatever passes in front of it hides it naturally." if occluded else "",
             "Reference image @image_2 is a sheet showing the same product from several angles: use it to render "
             "its true shape, label and top from this camera's viewing angle." if views else "",
+            (f"Reference image @{guide['id']} is the FIRST FRAME of the expected result: the product is already in place, at the right size, with the right light and look. Reproduce exactly that position, size, brightness and rendering in every frame." if guide['kind'] == "reference" else
+             f"Reference image @{guide['id']} is a layout guide (mock-up) of the first frame: follow exactly the position and size of the product in it; its rendering is approximate.") if guide else "",
         ]
     else:
         parts = [
-            f"Taille réelle : {block['real_size']}." if block.get("real_size") else "",
-            f"Échelle dans ce plan : {block['scale_in_frame']}. Respectez la perspective : l'objet rapetisse avec "
-            "la distance exactement comme les objets voisins." if block.get("scale_in_frame") else "",
+            placement.size_text(plan, name, "fr") if plan else
+            (f"Taille réelle : {block['real_size']}." if block.get("real_size") else ""),
+            "" if plan else (f"Échelle dans ce plan : {block['scale_in_frame']}. Respectez la perspective : l'objet rapetisse avec "
+            "la distance exactement comme les objets voisins." if block.get("scale_in_frame") else ""),
             f"Lumière : {block['light_on_object']}." if block.get("light_on_object") else "",
             f"Ombre : {block['shadow']}." if block.get("shadow") else "",
             f"Rendu de caméra : {block['camera_look']}. L'objet a exactement la même netteté, profondeur de champ, "
@@ -182,11 +189,13 @@ def realism(block, lang, views):
             "L'image de référence @image_2 est une planche qui montre le même produit sous plusieurs angles : "
             "servez-vous-en pour rendre sa vraie forme, son étiquette et son dessus sous l'angle de cette caméra."
             if views else "",
+            (f"L'image de référence @{guide['id']} est la PREMIÈRE IMAGE du résultat attendu : le produit y est déjà posé, à la bonne taille, avec la bonne lumière et le bon rendu. Reproduisez exactement cette position, cette taille, cette luminosité et ce rendu sur toutes les images." if guide['kind'] == "reference" else
+             f"L'image de référence @{guide['id']} est une maquette de la première image : suivez exactement la position et la taille du produit ; son rendu est approximatif.") if guide else "",
         ]
     return " ".join(p for p in parts if p)
 
 
-def build_prompts(revision, product, seconds, d, views=0):
+def build_prompts(revision, product, seconds, d, views=0, plan=None, guide=None):
     """Assemble les prompts à partir des descripteurs. Un champ manquant est omis, jamais inventé."""
     scale = revision.get("scale", 1.0)
     size_en = f" It appears at {round(scale * 100)}% of its reference size." if scale != 1 else ""
@@ -204,6 +213,11 @@ def build_prompts(revision, product, seconds, d, views=0):
                         for i, t in enumerate(en["timeline"][:3])])
     timeline_fr = join([f"{['0-' + str(round(n / 3)), str(round(n / 3)) + '-' + str(round(2 * n / 3)), str(round(2 * n / 3)) + '-' + str(n)][i]} s : {t}"
                         for i, t in enumerate(fr["timeline"][:3])])
+    if plan:
+        en["surface_position"] += (f". Its base touches the surface at about {round(plan['base_x'] * 100)}% from the left "
+                                   f"and {round(plan['base_y'] * 100)}% from the top of the image")
+        fr["surface_position"] += (f". Sa base touche la surface à environ {round(plan['base_x'] * 100)} % depuis la gauche "
+                                   f"et {round(plan['base_y'] * 100)} % depuis le haut de l'image")
     where_en = (f"on the EXISTING {en['surface_name']}. {en['surface_position']}. "
                 + (f"Landmark: {en['landmark']}. " if en["landmark"] else "")
                 + "Do not add, extend, raise, lower or move any counter, table, shelf, ledge, tray, board or other "
@@ -218,19 +232,25 @@ def build_prompts(revision, product, seconds, d, views=0):
                "first frame to the last, perfectly still." if flat else
                "It looks real: same lighting, a soft contact shadow and, on a glossy surface, a faint reflection. "
                "It is present from the first frame to the last, perfectly still. Nobody touches it, moves it or "
-               "looks at it.")
+               "looks at it. It stands like a real prop someone just put down: turned about 30 degrees, the label "
+               "partly visible, never squarely facing the camera like an advertisement. The reference photo is a "
+               "studio shot: in the scene the product is darker, less saturated and tinted by the room's light, "
+               "exactly like the objects next to it.")
     look_fr = ("C'est un visuel plat fixé sur la surface, qui suit sa perspective et sa lumière, présent de la "
                "première à la dernière image, parfaitement immobile." if flat else
                "Il paraît réel : même lumière, ombre de contact douce et, sur une surface brillante, léger reflet. "
                "Il est présent de la première à la dernière image, parfaitement immobile. Personne ne le touche, "
-               "ne le déplace ni ne le regarde.")
+               "ne le déplace ni ne le regarde. Il est posé comme un vrai accessoire que quelqu'un vient de poser : "
+               "tourné d'environ 30 degrés, l'étiquette en partie visible, jamais face caméra comme une publicité. "
+               "La photo de référence est une photo studio : dans la scène, le produit est plus sombre, moins "
+               "saturé et teinté par la lumière de la pièce, exactement comme les objets voisins.")
     prompt_en = (
         f"TASK: Edit the input video by adding one object, and change nothing else. Add {product['name']} "
         f"({(en['object_description'] or product['description']).rstrip('.')}) from the reference image to the scene. This is an "
         "edit of the existing shot, not a new video: every frame stays exactly as in the original, except for the "
         f"added object, its shadow and its reflection.\n\nWHERE IT GOES: {where_en}\n\nTHE OBJECT: "
         f"{(en['object_description'] or product['description']).rstrip('.')}.{size_en} {look_en}\n\n"
-        f"MAKE IT LOOK FILMED WITH THE SHOT: {realism(en, 'en', views)}\n\nKEEP EXACTLY THE SAME: the "
+        f"MAKE IT LOOK FILMED WITH THE SHOT: {realism(en, 'en', views, plan, product['name'], guide)}\n\nKEEP EXACTLY THE SAME: the "
         "camera (locked, no zoom, no pan, no cut, no reframing), the framing and composition, "
         f"the setting ({en['setting']}), the elements: {join(en['fixed_elements'])}, the lighting ({en['lighting']}), "
         f"the people: {join(en['people'])}, and the timing of their movements over the {n} seconds"
@@ -243,7 +263,7 @@ def build_prompts(revision, product, seconds, d, views=0):
         "C'est une modification du plan existant, pas une nouvelle vidéo : chaque image reste exactement comme "
         f"l'originale, sauf l'objet ajouté, son ombre et son reflet.\n\nOÙ : {where_fr}\n\nL'OBJET : "
         f"{(fr['object_description'] or product['description']).rstrip('.')}.{size_fr} {look_fr}\n\n"
-        f"QU'IL SEMBLE FILMÉ AVEC LE PLAN : {realism(fr, 'fr', views)}\n\nGARDER STRICTEMENT "
+        f"QU'IL SEMBLE FILMÉ AVEC LE PLAN : {realism(fr, 'fr', views, plan, product['name'], guide)}\n\nGARDER STRICTEMENT "
         "IDENTIQUE : la caméra (fixe, ni zoom, ni panoramique, ni coupe, ni recadrage), le cadrage et la "
         f"composition, le lieu ({fr['setting']}), les éléments : {join(fr['fixed_elements'])}, la lumière "
         f"({fr['lighting']}), les personnes : {join(fr['people'])} et le rythme de leurs gestes pendant les {n} "
@@ -251,6 +271,50 @@ def build_prompts(revision, product, seconds, d, views=0):
         + ".\n\nNE PAS : ajouter ou retirer un autre objet, une personne, un texte, un sous-titre ou un logo ; "
           "changer les visages ou le décor ; ajouter musique, dialogue ou bruitage ; changer la vitesse de l'action.")
     return prompt_en, prompt_fr
+
+
+SHORT_LIMIT = 3000   # Kling 3.0 Omni refuse au-delà de 3 072 caractères ; un prompt coupé perd ses consignes de taille
+
+
+def build_short(revision, product, d, views=0, plan=None, guide=None):
+    """Version compacte du prompt (anglais), pour les outils à prompt court : l'essentiel d'abord, jamais coupé."""
+    en = d["en"]
+    name = product["name"]
+    obj = (en.get("object_description") or product["description"]).rstrip(".")
+    where = f"on the existing {en.get('surface_name') or revision['surface']}"
+    if plan:
+        where += (f", its base at about {round(plan['base_x'] * 100)}% from the left and "
+                  f"{round(plan['base_y'] * 100)}% from the top of the image")
+    elif en.get("surface_position"):
+        where += f". {en['surface_position']}"
+    if en.get("landmark"):
+        where += f", next to {en['landmark']}"
+    refs = []
+    if guide:
+        refs.append(f"@{guide['id']} is the first frame of the expected result: copy exactly the product's position, size, "
+                    "light and look." if guide["kind"] == "reference" else
+                    f"@{guide['id']} is a mock-up of the first frame: copy exactly the product's position and size.")
+    if views:
+        refs.append("@image_2 shows the product from several angles.")
+    size = placement.size_text(plan, name, "en") if plan else (
+        f"Real size: {en['real_size']}. Scale: {en['scale_in_frame']}." if en.get("real_size") else "")
+    light = "; ".join(x for x in (en.get("light_on_object"), en.get("shadow")) if x)
+    parts = [
+        f"Edit the input video: add ONE object, {name} ({obj}) from @image_1, {where}. Change nothing else.",
+        size,
+        "It stands still from the first to the last frame, like a real prop someone put down: turned about 30 degrees, "
+        "label partly visible, never facing the camera like an ad. Its base touches the surface, with a dark soft "
+        "contact shadow.",
+        ("Light: " + light + ".") if light else "",
+        "@image_1 is a studio photo: in the scene the object is darker, less saturated and tinted by the room's light, "
+        "with the same softness, grain and color grading as the objects next to it. Never brighter, sharper or "
+        "cleaner than its surroundings.",
+        " ".join(refs),
+        "Keep exactly the same camera (locked, no zoom, no pan, no cut), framing, people, faces, gestures, timing, "
+        "set and light. Add no other object, text, logo or sound.",
+    ]
+    text = "\n\n".join(x for x in parts if x)
+    return text[:SHORT_LIMIT]
 
 
 def settings_text(seconds, product):
@@ -344,7 +408,25 @@ def build_kit(folder, proposal_id, client=None):
         thumbs.append(cv2.imencode(".jpg", small)[1].tobytes())
     client = client or Gemini(BACKUP_MODEL, PRIMARY_MODEL, Metrics())
     description = describe_shot(folder, revision, product, thumbs, client)
-    prompt_en, prompt_fr = build_prompts(revision, product, seconds, description, len(views))
+
+    # Placement mesuré : taille calculée par le code, produit accordé à la scène, maquette sur la première image.
+    first = frames["debut"]
+    plan, guide_image = None, None
+    try:
+        width = min(1280, first.shape[1])
+        frame_jpeg = cv2.imencode(".jpg", cv2.resize(first, (width, round(first.shape[0] * width / first.shape[1]))))[1].tobytes()
+        measurer = Gemini(PRIMARY_MODEL, BACKUP_MODEL, Metrics())
+        plan = placement.scale_plan(placement.measure(frame_jpeg, resized_file(folder / f"{stem}-produit.png", 512),
+                                                      product, revision, measurer), first.shape[0])
+    except Exception:   # mesure indisponible : le prompt garde la description qualitative
+        plan = None
+    if plan and revision["mode"] == "objet_pose":
+        bgr, alpha = placement.cutout(cv2.imread(str(folder / f"{stem}-produit.png")))
+        matched, mask = placement.match_to_scene(bgr, alpha, first, plan["base_x"], plan["base_y"], plan["target_px"])
+        cv2.imwrite(str(folder / f"{stem}-maquette.png"), placement.mockup(first, matched, mask, plan["base_x"], plan["base_y"]))
+        guide_image = {"kind": "maquette", "file": f"{stem}-maquette.png", "id": f"image_{2 + len(views)}"}
+    prompt_en, prompt_fr = build_prompts(revision, product, seconds, description, len(views), plan, guide_image)
+    prompt_short = build_short(revision, product, description, len(views), plan, guide_image)
     settings = settings_text(seconds, product)
 
     files = {
@@ -355,9 +437,19 @@ def build_kit(folder, proposal_id, client=None):
     }
     for i, view in enumerate(views, 1):
         files[view["file"]] = "Planche d’angles du produit (facultative)"
+    image_prompts = None
+    if guide_image:
+        files[guide_image["file"]] = "Maquette : le produit à la taille et à la place mesurées, sur la première image"
+        image_prompts = placement.image_prompts(product["name"], plan, description["en"], description["fr"])
+        (folder / f"{stem}-prompt-image-en.txt").write_text(image_prompts["en"] + "\n", encoding="utf-8")
+        (folder / f"{stem}-prompt-image-fr.txt").write_text(image_prompts["fr"] + "\n", encoding="utf-8")
+        files[f"{stem}-prompt-image-en.txt"] = "Prompt pour l'outil d'image (anglais) : rendre la maquette photoréaliste"
+        files[f"{stem}-prompt-image-fr.txt"] = "Prompt pour l'outil d'image (français)"
     (folder / f"{stem}-prompt-en.txt").write_text(prompt_en + "\n\nNEGATIVE PROMPT: " + NEGATIVE_EN + "\n", encoding="utf-8")
     (folder / f"{stem}-prompt-fr.txt").write_text(prompt_fr + "\n\nPROMPT NÉGATIF : " + NEGATIVE_FR + "\n", encoding="utf-8")
     files[f"{stem}-prompt-en.txt"], files[f"{stem}-prompt-fr.txt"] = "Prompt (anglais)", "Prompt (français)"
+    (folder / f"{stem}-prompt-court-en.txt").write_text(prompt_short + "\n", encoding="utf-8")
+    files[f"{stem}-prompt-court-en.txt"] = f"Prompt court (anglais, moins de {SHORT_LIMIT} caractères) pour Kling 3.0 Omni"
     guide = ["# Kit de génération SceneLine\n",
              f"Placement : {product['name']} · {render.clock(revision['start_ms'])}–{render.clock(revision['end_ms'])} "
              f"de la vidéo source · révision {revision['n']} (empreinte {digest(revision)}).\n",
@@ -377,14 +469,69 @@ def build_kit(folder, proposal_id, client=None):
         "proposal_id": proposal_id, "revision": revision["n"], "revision_digest": digest(revision),
         "created_at": now(), "stem": stem, "zip": archive.name, "product_name": product["name"],
         "seconds": round(seconds, 2), "files": files, "description_model": description["model"],
-        "prompt_en": prompt_en, "prompt_fr": prompt_fr, "negative_en": NEGATIVE_EN, "negative_fr": NEGATIVE_FR,
+        "prompt_en": prompt_en, "prompt_fr": prompt_fr, "prompt_short_en": prompt_short, "negative_en": NEGATIVE_EN, "negative_fr": NEGATIVE_FR,
         "settings": settings, "prompt_sha": hashlib.sha256(prompt_en.encode()).hexdigest()[:12],
         "clip": f"{stem}-plan.mp4", "asset": f"{stem}-produit.png", "views": [v["file"] for v in views],
         "frames": {"debut": f"{stem}-debut-16x9.png", "fin": f"{stem}-fin-16x9.png"},
         "frames_native": {"debut": f"{stem}-debut.png", "fin": f"{stem}-fin.png"},
+        "plan": plan, "guide": guide_image, "image_prompts": image_prompts, "reference": None,
+        "description": description, "frame_size": [first.shape[1], first.shape[0]],
     }
     with LOCK:
         store = read(folder, "kits.json", {"kits": {}})
+        store["kits"][proposal_id] = record
+        replace_json(folder / "kits.json", store)
+    return record
+
+
+# --------------------------------------------------------------------------- image de référence (facultative)
+
+def _rewrite(folder, record, product, revision):
+    """Refait les prompts et l'archive d'un kit après l'import ou le retrait de l'image de référence (sans appel IA)."""
+    stem = record["stem"]
+    guide = ({"kind": "reference", "file": record["reference"], "id": record["guide"]["id"]} if record.get("reference")
+             else {"kind": "maquette", "file": f"{stem}-maquette.png", "id": record["guide"]["id"]})
+    prompt_en, prompt_fr = build_prompts(revision, product, record["seconds"], record["description"],
+                                         len(record.get("views", [])), record["plan"], guide)
+    (folder / f"{stem}-prompt-en.txt").write_text(prompt_en + "\n\nNEGATIVE PROMPT: " + NEGATIVE_EN + "\n", encoding="utf-8")
+    (folder / f"{stem}-prompt-fr.txt").write_text(prompt_fr + "\n\nPROMPT NÉGATIF : " + NEGATIVE_FR + "\n", encoding="utf-8")
+    prompt_short = build_short(revision, product, record["description"], len(record.get("views", [])), record["plan"], guide)
+    (folder / f"{stem}-prompt-court-en.txt").write_text(prompt_short + "\n", encoding="utf-8")
+    files = {k: v for k, v in record["files"].items() if not k.endswith("-reference.png")}
+    if record.get("reference"):
+        files[record["reference"]] = "Image de référence : la première image avec le produit déjà en place"
+    with zipfile.ZipFile(folder / record["zip"], "w", zipfile.ZIP_DEFLATED) as zf:
+        for name in files:
+            zf.write(folder / name, name.replace(stem + "-", ""))
+    record.update(guide=guide, files=files, prompt_en=prompt_en, prompt_fr=prompt_fr, prompt_short_en=prompt_short,
+                  prompt_sha=hashlib.sha256(prompt_en.encode()).hexdigest()[:12])
+    return record
+
+
+def set_reference(folder, proposal_id, data):
+    """Importe l'image de référence (la maquette rendue photoréaliste par un outil d'image), ou la retire (data=None)."""
+    proposal, revision, _ = render.approved_revision(folder, proposal_id)
+    product = render.product_of(folder, revision)
+    with LOCK:
+        store = read(folder, "kits.json", {"kits": {}})
+        record = store["kits"].get(proposal_id)
+        if not record or record["revision"] != revision["n"]:
+            raise render.RenderError("Préparez d'abord le kit de la révision approuvée.", 409)
+        if not record.get("guide"):
+            raise render.RenderError("Ce kit n'a pas de maquette : refaites le kit.", 409)
+        if data is None:
+            record["reference"], record["reference_at"] = None, None
+        else:
+            image = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+            if image is None:
+                raise render.RenderError("Image illisible : PNG, JPG ou WebP.", 400)
+            w, h = record["frame_size"]
+            if abs(image.shape[1] / image.shape[0] - w / h) > 0.08:
+                raise render.RenderError(f"L'image doit garder le cadrage du plan ({w}×{h}) : l'outil l'a recadrée.", 400)
+            name = f"{record['stem']}-reference.png"
+            cv2.imwrite(str(folder / name), cv2.resize(image, (w, h), interpolation=cv2.INTER_AREA))
+            record["reference"], record["reference_at"] = name, now()
+        _rewrite(folder, record, product, revision)
         store["kits"][proposal_id] = record
         replace_json(folder / "kits.json", store)
     return record

@@ -67,17 +67,75 @@
 
   const section = (...children) => { const s = node("section", null, "nsec"); s.append(...children); return s; };
 
+  /* Image de référence : la maquette mesurée par SceneLine, rendue photoréaliste par un outil d'image (facultatif).
+     L'outil vidéo la reçoit comme première image attendue : taille, position et rendu ne sont plus devinés. */
+  function referenceBlock(kit, proposal) {
+    const base = baseUrl(), version = "?v=" + encodeURIComponent((kit.reference_at || kit.created_at) || "");
+    const box = node("div", null, "reference-block");
+    const plan = kit.plan;
+    box.append(node("h3", "Image de référence du placement", "sub-title"));
+    const fr = (n) => String(n).replace(".", ",");
+    if (plan) box.append(node("p", "Taille mesurée : " + fr(plan.target_pct) + " % de la hauteur de l’image (environ " + plan.target_px
+      + " px). Objet repère : " + plan.reference_fr + ", " + fr(plan.reference_height_cm) + " cm ; produit : "
+      + fr(plan.product_height_cm) + " cm, soit " + Math.round(plan.ratio * 100) + " % de sa hauteur.", "muted"));
+    const row = node("div", null, "media-row");
+    const fig = (src, alt, caption) => { const f = node("figure"); const i = node("img"); i.src = base + src + version; i.alt = alt; i.loading = "lazy"; f.append(i, node("figcaption", caption)); return f; };
+    row.append(fig(kit.guide.file.endsWith("-reference.png") ? kit.stem + "-maquette.png" : kit.guide.file, "Maquette du placement",
+      "1 · Maquette SceneLine : taille et position mesurées, lumière accordée"));
+    if (kit.reference) row.append(fig(kit.reference, "Image de référence importée", "2 · Votre image de référence, envoyée à l’outil vidéo"));
+    box.append(row);
+
+    const steps = node("ol", null, "reference-steps");
+    steps.append(node("li", "Copiez le prompt ci-dessous et donnez-le à un outil d’image (ChatGPT, Gemini…), avec la maquette et l’asset du produit."),
+      node("li", "Importez l’image obtenue. SceneLine vérifie qu’elle garde le cadrage du plan."),
+      node("li", "La génération vidéo la reçoit comme première image attendue. Sans elle, c’est la maquette qui guide la taille et la position."));
+    box.append(steps);
+    let lang = "en";
+    const text = node("textarea", null, "views-prompt"); text.readOnly = true; text.rows = 8;
+    text.value = kit.image_prompts?.[lang] || ""; text.setAttribute("aria-label", "Prompt pour l’outil d’image");
+    const bar = node("div", null, "views-bar");
+    bar.append(copyButton(() => text.value));
+    const swap = node("button", "Version française", "link"); swap.type = "button";
+    swap.onclick = () => { lang = lang === "en" ? "fr" : "en"; text.value = kit.image_prompts?.[lang] || "";
+      swap.textContent = lang === "en" ? "Version française" : "English version"; };
+    const mock = node("a", "Télécharger la maquette", "link"); mock.href = base + kit.stem + "-maquette.png"; mock.download = "maquette.png";
+    bar.append(swap, mock);
+    box.append(text, bar);
+
+    const input = node("input"); input.type = "file"; input.accept = ".png,.jpg,.jpeg,.webp"; input.hidden = true;
+    const pick = node("button", kit.reference ? "Remplacer l’image de référence" : "Importer l’image de référence", "btn secondary small"); pick.type = "button";
+    const status = node("p", null, "status");
+    pick.onclick = () => input.click();
+    input.onchange = async () => {
+      if (!input.files[0]) return;
+      const body = new FormData(); body.append("image", input.files[0]);
+      pick.disabled = true; status.className = "status"; status.textContent = "Import…";
+      try { await call("/proposals/" + proposal.id + "/reference", {method: "POST", body}); await window.reloadProject(); }
+      catch (error) { status.className = "status error"; status.textContent = error.message; pick.disabled = false; }
+    };
+    const actions = node("div", null, "views-bar");
+    actions.append(pick);
+    if (kit.reference) {
+      const remove = node("button", "Retirer", "link"); remove.type = "button";
+      remove.onclick = async () => { await call("/proposals/" + proposal.id + "/reference", {method: "DELETE"}); await window.reloadProject(); };
+      actions.append(remove);
+    }
+    box.append(input, actions, status, node("p", "Facultatif, mais recommandé : c’est la meilleure garantie que le produit garde la bonne taille, la bonne lumière et la bonne netteté.", "ink-note"));
+    return box;
+  }
+
   /* Option manuelle : prompt à copier, kit à télécharger, import à l'étape 4. */
   function manualPanel(kit, proposal) {
     const box = node("div", null, "numpanel");
     box.setAttribute("role", "group"); box.setAttribute("aria-label", "Génération manuelle");
     const panel = node("div", null, "prompt-panel");
     const bar = node("div", null, "panel-bar");
-    const texts = {en: kit.prompt_en, fr: kit.prompt_fr, neg: kit.negative_en};
+    const texts = {en: kit.prompt_en, short: kit.prompt_short_en, fr: kit.prompt_fr, neg: kit.negative_en};
     const area = node("textarea"); area.readOnly = true; area.value = texts.en; area.setAttribute("aria-label", "Prompt");
     const tabs = node("div", null, "segmented"); tabs.setAttribute("role", "radiogroup");
     const name = "pt-" + proposal.id;
-    for (const [value, label] of [["en", "Anglais"], ["fr", "Français"], ["neg", "Prompt négatif"]]) {
+    const tabsList = [["en", "Anglais"], ...(kit.prompt_short_en ? [["short", "Court · Kling 3.0"]] : []), ["fr", "Français"], ["neg", "Prompt négatif"]];
+    for (const [value, label] of tabsList) {
       const l = node("label"); const input = node("input"); input.type = "radio"; input.name = name; input.value = value; input.checked = value === "en";
       input.onchange = () => { area.value = texts[value]; area.rows = value === "neg" ? 4 : 12; };
       l.append(input, node("span", label)); tabs.append(l);
@@ -91,7 +149,7 @@
       setTimeout(() => { copy.textContent = "Copier"; }, 1800);
     };
     bar.append(tabs, copy);
-    panel.append(bar, area, node("p", "Prompt rédigé à partir de trois images du plan (" + kit.description_model + "), empreinte " + kit.prompt_sha + ". Les outils comprennent en général mieux l’anglais.", "muted"));
+    panel.append(bar, area, node("p", "Prompt rédigé à partir de trois images du plan (" + kit.description_model + "), empreinte " + kit.prompt_sha + ". Les outils comprennent en général mieux l’anglais. Kling 3.0 Omni accepte 3 072 caractères au plus : utilisez la version « Court », sinon la fin du prompt est coupée.", "muted"));
 
     const settings = node("details", null, "disclosure flat");
     settings.append(node("summary", "Réglages conseillés"));
@@ -374,6 +432,7 @@
       const show = () => place.replaceChildren(genState(proposal.id).choice === "auto" ? autoPanel(proposal, kit) : manualPanel(kit, proposal));
       const content = node("div", null, "stack-sm");
       content.append(node("h3", "Contenu du kit", "sub-title"), kitMedia(kit));
+      if (kit.guide) content.append(referenceBlock(kit, proposal));
       const choose = node("div", null, "stack-sm");
       choose.append(node("h3", "Comment produire la vidéo ?"), optionCards(proposal, show));
       card.append(content, node("hr", null, "hr"), choose, place, build);
