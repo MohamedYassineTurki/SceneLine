@@ -501,14 +501,21 @@ def build_kit(folder, proposal_id, client=None):
     # Placement mesuré : taille calculée par le code, produit accordé à la scène, maquette sur la première image.
     first = frames["debut"]
     plan, guide_image = None, None
-    try:
-        width = min(1280, first.shape[1])
-        frame_jpeg = cv2.imencode(".jpg", cv2.resize(first, (width, round(first.shape[0] * width / first.shape[1]))))[1].tobytes()
-        measurer = Gemini(PRIMARY_MODEL, BACKUP_MODEL, Metrics())
-        plan = placement.scale_plan(placement.measure(frame_jpeg, resized_file(folder / f"{stem}-produit.png", 512),
-                                                      product, revision, measurer), first.shape[0])
-    except Exception:   # mesure indisponible : le prompt garde la description qualitative
-        plan = None
+    width = min(1280, first.shape[1])
+    frame_jpeg = cv2.imencode(".jpg", cv2.resize(first, (width, round(first.shape[0] * width / first.shape[1]))))[1].tobytes()
+    measurer = Gemini(PRIMARY_MODEL, BACKUP_MODEL, Metrics())
+    for _ in range(3):   # une réponse illisible ou un fournisseur saturé : on réessaie avant d'abandonner
+        try:
+            plan = placement.scale_plan(placement.measure(frame_jpeg, resized_file(folder / f"{stem}-produit.png", 512),
+                                                          product, revision, measurer), first.shape[0])
+        except Exception:
+            plan = None
+        if plan:
+            break
+    if not plan and revision["mode"] == "objet_pose":
+        # Sans mesure, pas de maquette ni d'image de référence : mieux vaut le dire que livrer un kit incomplet.
+        raise render.RenderError("La mesure de la taille du produit a échoué (Gemini est saturé en ce moment). "
+                                 "Réessayez dans une minute : le kit précédent est conservé.", 503)
     if plan and revision["mode"] == "objet_pose":
         bgr, alpha = placement.cutout(cv2.imread(str(folder / f"{stem}-produit.png")))
         matched, mask = placement.match_to_scene(bgr, alpha, first, plan["base_x"], plan["base_y"], plan["target_px"])

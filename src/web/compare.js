@@ -404,7 +404,7 @@
     const message = node("p", null, "status");
     build.onclick = async () => {
       build.disabled = true; message.classList.remove("error");
-      message.textContent = "Préparation en cours : découpe du plan, images et description (environ 15 s)…";
+      message.textContent = "Préparation en cours : découpe du plan, mesure de la taille, maquette et description (environ 30 s)…";
       try { await call("/proposals/" + proposal.id + "/kit", {method: "POST"}); await window.reloadProject(); }
       catch (error) { message.textContent = error.message; message.classList.add("error"); build.disabled = false; }
     };
@@ -451,8 +451,15 @@
       refPart.append(node("h3", "2 · Image de référence" + (ready ? "" : " · obligatoire"), "sub-title"));
       if (kit.guide) refPart.append(referenceBlock(kit, proposal));
       else {
-        const redo = node("button", "Refaire le kit", "btn secondary small"); redo.type = "button"; redo.onclick = () => build.click();
-        refPart.append(node("p", "Ce kit a été préparé avant l’ajout de la maquette mesurée. Refaites-le pour obtenir la maquette et l’image de référence.", "badge uncertain"), redo);
+        const redo = node("button", "Refaire le kit", "btn secondary small"); redo.type = "button";
+        const redoStatus = node("p", null, "status");
+        redo.onclick = async () => {
+          redo.disabled = true; redo.textContent = "Préparation…"; redoStatus.className = "status";
+          redoStatus.textContent = "Découpe du plan, mesure de la taille et maquette (environ 30 s)…";
+          try { await call("/proposals/" + proposal.id + "/kit", {method: "POST"}); await window.reloadProject(); }
+          catch (error) { redoStatus.className = "status error"; redoStatus.textContent = error.message; redo.disabled = false; redo.textContent = "Réessayer"; }
+        };
+        refPart.append(node("p", "Ce kit n’a pas encore de maquette mesurée. Refaites-le pour obtenir la maquette et l’image de référence.", "badge uncertain"), redo, redoStatus);
       }
       card.append(refPart);
 
