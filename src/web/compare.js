@@ -433,59 +433,88 @@
     }));
     const lede = get("step3-lede");
     if (lede) lede.innerHTML = LEDES[version()];
+    const title = get("step3-title");
+    if (title) title.textContent = version() === "final" ? "Génération" : "Kit de génération";
   }
   paintVersionSwitch();
 
-  const RUN_STEPS = [["reference", "Image de référence", "API de génération d’image"], ["video", "Vidéo", "Kling AI"],
+  const RUN_STEPS = [["kit", "Kit média", "plan, produit, taille et place mesurées"],
+    ["reference", "Image de référence", "le produit posé dans la scène"],
+    ["video", "Vidéo", "le plan régénéré avec le produit, Kling AI"],
     ["integration", "Intégration", "vérification, recalage, 1 s d’original avant et après"]];
 
   function finalPanel(kit, proposal, data) {
     const box = node("section", null, "gen-part final-panel");
     let timer = null, wasRunning = false;
+    const poll = () => { timer = setTimeout(async () => paint(await call("/proposals/" + proposal.id + "/pipeline", {cache: "no-store"})), 1500); };
     const paint = (run) => {
       clearTimeout(timer);
       const integrated = data.renders[proposal.id]?.revision === proposal.approved_revision;
-      box.replaceChildren(node("h3", "2 · Générer et intégrer, sans quitter SceneLine", "sub-title"));
-      if (pipelineInfo.demo) box.append(node("p", "Démonstration : les API de génération ne sont pas encore financées. Pour ce plan, SceneLine rejoue l’image et la vidéo générées plus tôt avec ces mêmes outils ; la vérification et l’intégration sont réelles.", "demo-note"));
+      if (integrated && run.state !== "running") run = {...run, state: "done"};
+      box.replaceChildren(node("h3", "Générer le placement", "sub-title"));
+      const order = ["kit", "reference", "video", "integration", "done"];
+      const at = run.state === "done" ? 4 : run.state === "video_ready" ? 3 : order.indexOf(run.stage || "kit");
       const list = node("ol", null, "run-steps");
-      const order = ["reference", "video", "integration", "done"];
-      const at = run.state === "done" || (integrated && run.state === "idle") ? 3 : Math.max(0, order.indexOf(run.stage || "reference"));
       RUN_STEPS.forEach(([key, title, detail], i) => {
-        const state = run.state === "idle" && !integrated ? "todo" : i < at ? "done" : i === at ? (run.state === "error" ? "error" : "current") : "todo";
+        const state = run.state === "idle" || run.state === undefined ? "todo"
+          : i < at ? "done" : i === at ? (run.state === "error" ? "error" : run.state === "video_ready" ? "todo" : "current") : "todo";
         const li = node("li", null, "run-step " + state);
         li.append(node("span", state === "done" ? "✓" : String(i + 1), "dot"), node("b", title), node("span", " · " + detail, "muted"));
         list.append(li);
       });
       box.append(list);
-      if (run.reference || kit.reference) {
-        const img = node("img", null, "run-reference"); img.alt = "Image de référence générée";
-        img.src = baseUrl() + (run.reference || kit.reference) + "?v=" + encodeURIComponent(run.updated_at || kit.reference_at || "");
-        const f = node("figure", null, "run-figure"); f.append(img, node("figcaption", "Image de référence : le produit à la place et à la taille mesurées."));
-        box.append(f);
+
+      const media = node("div", null, "run-media");
+      const reference = run.reference || (run.state !== "idle" && kit?.reference);
+      if (reference && run.state !== "idle") {
+        const f = node("figure", null, "run-figure");
+        const img = node("img"); img.alt = "Image de référence"; img.src = baseUrl() + reference + "?v=" + encodeURIComponent(run.updated_at || "");
+        f.append(img, node("figcaption", "Image de référence · le produit à la place et à la taille mesurées"));
+        media.append(f);
       }
+      if (run.video && (run.state === "video_ready" || run.stage === "integration" || run.state === "done")) {
+        const f = node("figure", null, "run-figure");
+        const v = node("video"); v.src = baseUrl() + run.video; v.controls = true; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true; v.className = "run-video";
+        f.append(v, node("figcaption", "Vidéo générée · le plan avec le produit"));
+        media.append(f);
+      }
+      if (media.childElementCount) box.append(media);
+
       if (run.state === "running") {
         wasRunning = true;
         box.append(node("p", run.message || "Traitement en cours…", "status busy-line"));
-        timer = setTimeout(async () => paint(await call("/proposals/" + proposal.id + "/pipeline", {cache: "no-store"})), 2000);
+        poll();
         return;
       }
-      if (run.state === "done" || integrated) {
+      if (run.state === "video_ready") {
         const row = node("div", null, "decide");
-        const open = node("button", "Voir le résultat · Intégration", "btn primary"); open.type = "button";
+        const go = node("button", "Intégrer dans l’épisode", "btn primary"); go.type = "button";
+        go.onclick = async () => {
+          go.disabled = true;
+          try { paint(await call("/proposals/" + proposal.id + "/pipeline/integrate", {method: "POST"})); }
+          catch (error) { box.append(node("p", error.message, "status error")); go.disabled = false; }
+        };
+        row.append(node("span", run.message || "Vidéo générée.", "muted"), go);
+        box.append(row);
+        return;
+      }
+      if (run.state === "done") {
+        const row = node("div", null, "decide");
+        const open = node("button", "Voir l’intégration", "btn primary"); open.type = "button";
         open.onclick = async () => { await window.reloadProject(); go(4); };
         row.append(node("span", "✓ Placement intégré dans l’épisode.", "chip ok"), open);
         box.append(row);
-        if (run.state === "done" && wasRunning) { wasRunning = false; window.reloadProject(); }   // une seule fois, à la fin
+        if (wasRunning) { wasRunning = false; window.reloadProject().then(() => go(4)); }   // une seule fois, à la fin
         return;
       }
       if (run.state === "error") box.append(node("p", run.message, "status error"));
       if (!pipelineInfo.ready) {
-        box.append(node("p", "Les API de génération ne sont pas encore configurées sur ce serveur. Utilisez la version actuelle, avec vos outils.", "badge uncertain"));
+        box.append(node("p", "La génération intégrée n’est pas configurée sur ce serveur. Utilisez la version avec vos outils.", "badge uncertain"));
         return;
       }
       const sent = node("ul", null, "sendlist");
-      for (const line of ["La première image du plan, la photo du produit et sa planche d’angles, avec le prompt de taille et de place → API d’image",
-        "Le plan vidéo sans audio, le produit, la planche et l’image de référence, avec le prompt « MAIN REFERENCE » → Kling AI"]) sent.append(node("li", line));
+      for (const line of ["La première image du plan, la photo du produit et sa planche d’angles, avec la place et la taille mesurées → génération d’image",
+        "Le plan vidéo sans audio, le produit et l’image de référence → Kling AI"]) sent.append(node("li", line));
       const consent = node("label", null, "check-row");
       const check = node("input"); check.type = "checkbox";
       consent.append(check, node("span", "J’autorise l’envoi de ces éléments aux fournisseurs de génération pour ce placement."));
@@ -534,10 +563,9 @@
       card.append(warn);
     }
     card.append(message);
-    if (kit && version() === "final" && kit.image_prompts) {
-      const kitPart = node("details", null, "gen-part");
-      kitPart.append(node("summary", "1 · Contenu du kit"), kitMedia(kit));
-      card.append(kitPart, finalPanel(kit, proposal, data), build);
+    if (version() === "final") {
+      // Version finale : un seul panneau, du kit média à la vidéo générée ; rien à préparer à la main.
+      card.replaceChildren(head(proposal, null), finalPanel(kit, proposal, data));
       return card;
     }
     if (kit) {

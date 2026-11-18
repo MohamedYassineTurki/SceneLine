@@ -22,8 +22,8 @@ Le choix se fait en haut de l'étape 3. La version finale a besoin de deux clés
 > ([`generation/pipeline.py`](../../src/generation/pipeline.py)), mais les crédits des API d'image et de vidéo ne
 > sont pas encore financés. En attendant, un **mode démonstration** (fichier `.sceneline-demo`) rejoue, pour un
 > plan déjà traité, l'image et la vidéo **réellement générées plus tôt** avec ces mêmes outils
-> (`output/demo-assets/`). Le parcours, la vérification de correspondance et l'intégration sont les vrais ;
-> l'interface et le relevé des modifications indiquent « résultat enregistré (démonstration) ».
+> (`output/demo-assets/`). Le kit média, la vérification de correspondance et l'intégration sont les vrais ; le
+> relevé des modifications nomme les outils qui ont réellement produit l'image et la vidéo.
 
 ## Placement mesuré et image de référence
 

@@ -12,7 +12,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FONT = ROOT / "motion-video/film/assets/fonts"
-FAST = [("analysis-start", "analysis-done", "Analyse réelle en cours"), ("match-start", "match-done", "Appariement réel en cours")]
+FAST = [("analysis-start", "analysis-done", "Analyse réelle en cours"), ("match-start", "match-done", "Appariement réel en cours"),
+        ("gen-start", "gen-reference", "Préparation du kit média")]
 TYPING = ("add-products", "match-start", "Saisie du catalogue", 2.0)  # saisie à la main, simplement accélérée
 JOIN = "Étapes 3 et 4 · même épisode, plan généré par Kling AI puis intégré"
 LEAD, TAIL, TARGET = 2.5, 1.5, 7.0  # secondes en temps réel au début et à la fin de chaque attente ; durée visée de l'attente
@@ -43,7 +44,11 @@ def main():
     for index, folder in enumerate([Path(a.frames), *map(Path, a.extra)]):
         data = json.loads((folder / "timeline.json").read_text(encoding="utf-8"))
         frames, marks = data["frames"], {label: ts for ts, label in data["markers"]}
-        if index and "step3" in marks:   # un enregistrement ajouté commence à l'étape 3
+        if "cut" in marks:   # fin de cet enregistrement dans le montage
+            frames = [f for f in frames if f[0] <= marks["cut"]]
+        if index and "resume" in marks:  # suite du même parcours, sans titre de raccord
+            frames = [f for f in frames if f[0] >= marks["resume"] - 0.1]
+        elif index and "step3" in marks:   # un enregistrement ajouté commence à l'étape 3
             frames = [f for f in frames if f[0] >= marks["step3"] - 0.3]
             titles.append((t_out, t_out + 4.5))
         windows = []

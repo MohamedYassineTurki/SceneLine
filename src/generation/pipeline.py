@@ -171,59 +171,99 @@ def demo_assets(folder, record):
 # --------------------------------------------------------------------------- le traitement complet
 
 def start(folder, proposal_id, consent, model="kling-3.0-omni"):
+    """Kit média (si besoin) → image de référence → vidéo. L'intégration suit, à la demande du producteur."""
     if not consent:
         raise PipelineError("Cochez l'autorisation d'envoi pour ce placement.")
     if (folder.name, proposal_id) in _RUNNING:
         raise PipelineError("Un traitement est déjà en cours pour ce placement.")
-    record = kits.kits(folder).get(proposal_id)
-    _, revision, _ = render.approved_revision(folder, proposal_id)
-    if not record or record["revision"] != revision["n"] or not record.get("image_prompts"):
-        raise PipelineError("Préparez d'abord le kit de ce placement (taille et place mesurées).")
+    render.approved_revision(folder, proposal_id)          # placement approuvé, sinon erreur
     state = status()
     if not state["ready"]:
         raise PipelineError("Les API de génération ne sont pas encore configurées sur le serveur.")
     _RUNNING.add((folder.name, proposal_id))
     demo = state["demo"]
-    run = _save(folder, proposal_id, state="running", stage="reference", demo=demo, started_at=now(),
-                consent_at=now(), finished_at=None, message="Génération de l'image de référence…", reference=None)
+    run = _save(folder, proposal_id, state="running", stage="kit", demo=demo, started_at=now(), consent_at=now(),
+                finished_at=None, message="Préparation du kit média : plan, produit, taille et place mesurées…",
+                reference=None, video=None)
     threading.Thread(target=_run, args=(folder, proposal_id, model, demo), daemon=True).start()
     return run
 
 
+def _kit_ready(folder, proposal_id):
+    record = kits.kits(folder).get(proposal_id)
+    _, revision, _ = render.approved_revision(folder, proposal_id)
+    return record if record and record["revision"] == revision["n"] and record.get("image_prompts") else None
+
+
 def _run(folder, proposal_id, model, demo):
     try:
-        record = kits.kits(folder)[proposal_id]
+        record = _kit_ready(folder, proposal_id)
+        if not record:
+            record = kits.build_kit(folder, proposal_id)
+        elif demo:
+            time.sleep(3)
+        _save(folder, proposal_id, stage="reference", message="Génération de l'image de référence…")
         if demo:
             reference, video, info = demo_assets(folder, record)
-            time.sleep(6)                                       # le rythme d'un vrai appel, pour la démonstration
+            time.sleep(7)                                       # le rythme d'un appel à l'API d'image
         else:
             reference = generate_reference(folder, record)
         updated = kits.set_reference(folder, proposal_id, reference)
         _save(folder, proposal_id, stage="video", reference=updated["reference"],
-              message="Image de référence prête. Génération de la vidéo avec Kling AI…")
+              message="Génération de la vidéo avec Kling AI…")
+        _, revision, _ = render.approved_revision(folder, proposal_id)
+        name = f"generated-{proposal_id}-r{revision['n']}.mp4"
         if demo:
-            time.sleep(8)
-            _save(folder, proposal_id, stage="integration", message="Vidéo reçue. Vérification et intégration…")
-            tool = info.get("tool", "Kling AI") + " · résultat enregistré (démonstration)"
-            note = info.get("note", "Résultat généré plus tôt avec les mêmes API, rejoué pour la démonstration.")
-            render.import_external(folder, proposal_id, video, ".mp4", tool, note)
-        else:
-            kling.start(folder, proposal_id, model, "video", None, True)
-            while True:
-                time.sleep(4)
-                generation = kling.get_generation(folder, proposal_id)
-                if generation["state"] in ("downloading", "integrating"):
-                    _save(folder, proposal_id, stage="integration", message="Vidéo reçue. Vérification et intégration…")
-                elif generation["state"] == "processing":
-                    _save(folder, proposal_id, stage="video", message=generation.get("message", "Génération chez Kling…"))
-                elif generation["state"] == "done":
-                    break
-                elif generation["state"] == "error":
-                    raise PipelineError(generation.get("message", "La génération vidéo a échoué."))
-        _save(folder, proposal_id, state="done", stage="done", finished_at=now(), message="Placement intégré.")
+            time.sleep(12)                                      # le rythme d'une génération vidéo
+            (folder / name).write_bytes(video)
+            _save(folder, proposal_id, state="video_ready", stage="video", video=name, tool=info.get("tool", "Kling AI"),
+                  note=info.get("note", ""), message="Vidéo générée. Vérifiez-la, puis intégrez-la dans l'épisode.")
+            return
+        kling.start(folder, proposal_id, model, "video", None, True)
+        while True:
+            time.sleep(4)
+            generation = kling.get_generation(folder, proposal_id)
+            if generation["state"] == "processing":
+                _save(folder, proposal_id, message=generation.get("message", "Génération chez Kling…"))
+            elif generation["state"] in ("downloading", "integrating", "done"):
+                if generation["state"] != "done":
+                    continue
+                stored = next(iter(folder.glob(f"external-{proposal_id}-r{revision['n']}.*")), None)
+                _save(folder, proposal_id, state="video_ready", stage="video", integrated=True,
+                      video=stored.name if stored else None, message="Vidéo générée. Vérifiez-la, puis intégrez-la.")
+                return
+            elif generation["state"] == "error":
+                raise PipelineError(generation.get("message", "La génération vidéo a échoué."))
     except (PipelineError, kling.KlingError, render.RenderError) as error:
         _save(folder, proposal_id, state="error", message=str(error))
     except Exception as error:   # jamais de trace brute vers l'interface
         _save(folder, proposal_id, state="error", message="Erreur inattendue : " + str(error)[:200])
     finally:
         _RUNNING.discard((folder.name, proposal_id))
+
+
+def integrate(folder, proposal_id):
+    """Le producteur a vu la vidéo générée : SceneLine la vérifie et l'intègre dans l'épisode."""
+    run = get(folder, proposal_id)
+    if run.get("state") != "video_ready":
+        raise PipelineError("Aucune vidéo générée à intégrer pour ce placement.")
+    if run.get("integrated"):                          # déjà intégrée par la génération Kling
+        return _save(folder, proposal_id, state="done", stage="done", finished_at=now(), message="Placement intégré.")
+    _RUNNING.add((folder.name, proposal_id))
+    record = _save(folder, proposal_id, state="running", stage="integration",
+                   message="Vérification du plan, recalage et intégration dans l'épisode…")
+
+    def work():
+        try:
+            data = (folder / run["video"]).read_bytes()
+            render.import_external(folder, proposal_id, data, ".mp4", run.get("tool", "Kling AI"), run.get("note", ""))
+            _save(folder, proposal_id, state="done", stage="done", finished_at=now(), message="Placement intégré.")
+        except (PipelineError, render.RenderError) as error:
+            _save(folder, proposal_id, state="error", message=str(error))
+        except Exception as error:
+            _save(folder, proposal_id, state="error", message="Erreur inattendue : " + str(error)[:200])
+        finally:
+            _RUNNING.discard((folder.name, proposal_id))
+
+    threading.Thread(target=work, daemon=True).start()
+    return record
