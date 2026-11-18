@@ -431,9 +431,10 @@
       // La vidéo reste verrouillée tant que l'image de référence n'est pas importée : c'est elle qui fixe la taille,
       // la place et le rendu du produit, et l'outil vidéo n'a plus qu'à la reproduire.
       const ready = Boolean(kit.reference);
+      const integrated = data.renders[proposal.id]?.revision === proposal.approved_revision;
       const track = node("ol", null, "gen-track");
       for (const [label, state] of [["Kit préparé", "done"], ["Image de référence", ready ? "done" : "current"],
-        ["Vidéo générée", ready ? "current" : "locked"]]) {
+        [integrated ? "Vidéo intégrée" : "Vidéo générée", integrated ? "done" : ready ? "current" : "locked"]]) {
         const li = node("li", null, "gen-track-step " + state);
         li.append(node("span", state === "done" ? "✓" : "", "dot"), node("span", label));
         if (state === "current") li.setAttribute("aria-current", "step");
