@@ -46,7 +46,7 @@ flowchart LR
 
 | Mécanisme | Où dans le code |
 |---|---|
-| Plans, transcription et images sont calculés **en local** ; seules des images échantillonnées et le dialogue voisin partent vers Gemini | [`video_analyzer/analyze.py`](../src/video_analyzer/analyze.py), [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) |
+| Plans et images sont calculés **en local**, comme la transcription du français ; vers Gemini ne partent que des images échantillonnées, le dialogue voisin et, **si le producteur choisit la darija ou l'arabe**, la piste audio à transcrire | [`video_analyzer/analyze.py`](../src/video_analyzer/analyze.py), [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) |
 | Les **scènes protégées ne sont jamais envoyées** à la recherche de surface | [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) |
 | Le modèle utilisé, le nombre d'appels et d'images envoyées sont **affichés** | `metrics` dans `sceneline.json` |
 | La clé Kling reste **en mémoire**, jamais sur disque ni dans un journal ; le plan n'est servi que par un lien aléatoire éphémère | [`generation/kling.py`](../src/generation/kling.py), [`server/app.py`](../src/server/app.py) · `before_request` |
@@ -59,6 +59,7 @@ flowchart LR
 | **Cultural Integrity Guard** : cinq critères (historique, culturel, narratif, sensibilité, intention artistique), risque faible / moyen / élevé, justification pour chacun | [`cultural_guard/guard.py`](../src/cultural_guard/guard.py) · `assess()` |
 | Scènes sacrées, traditionnelles, commémoratives, sensibles, titres et génériques **protégés** : aucun placement | [`cultural_guard/guard.py`](../src/cultural_guard/guard.py) · `assess_scene()` |
 | **Cohérence géographique** : le lieu est déclaré, chaque produit porte une origine et des marchés visés ; un produit hors marché est écarté | [`cultural_guard/guard.py`](../src/cultural_guard/guard.py) · `geographic()` |
+| **La darija tunisienne est transcrite pour de vrai** : réplique d'origine en caractères arabes et traduction française, au lieu d'un français inventé par un modèle qui ne la comprend pas | [`video_analyzer/transcribe.py`](../src/video_analyzer/transcribe.py) |
 | **La langue parlée ne décide jamais du pays** de l'histoire : une œuvre francophone peut se passer à Tunis, Dakar ou Montréal | [`cultural_guard/guard.py`](../src/cultural_guard/guard.py) · `setting_country()` |
 | Une scène est protégée seulement au moment sensible, pas sur tout le thème de l'œuvre | prompt de scènes, [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) |
 

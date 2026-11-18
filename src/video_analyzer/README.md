@@ -8,6 +8,7 @@
 | Fichier | Rôle |
 |---|---|
 | [`analyze.py`](analyze.py) | Préparation **locale** : métadonnées (ffprobe), plans (PySceneDetect), transcription horodatée (faster-whisper), une image par plan (FFmpeg) → `analysis.json` |
+| [`transcribe.py`](transcribe.py) | Transcription de la **darija tunisienne** et de l'arabe par Gemini (audio seul, extraits d'une minute) : réplique d'origine + traduction française, horodatées |
 | [`understand.py`](understand.py) | Compréhension : scènes et contexte (Gemini Flash), protection éditoriale, intervalles de coupe à coupe, revue des surfaces (Gemini Flash-Lite), **règles de décision** `classify()`, vérification des finalistes → `sceneline.json` |
 | [`context.py`](context.py) | Contexte déclaré par le producteur (lieu, époque, intention, exclusions) et consentements horodatés |
 | [`review.py`](review.py) | Utilitaires partagés : clés Gemini, écriture JSON atomique `replace_json()`, revue par modèle visuel local (llama.cpp) |

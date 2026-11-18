@@ -99,7 +99,7 @@ flowchart LR
 
 | Étape | Ce que fait SceneLine | Technologie | Documentation |
 |---|---|---|---|
-| **1 · Analyse** | Détecte les plans, transcrit le dialogue, comprend chaque scène (lieu, époque, ton, sensibilité), **protège** les scènes sensibles, cherche des surfaces **de coupe à coupe**, applique des **règles écrites**, vérifie les finalistes sur six images | PySceneDetect, faster-whisper, FFmpeg (local) · Gemini Flash et Flash-Lite | [Étape 1](docs/etapes/1-analyse.md) |
+| **1 · Analyse** | Détecte les plans, transcrit le dialogue, comprend chaque scène (lieu, époque, ton, sensibilité), **protège** les scènes sensibles, cherche des surfaces **de coupe à coupe**, applique des **règles écrites**, vérifie les finalistes sur six images | PySceneDetect, faster-whisper, FFmpeg (local) · Gemini Flash et Flash-Lite (et transcription de la darija) | [Étape 1](docs/etapes/1-analyse.md) |
 | **2 · Produits** | Catalogue avec origine, marchés et **provenance obligatoire** du visuel ; règles d'appariement ; **Cultural Integrity Guard** (5 critères) ; Accepter / Refuser / Ajuster, **signé et daté** | Python, Gemini Flash-Lite, SHA-256 | [Étape 2](docs/etapes/2-produits-et-guard.md) |
 | **3 · Génération** | Kit complet (plan, asset, prompt FR/EN, prompt négatif) ; génération **Kling AI** avec la clé du créateur, **en mémoire seulement**, et son **accord pour ce placement** | Kling AI 4.0 API, lien public éphémère | [Étape 3](docs/etapes/3-generation.md) |
 | **4 · Intégration** | Retrait des bandes noires, **recalage temporel par programmation dynamique**, assemblage avec l'**audio d'origine**, comparaison Original / Version éditée, étiquette, relevé | OpenCV, NumPy, FFmpeg | [Étape 4](docs/etapes/4-integration.md) |
@@ -144,7 +144,7 @@ engagement à l'endroit où le vérifier).
 |---|---|
 | 🎨 **Créateurs** | Rien n'est modifié sans accord ; exclusions de catégories et d'intervalles ; décisions signées, datées, avec empreinte SHA-256 ; original intact |
 | ⚖️ **Droits** | Deux autorisations obligatoires à l'import ; provenance et licence exigées pour chaque visuel ; accord par placement avant tout envoi à Kling |
-| 🔒 **Données** | Plans, transcription et images calculés en local ; scènes protégées jamais envoyées ; clé Kling en mémoire seulement ; appels et images envoyées affichés |
+| 🔒 **Données** | Plans et images calculés en local, transcription locale du français (la darija et l'arabe, au choix, par Gemini) ; scènes protégées jamais envoyées ; clé Kling en mémoire seulement ; appels et images envoyées affichés |
 | 🌐 **Cultures et langues** | Cultural Integrity Guard (historique, culturel, narratif, sensibilité, intention artistique) ; cohérence géographique ; **la langue ne décide jamais du pays** |
 | 👁 **Transparence** | Étiquette « Placement virtuel · Produit » ; relevé des modifications (outil, approbateur, empreintes) ; chaque proposition explique son *pourquoi* |
 | 🌱 **Planète** | Aucune génération spéculative ; calcul lourd local ; modèle léger pour les volumes ; scores mis en cache |
@@ -159,7 +159,8 @@ engagement à l'endroit où le vérifier).
 |---|---|---|
 | Serveur | **Python 3.11+**, **Flask 3.1** | API REST, file de travaux, reprise après interruption |
 | Vidéo locale | **FFmpeg / FFprobe**, **PySceneDetect 0.7**, **OpenCV**, **NumPy** | Coupes, images, recadrage, recalage, assemblage |
-| Parole locale | **faster-whisper 1.2** | Transcription horodatée, sur la machine |
+| Parole locale | **faster-whisper 1.2** | Transcription horodatée du français, sur la machine |
+| Darija et arabe | **Gemini Flash** (audio) | Réplique d'origine en caractères arabes + traduction française, horodatées |
 | Compréhension | **Google Gemini** 3.5 Flash · 3.1 Flash-Lite | Scènes, surfaces, vérification, produits ; sorties JSON contraintes par schéma |
 | Génération | **Kling AI 4.0** (API Omni-Video) | Régénération du plan avec le produit, à la demande |
 | Interface | **HTML, CSS, JavaScript** sans framework | Lisible, auditable, sans compilation ; police Inter ; thème clair |

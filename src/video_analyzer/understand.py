@@ -844,6 +844,11 @@ def run(bundle, source, model=PRIMARY_MODEL, workers=2, max_kept=MAX_KEPT):
     saved = json.loads(checkpoint.read_text(encoding="utf-8")) if checkpoint.is_file() else {}
     resumable = saved.get("pipeline_version") == 2 and saved.get("status") != "complete"
     metrics = Metrics(saved.get("metrics") if resumable else None)
+    spoken = analysis.get("transcription_metrics")
+    if spoken and not resumable:   # la transcription par Gemini compte dans les appels affichés
+        metrics.add("api_calls", spoken["api_calls"])
+        metrics.add("failed_attempts", spoken["failed_attempts"])
+        metrics.data["transcription"] = spoken
     # Le modèle le plus capable sert au contexte des scènes et à la protection (là où l'erreur coûte le plus).
     # Le modèle léger prend les volumes : revue des intervalles et vérification. Chacun est le secours de l'autre.
     client = Gemini(model, BACKUP_MODEL, metrics)

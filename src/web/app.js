@@ -415,6 +415,12 @@ function showResults(job, result, complete) {
   get("transcript").replaceChildren(...result.transcript.map(line => {
     const paragraph = node("p", null, "line-text");
     paragraph.append(seekButton(time(line.start_ms), line.start_ms), document.createTextNode(line.text));
+    if (line.original && line.original !== line.text) {
+      const original = node("span", line.original, "line-original");
+      original.dir = "auto";
+      original.lang = "ar";
+      paragraph.append(original);
+    }
     return paragraph;
   }));
   if (!result.transcript.length) get("transcript").append(node("p", "Aucun dialogue transcrit.", "empty"));

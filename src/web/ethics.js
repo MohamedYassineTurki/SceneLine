@@ -22,7 +22,7 @@
       where: [["Autorisations à l’import", 1, "upload"], ["Provenance du visuel", 2, "matching"]],
       limit: "Les visages modifiés par une IA posent une question de droit à l’image pour une vraie production."},
     donnees: {name: "Les données", q: "D’où viennent-elles ? Sont-elles utilisées légalement ?", status: "Limite connue",
-      does: ["La détection des plans et la transcription tournent en local ; seules des images échantillonnées et le dialogue voisin partent vers Gemini, avec consentement.",
+      does: ["La détection des plans et la transcription du français tournent en local ; vers Gemini ne partent que des images échantillonnées, le dialogue voisin et, si vous choisissez la darija ou l’arabe, la piste audio, avec consentement.",
         "Les fichiers restent dans le dossier du projet.",
         "Chaque visuel de produit porte sa provenance ; les produits fictifs de démonstration sont signalés « Fictif ».",
         "Le modèle utilisé, le nombre d’appels et d’images envoyées sont affichés.",

@@ -95,7 +95,7 @@ sequenceDiagram
 | Étape | Module | Responsabilité |
 |---|---|---|
 | Serveur | [`server/app.py`](../src/server/app.py) | API REST, file de travaux, reprise après redémarrage, garde d'hôte (seul `/pub/` est servi à un hôte non local) |
-| 1 · Préparation | [`video_analyzer/analyze.py`](../src/video_analyzer/analyze.py) | Métadonnées (ffprobe), plans (PySceneDetect), transcription horodatée (faster-whisper, local), une image par plan (FFmpeg) |
+| 1 · Préparation | [`video_analyzer/analyze.py`](../src/video_analyzer/analyze.py) | Métadonnées (ffprobe), plans (PySceneDetect), transcription horodatée (faster-whisper en local ; Gemini pour la darija et l'arabe, via [`transcribe.py`](../src/video_analyzer/transcribe.py)), une image par plan (FFmpeg) |
 | 1 · Compréhension | [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) | Scènes et contexte, protection éditoriale, intervalles de coupe à coupe, revue des surfaces, **règles de décision en code**, vérification des finalistes |
 | 1 · Client Gemini | [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) (`Gemini`) | Rotation des clés, mémoire des quotas épuisés, modèle de secours, sorties JSON contraintes par schéma |
 | 1 · Contexte | [`video_analyzer/context.py`](../src/video_analyzer/context.py) | Type d'œuvre, lieu, époque, intention, exclusions de catégories et d'intervalles, consentements horodatés |

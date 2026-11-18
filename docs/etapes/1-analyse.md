@@ -20,7 +20,7 @@
 ```mermaid
 flowchart TD
     V[Vidéo MP4] --> A1[1 · Plans<br/>PySceneDetect · local]
-    V --> A2[2 · Dialogue<br/>faster-whisper · local]
+    V --> A2[2 · Dialogue<br/>faster-whisper · local<br/>ou Gemini pour la darija]
     A1 --> A3[3 · Une image par plan<br/>FFmpeg · local]
     A2 --> S
     A3 --> S[4 · Scènes et contexte<br/>Gemini Flash · 1 appel]
@@ -38,7 +38,7 @@ flowchart TD
 | Phase | Outil | Où | Rôle |
 |---|---|---|---|
 | 1 · Plans | PySceneDetect | local | Limites de plans : **seule source des temps** |
-| 2 · Dialogue | faster-whisper | local | Transcription horodatée |
+| 2 · Dialogue | faster-whisper, ou Gemini (audio) | local, ou Gemini pour la darija et l'arabe | Transcription horodatée ; pour la darija : réplique d'origine + traduction française |
 | 3 · Images | FFmpeg | local | Une image de référence par plan |
 | 4 · Scènes | Gemini Flash | 1 appel | Regroupe les plans en scènes : action, lieu, époque, ton, indices culturels, **protection éditoriale** |
 | 5 · Surfaces | Gemini Flash-Lite | 1 appel par intervalle | Surface, cohérence éditoriale, faisabilité visuelle, occultation, catégories compatibles |
@@ -88,7 +88,9 @@ et **chercher d'autres surfaces** dans un plan (jusqu'à trois, notées). Chaque
 la proposition d'origine de SceneLine.
 
 ## Sobriété
-- Les traitements lourds (plans, transcription, images) restent **locaux**.
+- Les traitements lourds (plans, images, transcription du français) restent **locaux**. La darija tunisienne
+  et l'arabe, que Whisper ne comprend pas, sont transcrits par Gemini **si le producteur le choisit** :
+  seule la piste audio est envoyée, par extraits d'une minute, et ce choix est inscrit dans le consentement.
 - Le modèle complet ne sert qu'au contexte (1 appel) ; le modèle léger traite les volumes.
 - Les clés tournent, un quota épuisé est mémorisé, et chaque modèle est le secours de l'autre.
 - Le nombre d'appels et d'images envoyées est **affiché** au producteur.

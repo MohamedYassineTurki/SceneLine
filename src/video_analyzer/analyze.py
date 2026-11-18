@@ -10,12 +10,15 @@ from faster_whisper import WhisperModel
 import numpy as np
 from scenedetect import AdaptiveDetector, detect
 
+from video_analyzer.transcribe import LANGUAGES as TRANSCRIBE_LANGUAGES, GeminiUnavailable
+from video_analyzer.transcribe import transcribe as transcribe_with_gemini
+
 
 def run_media(*args):
     return subprocess.run(args, check=True, capture_output=True, text=True).stdout
 
 
-def analyze(source, output, description, model_name, visual_only=False, language_hint=None):
+def analyze(source, output, description, model_name, visual_only=False, language_hint=None, transcriber="whisper"):
     started = perf_counter()
     output.mkdir(parents=True, exist_ok=True)
     metadata = json.loads(run_media(
@@ -32,7 +35,20 @@ def analyze(source, output, description, model_name, visual_only=False, language
     transcript = []
     language = None
     has_audio = any(stream["codec_type"] == "audio" for stream in streams)
-    if has_audio and not visual_only:
+    status = "skipped" if visual_only else "complete" if has_audio else "no_audio"
+    transcription_metrics = None
+    if has_audio and not visual_only and transcriber in TRANSCRIBE_LANGUAGES:
+        # Darija, arabe : Whisper invente du français. Gemini reçoit la piste audio seule, par extraits.
+        print("Transcription par Gemini…", flush=True)
+        model_name = "gemini"
+        try:
+            transcript, language, transcription_metrics = transcribe_with_gemini(source, duration, transcriber)
+            model_name = "gemini · " + ", ".join(transcription_metrics["models"])
+        except GeminiUnavailable as error:
+            # Mieux vaut aucune réplique qu'une transcription fausse : l'analyse continue sur les images.
+            print(f"Transcription indisponible : {error}", flush=True)
+            status = "unavailable"
+    elif has_audio and not visual_only:
         print("Transcription locale…", flush=True)
         model = WhisperModel(model_name, device="cpu", compute_type="int8")
         pcm = subprocess.run(
@@ -79,7 +95,8 @@ def analyze(source, output, description, model_name, visual_only=False, language
         "source": source.name, "duration_ms": duration,
         "producer_description": description or None,
         "transcription_model": model_name, "dominant_language": language,
-        "transcription_status": "skipped" if visual_only else "complete" if has_audio else "no_audio",
+        "transcription_status": status, "transcription_language_choice": transcriber,
+        "transcription_metrics": transcription_metrics,
         "transcript": transcript, "shots": shot_records,
         "placement_analysis_status": "visual_candidates_only",
         "placement_candidates": candidates,
@@ -99,6 +116,8 @@ if __name__ == "__main__":
     parser.add_argument("--model", default="base")
     parser.add_argument("--visual-only", action="store_true")
     parser.add_argument("--language", default="fr", help="Langue parlée (fr par défaut). Vide pour détecter.")
+    parser.add_argument("--transcriber", default="whisper", choices=["whisper", *TRANSCRIBE_LANGUAGES],
+                        help="whisper (local) ou une langue transcrite par Gemini : darija, ar.")
     args = parser.parse_args()
     analyze(args.video, args.output, args.description, args.model, args.visual_only,
-            args.language or None)
+            args.language or None, args.transcriber)

@@ -9,6 +9,10 @@ from product_matcher.catalog import CATEGORIES
 WORK_TYPES = ["Série", "Film", "Court métrage", "Documentaire", "Autre"]
 TEXT_FIELDS = {"location": "Lieu de l'action", "period": "Époque de l'action",
                "languages": "Langues parlées", "intention": "Intention narrative"}
+TRANSCRIPTIONS = {"fr": "Français · transcription locale",
+                  "darija": "Darija tunisienne · transcription par Gemini",
+                  "ar": "Arabe · transcription par Gemini",
+                  "auto": "Autre langue · détection locale"}
 INTERVAL = re.compile(r"(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})")
 
 
@@ -43,9 +47,14 @@ def build_context(form):
     context["excluded_intervals"] = parse_intervals(context["excluded_intervals_text"])
     context["extra_description"] = form.get("description", "").strip()[:1000]
     context["unknown_fields"] = unknown
+    transcription = form.get("transcription") if form.get("transcription") in TRANSCRIPTIONS else "fr"
+    context["transcription"] = transcription
+    sent = "images échantillonnées, dialogue voisin, description"
+    if transcription in ("darija", "ar"):
+        sent = "piste audio pour la transcription, " + sent
     context["consent"] = {"processing": True, "provider": True,
                           "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                          "provider_name": "Google Gemini (images échantillonnées, dialogue voisin, description)"}
+                          "provider_name": f"Google Gemini ({sent})"}
     return context
 
 

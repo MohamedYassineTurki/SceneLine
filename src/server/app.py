@@ -40,6 +40,16 @@ def submit_analysis(folder, video, description, review_only=False):
     ACTIVE_ANALYSES.add(folder.name)
     worker.submit(run_analysis, folder, video, description, review_only)
 
+def transcription_args(folder):
+    """Langue des dialogues choisie par le producteur : Whisper en local, ou Gemini pour la darija et l'arabe."""
+    try:
+        choice = json.loads((folder / "context.json").read_text(encoding="utf-8")).get("transcription", "fr")
+    except (OSError, ValueError):
+        choice = "fr"
+    if choice in ("darija", "ar"):
+        return ["--transcriber", choice]
+    return ["--language", "" if choice == "auto" else "fr"]
+
 def save_status(folder, **status):
     replace_json(folder / "status.json", status)
 
@@ -52,7 +62,7 @@ def run_analysis(folder, video, description, review_only=False):
     try:
         commands = [
             [str(SRC / "video_analyzer" / "analyze.py"), str(video), "--output", str(folder),
-             "--description=" + description, "--model", "base"],
+             "--description=" + description, "--model", "base", *transcription_args(folder)],
             [str(SRC / "video_analyzer" / "understand.py"), str(folder), "--video", str(video),
              "--gemini-model", DEFAULT_GEMINI_MODEL],
         ]

@@ -53,6 +53,14 @@
       <div class="field"><span>Langues parlées</span>
         <div class="with-toggle"><input id="languages" name="languages" maxlength="200" placeholder="Ex. français, arabe tunisien"><label class="toggle"><input type="checkbox" name="languages_unknown" data-for="languages"> Inconnu</label></div></div>
     </div>
+    <label class="field"><span>Langue des dialogues, pour la transcription</span>
+      <select id="transcription" name="transcription">
+        <option value="fr">Français · transcription locale (Whisper)</option>
+        <option value="darija">Darija tunisienne · transcription par Gemini</option>
+        <option value="ar">Arabe · transcription par Gemini</option>
+        <option value="auto">Autre langue · détection locale (Whisper)</option>
+      </select>
+      <span class="muted" id="transcription-note">Le français est transcrit sur votre machine. La darija et l’arabe sont transcrits par Gemini, qui reçoit alors la piste audio.</span></label>
 
     <details class="disclosure">
       <summary><span>Contexte et exclusions</span><span class="muted">facultatif</span></summary>
@@ -84,7 +92,7 @@
     <div class="consents" role="group" aria-labelledby="consents-title">
       <p id="consents-title" class="consents-title">Deux autorisations sont nécessaires</p>
       <label class="check-row"><input type="checkbox" name="consent_processing" required><span>Je suis autorisé(e) à traiter et modifier cette vidéo (droits d’auteur, droit à l’image et à la voix).<span class="cap">Angle Droits</span></span></label>
-      <label class="check-row"><input type="checkbox" name="consent_provider" required><span>J’accepte l’envoi d’images échantillonnées et du dialogue voisin à Google Gemini. L’offre gratuite peut servir à améliorer leurs modèles.<span class="cap">Angle Données · le calcul des plans et la transcription restent locaux</span></span></label>
+      <label class="check-row"><input type="checkbox" name="consent_provider" required><span>J’accepte l’envoi d’images échantillonnées et du dialogue voisin à Google Gemini, ainsi que de la piste audio si la transcription par Gemini est choisie. L’offre gratuite peut servir à améliorer leurs modèles.<span class="cap">Angle Données · le calcul des plans reste local ; la transcription aussi, sauf pour la darija et l’arabe</span></span></label>
     </div>
 
     <div class="form-foot"><p id="status" class="status" role="status">Choisissez une vidéo pour commencer.</p><button id="submit" class="btn primary">Analyser la vidéo</button></div>

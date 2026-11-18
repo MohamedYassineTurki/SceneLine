@@ -500,3 +500,6 @@ fieldset.plain > legend { padding: 0 0 6px; font-size: .875rem; font-weight: 500
   .meter { grid-template-columns: 88px minmax(0, 1fr) 40px; }
   .tag-prov { bottom: 56px; }
 }
+
+/* Réplique d'origine (darija, arabe) sous sa traduction française */
+.line-original { display: block; margin: 2px 0 0 0; color: var(--ink-2); font-size: .92em; margin-left: 0; padding-left: 0; unicode-bidi: plaintext; }
