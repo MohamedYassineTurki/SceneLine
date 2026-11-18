@@ -477,7 +477,7 @@ def modifications(job_id):
 @app.get("/api/jobs/<job_id>/files/<name>")
 def job_file(job_id, name):
     folder = job_folder(job_id)
-    if not re.fullmatch(r"(?:source\.mp4|plan-\d+\.jpg|win-\d+-\d+\.jpg|analysis\.json|sceneline\.json|run\.log|product-[a-z0-9-]+\.(?:png|jpe?g|webp)|(?:render|export)-p-\d+-\d+-r\d+(?:-original|-edited)?\.mp4|kit-p-\d+-\d+-r\d+(?:-plan\.mp4|-(?:debut|fin)(?:-16x9)?\.png|-produit\.png|-prompt-(?:en|fr)\.txt|-LISEZ-MOI\.md|\.zip))", name):
+    if not re.fullmatch(r"(?:source\.mp4|plan-\d+\.jpg|win-\d+-\d+\.jpg|analysis\.json|sceneline\.json|run\.log|product-[a-z0-9-]+\.(?:png|jpe?g|webp)|(?:render|export)-p-\d+-\d+-r\d+(?:-original|-edited)?\.mp4|kit-p-\d+-\d+-r\d+(?:-plan\.mp4|-(?:debut|fin)(?:-16x9)?\.png|-produit\.png|-angles\.png|-prompt-(?:en|fr)\.txt|-LISEZ-MOI\.md|\.zip))", name):
         abort(404)
     return send_from_directory(folder, name)
 

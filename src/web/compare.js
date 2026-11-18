@@ -56,9 +56,12 @@
     const row = node("div", null, "media-row");
     const fig = (child, caption) => { const f = node("figure"); f.append(child, node("figcaption", caption)); return f; };
     const clip = node("video"); clip.src = base + kit.clip; clip.controls = true; clip.preload = "metadata"; clip.muted = true;
-    const img = (src, alt, cls) => { const i = node("img", null, cls); i.src = base + src; i.alt = alt; i.loading = "lazy"; return i; };
+    // Un kit refait garde les mêmes noms de fichiers : la date du kit évite d'afficher une ancienne image en cache.
+    const version = "?v=" + encodeURIComponent(kit.created_at || "");
+    const img = (src, alt, cls) => { const i = node("img", null, cls); i.src = base + src + version; i.alt = alt; i.loading = "lazy"; return i; };
     row.append(fig(clip, "Scène · " + kit.seconds + " s, sans audio"), fig(img(kit.frames.debut, "Première image"), "Première image"),
       fig(img(kit.frames.fin, "Dernière image"), "Dernière image"), fig(img(kit.asset, "Asset produit", "asset"), "Asset du produit"));
+    if (kit.views?.length) row.append(fig(img(kit.views[0], "Planche d’angles du produit", "asset"), "Autres angles du produit"));
     return row;
   }
 
@@ -225,6 +228,7 @@
       sending.replaceChildren(heading("3 · Ce qui sera envoyé à Kling"));
       const list = node("ul", null, "sendlist"); list.setAttribute("aria-label", "Éléments envoyés à Kling");
       for (const line of ["Le prompt du kit, en anglais", "L’image du produit, sur fond blanc",
+        ...(kit.views?.length ? ["La planche d’angles du produit"] : []),
         "Le plan vidéo, sans audio, par un lien temporaire"]) list.append(node("li", line));
       sending.append(list, node("p", (account.managed ? "La génération passe par le compte Kling de SceneLine : vous n’avez rien à payer à Kling. "
         : "Chaque génération consomme des crédits de votre compte Kling. ") + "Le plan montre des visages : Kling les traite selon ses propres conditions.", "ink-note"));
@@ -352,6 +356,18 @@
     const stale = data.kits[proposal.id] && !kit;
     if (stale) card.append(node("p", "Le kit existant correspond à la révision " + data.kits[proposal.id].revision + ". Préparez-en un nouveau.", "badge uncertain"));
     else if (!kit) card.append(node("p", "Le kit n’existe pas encore. Il contient le clip source, la première et la dernière image, l’asset du produit et le prompt.", "muted"));
+    // Planche d'angles importée ou retirée après la préparation du kit : le kit doit être refait pour en tenir compte.
+    const product = (data.catalog || []).find(p => p.name === kit?.product_name);
+    const sheet = product?.views?.[0];
+    const outdated = kit && (sheet ? !kit.views?.length || sheet.added_at > kit.created_at : kit.views?.length > 0);
+    if (outdated) {
+      const warn = node("div", null, "badge uncertain");
+      warn.append(document.createTextNode(sheet ? "Vous avez importé une planche d’angles après ce kit. " : "La planche d’angles a été retirée du produit. "));
+      const redo = node("button", "Mettre à jour le kit", "btn secondary small"); redo.type = "button";
+      redo.onclick = () => build.click();
+      warn.append(redo);
+      card.append(warn);
+    }
     card.append(message);
     if (kit) {
       const place = node("div", null, "gen-choice");

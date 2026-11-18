@@ -332,7 +332,7 @@ def add_view(folder, product_id, image_bytes, extension, angle=None, tool=None):
     tool = text_of(tool, "")[:80]
 
     def change(product):
-        name = f"product-{product_id}-angles-{now().replace(':', '').replace('-', '')[:15]}{extension.lower()}"
+        name = f"product-{product_id}-angles-{now().replace(':', '').replace('-', '')[:15].lower()}{extension.lower()}"
         (folder / name).write_bytes(image_bytes)
         made = f"produite avec {tool}" if tool else "importée par le producteur"
         product["views"] = [{"image": name, "angle": one_of(angle, list(ANGLES), "autre"), "tool": tool or "non précisé",
