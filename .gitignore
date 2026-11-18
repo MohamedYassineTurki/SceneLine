@@ -7,6 +7,8 @@ __pycache__/
 .env
 .gemini-keys
 .kling-key
+.openai-key
+.sceneline-demo
 .sceneline-public-url
 motion-video/.env
 

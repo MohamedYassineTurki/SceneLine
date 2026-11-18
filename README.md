@@ -189,6 +189,11 @@ placez la clé dans `KLING_API_KEY` (ou le fichier `.kling-key`) et l'adresse pu
 `SCENELINE_PUBLIC_URL` (ou `.sceneline-public-url`). Les créateurs n'ont aucune clé à fournir.
 Voir [Étape 3 · configuration](docs/etapes/3-generation.md#configuration-du-serveur).
 
+**Version finale, sans quitter SceneLine.** À l'étape 3, un seul accord suffit : SceneLine génère l'image de
+référence (API d'image), puis la vidéo (Kling AI), et l'intègre. Elle demande aussi `OPENAI_API_KEY` sur le
+serveur. Les crédits de ces API ne sont pas encore financés : la démonstration rejoue des résultats réellement
+générés plus tôt pour le même plan, et l'indique à l'écran ([détails](docs/etapes/3-generation.md#deux-versions-du-parcours)).
+
 <details>
 <summary><b>Rejouer la démonstration enregistrée</b></summary>
 

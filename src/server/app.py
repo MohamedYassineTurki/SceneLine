@@ -19,6 +19,7 @@ from cultural_guard import guard
 from product_matcher import matching
 from generation import kit
 from generation import kling
+from generation import pipeline
 from integration import render
 
 ROOT = Path(__file__).resolve().parents[2]  # racine du dépôt (src/<module>/<fichier>.py)
@@ -526,6 +527,23 @@ def public_clip(token):
     folder, name = entry
     return send_from_directory(folder, name, mimetype="video/mp4")
 
+
+@app.get("/api/pipeline")
+def pipeline_status():
+    """Version finale : les API d'image et de vidéo sont-elles prêtes (ou le mode démonstration actif) ?"""
+    return jsonify(pipeline.status())
+
+@app.post("/api/jobs/<job_id>/proposals/<proposal_id>/pipeline")
+def pipeline_start(job_id, proposal_id):
+    body = request.get_json(silent=True) or {}
+    try:
+        return jsonify(pipeline.start(ready_job(job_id), proposal_id, body.get("consent") is True)), 202
+    except (pipeline.PipelineError, render.RenderError) as error:
+        return jsonify(message=str(error)), 409
+
+@app.get("/api/jobs/<job_id>/proposals/<proposal_id>/pipeline")
+def pipeline_state(job_id, proposal_id):
+    return jsonify(pipeline.get(ready_job(job_id), proposal_id))
 
 @app.get("/api/providers/kling")
 def kling_status():

@@ -9,6 +9,7 @@
 |---|---|
 | [`kit.py`](kit.py) | Kit de génération : plan source exact (sans audio), asset du produit (1024 px), prompt détaillé FR/EN rédigé à partir de trois images, prompt négatif, réglages, archive ZIP, empreinte du prompt |
 | [`placement.py`](placement.py) | Placement **mesuré** : taille apparente calculée par le code à partir d'un objet repère, produit accordé à la scène (luminosité, couleur, netteté, grain), maquette sur la première image, prompt pour un outil d'image |
+| [`pipeline.py`](pipeline.py) | **Version finale** : image de référence par API d'image, vidéo par Kling, intégration, en un seul traitement suivi dans l'interface ; mode démonstration qui rejoue des résultats réellement générés plus tôt, en le signalant |
 | [`kling.py`](kling.py) | Génération automatique avec l'API Kling AI : connexion de la clé, envoi, suivi de tâche, téléchargement, intégration |
 
 ## Kling AI : sécurité par conception

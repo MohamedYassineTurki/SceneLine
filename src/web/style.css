@@ -541,3 +541,24 @@ details.gen-part > summary { cursor: pointer; font-weight: 600; margin-bottom: 8
 .import-target p { margin: 4px 0 0; }
 .step-card-waiting { opacity: .9; }
 @media (max-width: 560px) { .import-target { flex-direction: column; align-items: flex-start; } .import-target img { width: 100%; } }
+
+/* Étape 3 · deux versions du parcours */
+.version-switch { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; }
+.version-option { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border: var(--border); border-radius: 999px; cursor: pointer; font-size: .875rem; background: #fff; }
+.version-option input { accent-color: #0066cc; }
+.version-option.on { border-color: #0066cc; color: #0066cc; font-weight: 600; }
+.final-panel { display: grid; gap: 10px; }
+.run-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.run-step { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: var(--border); border-radius: 12px; font-size: .9rem; }
+.run-step .dot { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: .75rem; border: 1.5px solid currentColor; flex: none; }
+.run-step.done .dot { background: var(--ink); color: #fff; border-color: var(--ink); }
+.run-step.current { border-color: #0066cc; color: #0066cc; }
+.run-step.current .dot { animation: run-pulse 1.2s ease-in-out infinite; }
+.run-step.error { border-color: #c0392b; color: #c0392b; }
+.run-step.todo { opacity: .6; }
+@keyframes run-pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .run-step.current .dot { animation: none; } }
+.run-figure { margin: 0; }
+.run-figure img { width: 100%; max-width: 640px; border-radius: 10px; border: var(--border); display: block; }
+.run-figure figcaption { font-size: .8125rem; color: var(--ink-2); margin-top: 4px; }
+.demo-note { font-size: .8125rem; color: var(--ink-2); background: rgba(255, 204, 0, .14); border-radius: 10px; padding: 8px 12px; margin: 0; }

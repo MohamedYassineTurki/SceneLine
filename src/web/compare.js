@@ -406,6 +406,104 @@
     note.textContent = ok ? "" : STEP3_WHY;
   }
 
+  /* ---------------------------------------------------------------- deux versions du parcours de génération
+
+     Version actuelle : le producteur passe par ses outils (image de référence, vidéo) et revient importer.
+     Version finale : SceneLine appelle lui-même l'API d'image puis Kling, et intègre ; on ne quitte pas SceneLine. */
+  let pipelineInfo = {ready: false, demo: false};
+  fetch("/api/pipeline", {cache: "no-store"}).then(r => r.json()).then(info => { pipelineInfo = info; paintVersionSwitch(); }).catch(() => {});
+  const LEDES = {
+    current: "<strong>Votre outil, nos mesures.</strong> SceneLine prépare la scène, le produit, la place et la taille mesurées, et les prompts : vous produisez l’image de référence et la vidéo avec vos outils, puis vous les importez.",
+    final: "<strong>Tout dans SceneLine.</strong> Après votre accord, SceneLine génère l’image de référence, puis la vidéo avec Kling AI, et l’intègre dans l’épisode. Vous ne quittez pas la plateforme.",
+  };
+  const version = () => {
+    let saved = null;
+    try { saved = localStorage.getItem("sceneline-version"); } catch {}
+    return saved === "current" || saved === "final" ? saved : "final";
+  };
+  function paintVersionSwitch() {
+    const box = get("version-switch");
+    if (!box) return;
+    box.replaceChildren(...[["final", "Version finale · tout dans SceneLine"], ["current", "Version actuelle · avec vos outils"]].map(([value, label]) => {
+      const l = node("label", null, "version-option" + (version() === value ? " on" : ""));
+      const input = node("input"); input.type = "radio"; input.name = "sceneline-version"; input.value = value; input.checked = version() === value;
+      input.onchange = () => { try { localStorage.setItem("sceneline-version", value); } catch {} paintVersionSwitch(); if (lastData) window.reloadProject(); };
+      l.append(input, node("span", label));
+      return l;
+    }));
+    const lede = get("step3-lede");
+    if (lede) lede.innerHTML = LEDES[version()];
+  }
+  paintVersionSwitch();
+
+  const RUN_STEPS = [["reference", "Image de référence", "API de génération d’image"], ["video", "Vidéo", "Kling AI"],
+    ["integration", "Intégration", "vérification, recalage, 1 s d’original avant et après"]];
+
+  function finalPanel(kit, proposal, data) {
+    const box = node("section", null, "gen-part final-panel");
+    let timer = null, wasRunning = false;
+    const paint = (run) => {
+      clearTimeout(timer);
+      const integrated = data.renders[proposal.id]?.revision === proposal.approved_revision;
+      box.replaceChildren(node("h3", "2 · Générer et intégrer, sans quitter SceneLine", "sub-title"));
+      if (pipelineInfo.demo) box.append(node("p", "Démonstration : les API de génération ne sont pas encore financées. Pour ce plan, SceneLine rejoue l’image et la vidéo générées plus tôt avec ces mêmes outils ; la vérification et l’intégration sont réelles.", "demo-note"));
+      const list = node("ol", null, "run-steps");
+      const order = ["reference", "video", "integration", "done"];
+      const at = run.state === "done" || (integrated && run.state === "idle") ? 3 : Math.max(0, order.indexOf(run.stage || "reference"));
+      RUN_STEPS.forEach(([key, title, detail], i) => {
+        const state = run.state === "idle" && !integrated ? "todo" : i < at ? "done" : i === at ? (run.state === "error" ? "error" : "current") : "todo";
+        const li = node("li", null, "run-step " + state);
+        li.append(node("span", state === "done" ? "✓" : String(i + 1), "dot"), node("b", title), node("span", " · " + detail, "muted"));
+        list.append(li);
+      });
+      box.append(list);
+      if (run.reference || kit.reference) {
+        const img = node("img", null, "run-reference"); img.alt = "Image de référence générée";
+        img.src = baseUrl() + (run.reference || kit.reference) + "?v=" + encodeURIComponent(run.updated_at || kit.reference_at || "");
+        const f = node("figure", null, "run-figure"); f.append(img, node("figcaption", "Image de référence : le produit à la place et à la taille mesurées."));
+        box.append(f);
+      }
+      if (run.state === "running") {
+        wasRunning = true;
+        box.append(node("p", run.message || "Traitement en cours…", "status busy-line"));
+        timer = setTimeout(async () => paint(await call("/proposals/" + proposal.id + "/pipeline", {cache: "no-store"})), 2000);
+        return;
+      }
+      if (run.state === "done" || integrated) {
+        const row = node("div", null, "decide");
+        const open = node("button", "Voir le résultat · Intégration", "btn primary"); open.type = "button";
+        open.onclick = async () => { await window.reloadProject(); go(4); };
+        row.append(node("span", "✓ Placement intégré dans l’épisode.", "chip ok"), open);
+        box.append(row);
+        if (run.state === "done" && wasRunning) { wasRunning = false; window.reloadProject(); }   // une seule fois, à la fin
+        return;
+      }
+      if (run.state === "error") box.append(node("p", run.message, "status error"));
+      if (!pipelineInfo.ready) {
+        box.append(node("p", "Les API de génération ne sont pas encore configurées sur ce serveur. Utilisez la version actuelle, avec vos outils.", "badge uncertain"));
+        return;
+      }
+      const sent = node("ul", null, "sendlist");
+      for (const line of ["La première image du plan, la photo du produit et sa planche d’angles, avec le prompt de taille et de place → API d’image",
+        "Le plan vidéo sans audio, le produit, la planche et l’image de référence, avec le prompt « MAIN REFERENCE » → Kling AI"]) sent.append(node("li", line));
+      const consent = node("label", null, "check-row");
+      const check = node("input"); check.type = "checkbox";
+      consent.append(check, node("span", "J’autorise l’envoi de ces éléments aux fournisseurs de génération pour ce placement."));
+      const startButton = node("button", run.state === "error" ? "Relancer" : "Générer et intégrer", "btn primary"); startButton.type = "button";
+      startButton.disabled = true;
+      check.onchange = () => { startButton.disabled = !check.checked; };
+      startButton.onclick = async () => {
+        startButton.disabled = true;
+        try { paint(await call("/proposals/" + proposal.id + "/pipeline", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({consent: true})})); }
+        catch (error) { box.append(node("p", error.message, "status error")); startButton.disabled = false; }
+      };
+      box.append(node("p", "Ce qui sera envoyé :", "muted"), sent, consent, startButton);
+    };
+    paint({state: "idle"});
+    call("/proposals/" + proposal.id + "/pipeline", {cache: "no-store"}).then(paint).catch(() => {});
+    return box;
+  }
+
   function kitCard(proposal, data) {
     const kit = approvedKit(proposal, data);
     const card = node("article", null, "step-card");
@@ -436,6 +534,12 @@
       card.append(warn);
     }
     card.append(message);
+    if (kit && version() === "final" && kit.image_prompts) {
+      const kitPart = node("details", null, "gen-part");
+      kitPart.append(node("summary", "1 · Contenu du kit"), kitMedia(kit));
+      card.append(kitPart, finalPanel(kit, proposal, data), build);
+      return card;
+    }
     if (kit) {
       // Trois temps, dans l'ordre : le kit, l'image de référence (obligatoire), puis la vidéo.
       // La vidéo reste verrouillée tant que l'image de référence n'est pas importée : c'est elle qui fixe la taille,

@@ -5,6 +5,26 @@
 
 ![Étape 3](../media/etape-3.jpg)
 
+## Deux versions du parcours
+
+| | **Version finale · tout dans SceneLine** | **Version actuelle · avec vos outils** |
+|---|---|---|
+| Image de référence | Générée par une API d'image (OpenAI Images) à partir de la première image du plan, de la photo du produit, de sa planche d'angles et du prompt mesuré | Le producteur la génère avec l'outil de son choix (ChatGPT, Gemini…) et l'importe |
+| Vidéo | Envoyée directement à Kling AI avec le prompt « MAIN REFERENCE » | Kling AI par l'API, ou n'importe quel outil vidéo, puis import |
+| Intégration | Automatique : vérification du bon placement, recalage, 1 s d'original avant et après | Identique, après l'import à l'étape 4 |
+| Pour le producteur | Un accord, un bouton, une barre de progression : il ne quitte pas SceneLine | Il passe par ses outils puis revient |
+
+Le choix se fait en haut de l'étape 3. La version finale a besoin de deux clés **sur le serveur** :
+`OPENAI_API_KEY` (ou le fichier `.openai-key`) pour l'image, et la clé Kling de SceneLine avec son adresse publique
+(voir plus bas). Le modèle d'image se règle avec `SCENELINE_IMAGE_MODEL`.
+
+> **En développement · financement des API.** La version finale est entièrement écrite
+> ([`generation/pipeline.py`](../../src/generation/pipeline.py)), mais les crédits des API d'image et de vidéo ne
+> sont pas encore financés. En attendant, un **mode démonstration** (fichier `.sceneline-demo`) rejoue, pour un
+> plan déjà traité, l'image et la vidéo **réellement générées plus tôt** avec ces mêmes outils
+> (`output/demo-assets/`). Le parcours, la vérification de correspondance et l'intégration sont les vrais ;
+> l'interface et le relevé des modifications indiquent « résultat enregistré (démonstration) ».
+
 ## Placement mesuré et image de référence
 
 Un outil vidéo à qui l'on laisse deviner la taille et la lumière rend un produit trop grand, trop net, trop
