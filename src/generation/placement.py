@@ -237,40 +237,51 @@ def mockup(frame, product_bgr, mask, base_x, base_y):
     return out
 
 
-def image_prompts(product_name, plan, desc_en, desc_fr):
-    """Prompt pour un outil d'image : rendre la maquette photoréaliste sans changer ni taille ni position."""
-    where_en = (f"Its base is at about {round(plan['base_x'] * 100)}% from the left and {round(plan['base_y'] * 100)}% "
-                "from the top of the image.")
-    where_fr = (f"Sa base est à environ {round(plan['base_x'] * 100)} % depuis la gauche et {round(plan['base_y'] * 100)} % "
-                "depuis le haut de l'image.")
+def image_prompts(product_name, plan, desc_en, desc_fr, surface_en="", surface_fr="", angles=False):
+    """Prompt pour un outil d'image (ChatGPT, Gemini…) : ajouter le produit sur l'image ORIGINALE du plan.
+
+    Le producteur donne lui-même à l'outil la première image du plan, la photo du produit (et sa planche
+    d'angles) ; SceneLine fournit la place et la taille MESURÉES, pour que l'outil n'ait rien à deviner."""
+    x, y = round(plan["base_x"] * 100), round(plan["base_y"] * 100)
+    light_en = f" ({desc_en['light_on_object']})" if desc_en.get("light_on_object") else ""
+    light_fr = f" ({desc_fr['light_on_object']})" if desc_fr.get("light_on_object") else ""
+    shadow_en = f" ({desc_en['shadow']})" if desc_en.get("shadow") else ""
+    shadow_fr = f" ({desc_fr['shadow']})" if desc_fr.get("shadow") else ""
+    images_en = ("(1) a frame from a TV series, (2) a studio photo of a product, " + product_name
+                 + (", (3) the same product from several angles." if angles else "."))
+    images_fr = ("(1) une image d'une série, (2) une photo studio d'un produit, " + product_name
+                 + (", (3) le même produit sous plusieurs angles." if angles else "."))
     en = (
-        "You receive two images: (1) a frame from a TV series where a product has ALREADY been placed as a "
-        f"mock-up, (2) a studio photo of the product, {product_name}.\n\n"
-        "Edit ONLY the product in image 1 so that it looks physically present in the room and filmed by this "
-        "camera. Keep its EXACT size, position and outline from the mock-up: do not enlarge, move or straighten "
-        f"it. {where_en} {size_text(plan, product_name, 'en')}\n\n"
-        "Make it real: same light as the objects next to it"
-        + (f" ({desc_en['light_on_object']})" if desc_en.get("light_on_object") else "")
-        + ", a dark soft contact shadow where it touches the surface"
-        + (f" ({desc_en['shadow']})" if desc_en.get("shadow") else "")
-        + ", reflections of the room on its surface, the same softness, grain, contrast and color grading as the "
-        "rest of the frame. It is never brighter, cleaner, sharper or more saturated than the objects around it. "
-        "Use photo 2 only for the label, shape and colors.\n\n"
-        "Change NOTHING else: same people, faces, poses, furniture, framing, black bars and resolution. "
-        "Return the full frame at the same size as image 1.")
+        f"You receive {'three' if angles else 'two'} images: {images_en}\n\n"
+        f"Edit image 1 by adding {product_name}, as if it had been on set when the scene was filmed. Change "
+        "nothing else.\n\n"
+        f"WHERE: standing on the {surface_en or 'existing surface'}, right next to the {plan['reference_en']}, "
+        f"without covering it. Its base touches the surface at about {x}% from the left and {y}% from the top of "
+        "the image.\n\n"
+        f"{size_text(plan, product_name, 'en')}\n\n"
+        "LOOK: like a real object filmed by this camera. Same light as the objects next to it" + light_en
+        + ", a dark soft contact shadow where it touches the surface" + shadow_en + ", reflections of the room on "
+        "its surface, the same softness, grain, contrast and color grading as the rest of the frame. Never "
+        "brighter, cleaner, sharper or more saturated than the objects around it. Placed casually, turned about "
+        "30 degrees, the label partly visible, never facing the camera like an advertisement.\n\n"
+        f"PRODUCT: use image 2{' and image 3' if angles else ''} only for the exact label, text, shape and colors.\n\n"
+        "KEEP EXACTLY: the people, faces, poses, furniture, objects, framing, black bars and resolution of "
+        "image 1. Return the full frame at the same size as image 1.")
     fr = (
-        "Vous recevez deux images : (1) une image d'une série où un produit a DÉJÀ été posé en maquette, "
-        f"(2) une photo studio du produit, {product_name}.\n\n"
-        "Modifiez UNIQUEMENT le produit de l'image 1 pour qu'il paraisse réellement présent dans la pièce et "
-        "filmé par cette caméra. Gardez EXACTEMENT sa taille, sa position et son contour : ne l'agrandissez pas, "
-        f"ne le déplacez pas, ne le redressez pas. {where_fr} {size_text(plan, product_name, 'fr')}\n\n"
-        "Rendez-le réel : même lumière que les objets voisins"
-        + (f" ({desc_fr['light_on_object']})" if desc_fr.get("light_on_object") else "")
-        + ", ombre de contact sombre et douce là où il touche la surface"
-        + (f" ({desc_fr['shadow']})" if desc_fr.get("shadow") else "")
-        + ", reflets de la pièce sur sa surface, même douceur, grain, contraste et étalonnage que le reste de "
-        "l'image. Il n'est jamais plus lumineux, plus propre, plus net ni plus saturé que les objets autour. "
-        "Servez-vous de la photo 2 uniquement pour l'étiquette, la forme et les couleurs.\n\n"
-        "Ne changez RIEN d'autre : mêmes personnes, visages, poses, meubles, cadrage, bandes noires et "
-        "résolution. Rendez l'image entière, à la même taille que l'image 1.")
+        f"Vous recevez {'trois' if angles else 'deux'} images : {images_fr}\n\n"
+        f"Modifiez l'image 1 en y ajoutant {product_name}, comme s'il avait été sur le plateau au moment du "
+        "tournage. Ne changez rien d'autre.\n\n"
+        f"OÙ : posé sur la surface ({surface_fr or 'surface existante'}), juste à côté de l'objet voisin "
+        f"({plan['reference_fr']}), sans le cacher. Sa base touche la surface à environ {x} % depuis la gauche et "
+        f"{y} % depuis le haut de l'image.\n\n"
+        f"{size_text(plan, product_name, 'fr')}\n\n"
+        "RENDU : comme un vrai objet filmé par cette caméra. Même lumière que les objets voisins" + light_fr
+        + ", ombre de contact sombre et douce là où il touche la surface" + shadow_fr + ", reflets de la pièce, "
+        "même douceur, grain, contraste et étalonnage que le reste de l'image. Jamais plus lumineux, plus propre, "
+        "plus net ni plus saturé que les objets autour. Posé naturellement, tourné d'environ 30 degrés, "
+        "l'étiquette en partie visible, jamais face caméra comme une publicité.\n\n"
+        f"PRODUIT : servez-vous de l'image 2{' et de l’image 3' if angles else ''} uniquement pour l'étiquette, le "
+        "texte, la forme et les couleurs exacts.\n\n"
+        "GARDER EXACTEMENT : les personnes, visages, poses, meubles, objets, cadrage, bandes noires et résolution "
+        "de l'image 1. Rendez l'image entière, à la même taille que l'image 1.")
     return {"en": en, "fr": fr}

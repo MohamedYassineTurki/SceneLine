@@ -77,17 +77,23 @@
     if (plan) box.append(node("p", "Taille mesurée : " + fr(plan.target_pct) + " % de la hauteur de l’image (environ " + plan.target_px
       + " px). Objet repère : " + plan.reference_fr + ", " + fr(plan.reference_height_cm) + " cm ; produit : "
       + fr(plan.product_height_cm) + " cm, soit " + Math.round(plan.ratio * 100) + " % de sa hauteur.", "muted"));
+    // Ce que le producteur donne à l'outil d'image : l'image originale du plan, le produit et ses angles.
     const row = node("div", null, "media-row");
-    const fig = (src, alt, caption) => { const f = node("figure"); const i = node("img"); i.src = base + src + version; i.alt = alt; i.loading = "lazy"; f.append(i, node("figcaption", caption)); return f; };
-    row.append(fig(kit.guide.file.endsWith("-reference.png") ? kit.stem + "-maquette.png" : kit.guide.file, "Maquette du placement",
-      "1 · Maquette SceneLine : taille et position mesurées, lumière accordée"));
-    if (kit.reference) row.append(fig(kit.reference, "Image de référence importée", "2 · Votre image de référence, envoyée à l’outil vidéo"));
+    const fig = (src, alt, caption, name) => {
+      const f = node("figure"); const i = node("img"); i.src = base + src + version; i.alt = alt; i.loading = "lazy";
+      const cap = node("figcaption", caption + " ");
+      if (name) { const a = node("a", "Télécharger", "link"); a.href = base + src; a.download = name; cap.append(a); }
+      f.append(i, cap); return f;
+    };
+    row.append(fig(kit.frames_native.debut, "Première image du plan", "Image 1 · le plan, sans le produit.", "image-1-plan.png"),
+      fig(kit.asset, "Photo du produit", "Image 2 · le produit.", "image-2-produit.png"));
+    if (kit.views?.length) row.append(fig(kit.views[0], "Planche d’angles du produit", "Image 3 · les angles du produit.", "image-3-angles.png"));
     box.append(row);
 
     const steps = node("ol", null, "reference-steps");
-    steps.append(node("li", "Téléchargez la maquette, puis donnez-la à un outil d’image (ChatGPT, Gemini…) avec l’asset du produit et le prompt ci-dessous."),
-      node("li", "Vérifiez le résultat : le produit garde la taille et la place de la maquette, et paraît filmé avec la scène."),
-      node("li", "Importez l’image. SceneLine vérifie le cadrage, puis l’envoie à l’outil vidéo comme première image attendue."));
+    steps.append(node("li", "Téléchargez " + (kit.views?.length ? "les trois images" : "les deux images") + " et donnez-les, dans cet ordre, à un outil d’image (ChatGPT, Gemini…) avec le prompt ci-dessous."),
+      node("li", "Vérifiez le résultat : le produit est à la place et à la taille indiquées, et paraît filmé avec la scène."),
+      node("li", "Importez l’image obtenue. SceneLine vérifie le cadrage, puis l’envoie à l’outil vidéo comme première image attendue."));
     box.append(steps);
     let lang = "en";
     const text = node("textarea", null, "views-prompt"); text.readOnly = true; text.rows = 8;
@@ -97,8 +103,7 @@
     const swap = node("button", "Version française", "link"); swap.type = "button";
     swap.onclick = () => { lang = lang === "en" ? "fr" : "en"; text.value = kit.image_prompts?.[lang] || "";
       swap.textContent = lang === "en" ? "Version française" : "English version"; };
-    const mock = node("a", "Télécharger la maquette", "link"); mock.href = base + kit.stem + "-maquette.png"; mock.download = "maquette.png";
-    bar.append(swap, mock);
+    bar.append(swap);
     box.append(text, bar);
 
     const input = node("input"); input.type = "file"; input.accept = ".png,.jpg,.jpeg,.webp"; input.hidden = true;
@@ -112,6 +117,11 @@
       try { await call("/proposals/" + proposal.id + "/reference", {method: "POST", body}); await window.reloadProject(); }
       catch (error) { status.className = "status error"; status.textContent = error.message; pick.disabled = false; }
     };
+    if (kit.reference) {
+      const done = node("div", null, "media-row");
+      done.append(fig(kit.reference, "Image de référence importée", "Votre image de référence, envoyée à l’outil vidéo."));
+      box.append(done);
+    }
     const actions = node("div", null, "views-bar");
     actions.append(pick);
     if (kit.reference) {

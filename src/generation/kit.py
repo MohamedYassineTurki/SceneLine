@@ -535,8 +535,9 @@ def build_kit(folder, proposal_id, client=None):
         files[view["file"]] = "Planche d’angles du produit (facultative)"
     image_prompts = None
     if guide_image:
-        files[guide_image["file"]] = "Maquette : le produit à la taille et à la place mesurées, sur la première image"
-        image_prompts = placement.image_prompts(product["name"], plan, description["en"], description["fr"])
+        image_prompts = placement.image_prompts(product["name"], plan, description["en"], description["fr"],
+                                                description["en"].get("surface_name", ""),
+                                                description["fr"].get("surface_name", ""), bool(views))
         (folder / f"{stem}-prompt-image-en.txt").write_text(image_prompts["en"] + "\n", encoding="utf-8")
         (folder / f"{stem}-prompt-image-fr.txt").write_text(image_prompts["fr"] + "\n", encoding="utf-8")
         files[f"{stem}-prompt-image-en.txt"] = "Prompt pour l'outil d'image (anglais) : rendre la maquette photoréaliste"
