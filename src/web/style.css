@@ -503,3 +503,14 @@ fieldset.plain > legend { padding: 0 0 6px; font-size: .875rem; font-weight: 500
 
 /* Réplique d'origine (darija, arabe) sous sa traduction française */
 .line-original { display: block; margin: 2px 0 0 0; color: var(--ink-2); font-size: .92em; margin-left: 0; padding-left: 0; unicode-bidi: plaintext; }
+
+/* Étape 2 · autres angles du produit */
+.product .views { margin-top: 10px; border-top: var(--border); padding-top: 8px; }
+.product .views summary { cursor: pointer; font-size: .875rem; font-weight: 600; }
+.views-prompt { width: 100%; box-sizing: border-box; font: inherit; font-size: .8125rem; line-height: 1.45; padding: 8px; border: var(--border); border-radius: 8px; resize: vertical; background: var(--bg, #fff); color: var(--ink); }
+.views-bar { display: flex; gap: 12px; align-items: center; margin: 6px 0 10px; }
+.views-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+.views-list .view { margin: 0; text-align: center; font-size: .75rem; color: var(--ink-2); }
+.views-list img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; border: var(--border); border-radius: 8px; }
+.views-form { display: grid; gap: 6px; }
+.views-form input, .views-form select { font: inherit; font-size: .8125rem; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0; }

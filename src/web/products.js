@@ -69,8 +69,67 @@
     edit.type = "button";
     edit.onclick = () => { edit.hidden = true; details.append(correctionForm(product)); };
     details.append(edit);
-    card.append(details);
+    card.append(details, viewsBlock(product));
     return card;
+  }
+
+  // Vues sous d'autres angles : un prompt pour un outil d'image, puis l'import des vues obtenues.
+  // Elles accompagnent le visuel principal jusqu'à l'outil vidéo, qui rend mieux la forme selon l'angle de la caméra.
+  function viewsBlock(product) {
+    const views = product.views || [];
+    const box = node("details", null, "views");
+    box.append(node("summary", "Autres angles · " + views.length + "/3 vue" + (views.length > 1 ? "s" : "")));
+    box.append(node("p", "Donnez ce prompt et le visuel du produit à un outil d’image (Gemini, ChatGPT…), puis importez les vues obtenues. Elles aident l’outil vidéo à rendre le produit sous le bon angle.", "muted"));
+    let lang = "en";
+    const text = node("textarea", null, "views-prompt");
+    text.readOnly = true; text.rows = 7; text.value = product.views_prompt[lang];
+    text.setAttribute("aria-label", "Prompt pour générer d’autres angles de " + product.name);
+    const bar = node("div", null, "views-bar");
+    const copy = node("button", "Copier le prompt", "btn secondary small"); copy.type = "button";
+    copy.onclick = async () => {
+      try { await navigator.clipboard.writeText(text.value); } catch { text.select(); document.execCommand("copy"); }
+      window.toast?.("Prompt copié.");
+    };
+    const swap = node("button", "Version française", "link"); swap.type = "button";
+    swap.onclick = () => { lang = lang === "en" ? "fr" : "en"; text.value = product.views_prompt[lang];
+      swap.textContent = lang === "en" ? "Version française" : "English version"; };
+    bar.append(copy, swap);
+    box.append(text, bar);
+
+    if (views.length) {
+      const list = node("div", null, "views-list");
+      views.forEach((view, index) => {
+        const item = node("figure", null, "view");
+        const img = node("img"); img.src = base() + view.image; img.alt = (product.angles[view.angle] || "Vue") + " de " + product.name; img.loading = "lazy";
+        const remove = node("button", "Retirer", "link"); remove.type = "button";
+        remove.onclick = async () => { await api("/products/" + product.id + "/views/" + index, {method: "DELETE"}); await load(); };
+        item.append(img, node("figcaption", (product.angles[view.angle] || "Vue") + " · " + view.tool), remove);
+        list.append(item);
+      });
+      box.append(list);
+    }
+    if (views.length < 3) {
+      const form = node("form", null, "views-form");
+      const file = node("input"); file.type = "file"; file.accept = ".png,.jpg,.jpeg,.webp"; file.required = true;
+      file.setAttribute("aria-label", "Image de la vue");
+      const angle = node("select"); fill(angle, product.angles); angle.setAttribute("aria-label", "Angle de la vue");
+      angle.value = ["trois_quarts", "profil", "plongee"].find(a => !views.some(v => v.angle === a)) || "autre";
+      const tool = node("input"); tool.placeholder = "Outil utilisé (ex. Gemini)"; tool.required = true; tool.maxLength = 80;
+      tool.setAttribute("aria-label", "Outil qui a produit la vue");
+      const add = node("button", "Ajouter la vue", "btn secondary small");
+      const status = node("p", null, "status");
+      form.append(file, angle, tool, add, status);
+      form.onsubmit = async (event) => {
+        event.preventDefault();
+        const body = new FormData();
+        body.append("image", file.files[0]); body.append("angle", angle.value); body.append("tool", tool.value);
+        add.disabled = true;
+        try { await api("/products/" + product.id + "/views", {method: "POST", body}); await load(); }
+        catch (error) { status.className = "status error"; status.textContent = error.message; add.disabled = false; }
+      };
+      box.append(form);
+    }
+    return box;
   }
 
   function correctionForm(product) {

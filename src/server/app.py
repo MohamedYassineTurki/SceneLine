@@ -246,6 +246,32 @@ def demo_products(job_id):
     added = catalog.load_demo(ready_job(job_id))
     return jsonify(added=[p["id"] for p in added])
 
+@app.post("/api/jobs/<job_id>/products/<product_id>/views")
+def add_product_view(job_id, product_id):
+    """Vue du produit sous un autre angle (produite par un outil d'image à partir du prompt fourni)."""
+    image = request.files.get("image")
+    if not image:
+        return jsonify(message="Ajoutez l'image de la vue."), 400
+    try:
+        product = catalog.add_view(ready_job(job_id), product_id, image.read(),
+                                   Path(image.filename or "").suffix or ".png",
+                                   request.form.get("angle"), request.form.get("tool"))
+    except KeyError:
+        abort(404)
+    except ValueError as error:
+        return jsonify(message=str(error)), 400
+    return jsonify(catalog.public(product)), 201
+
+@app.delete("/api/jobs/<job_id>/products/<product_id>/views/<int:index>")
+def remove_product_view(job_id, product_id, index):
+    try:
+        product = catalog.remove_view(ready_job(job_id), product_id, index)
+    except KeyError:
+        abort(404)
+    except ValueError as error:
+        return jsonify(message=str(error)), 400
+    return jsonify(catalog.public(product))
+
 @app.patch("/api/jobs/<job_id>/products/<product_id>")
 def correct_product(job_id, product_id):
     try:

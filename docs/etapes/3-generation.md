@@ -17,10 +17,14 @@
 ## Le kit de génération
 Pour un placement approuvé, [`generation/kit.py`](../../src/generation/kit.py) assemble :
 - **la scène** : le plan source exact (sans audio), découpé sur l'intervalle approuvé ;
-- **l'asset** : le visuel propre du produit, sur un fond carré de 1024 px ;
+- **l'asset** : le visuel propre du produit, sur un fond carré de 1024 px, et ses **autres angles** s'il y en a ;
 - **le prompt**, en français et en anglais : la description du plan (rédigée par Gemini à partir de trois images),
   l'emplacement précis sur une surface existante, **ce qui ne doit pas changer** (personnes, décor, cadrage,
   rythme des gestes), un **prompt négatif** et des réglages conseillés ;
+- **le réalisme**, décrit par Gemini à partir des images du plan : la **taille réelle** du produit, sa **taille
+  apparente** comparée aux objets voisins et en pourcentage de l'image, la **direction et la couleur de la
+  lumière**, l'**ombre** cohérente avec celles du décor, le **rendu de caméra** (netteté, grain, étalonnage) et ce
+  qui passe devant. Le produit doit sembler filmé avec le plan, jamais plus net ni plus propre que son entourage ;
 - une **empreinte du prompt**, qui suivra le résultat jusqu'au relevé de l'étape 4.
 
 ## Génération automatique avec Kling AI

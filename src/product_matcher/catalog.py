@@ -264,5 +264,95 @@ def effective(product):
     }
 
 
+# --------------------------------------------------------------------------- vues sous d'autres angles
+
+MAX_VIEWS = 3   # avec le visuel principal, quatre images de référence au plus pour l'outil vidéo
+ANGLES = {"trois_quarts": "Trois-quarts (45°)", "profil": "Profil", "plongee": "Vue plongeante (30°)",
+          "dos": "Dos", "autre": "Autre angle"}
+
+
+def views_prompt(product):
+    """Prompt pour un outil d'image : le même produit sous d'autres angles, sans le redessiner.
+    Des vues cohérentes aident l'outil vidéo à rendre la bonne forme selon l'angle de la caméra."""
+    analysis = product.get("analysis") or {}
+    look = analysis.get("appearance") or product["description"]
+    text = analysis.get("visible_text")
+    size = product["declared"].get("dimensions")
+    en = (
+        f"Product reference sheet for \"{product['name']}\". Use the attached photo as the only reference: "
+        f"it is the exact product ({look.rstrip('.')}). Reproduce it identically: same shape and proportions, "
+        "same materials and finish, same colors, same label layout"
+        + (f" and the same printed text (\"{text}\")" if text else "")
+        + (f", real size {size}" if size else "") + ". Do not redesign, simplify, translate or add anything.\n\n"
+        "Create 3 separate photorealistic images, one per view, square 1:1, at least 1536 px:\n"
+        "1. Three-quarter view, product turned 45 degrees, camera at the product's mid-height.\n"
+        "2. Side profile view, camera at the product's mid-height.\n"
+        "3. High-angle view from about 30 degrees above, as seen on a table.\n\n"
+        "For every view: pure white seamless background, soft even studio light from the front-left, a faint "
+        "soft contact shadow under the product, sharp focus on the whole product, no props, no hands, no "
+        "reflections of a studio, no added text or watermark. Keep the same camera distance in all views so the "
+        "product has the same size in every image.")
+    fr = (
+        f"Fiche de référence produit pour « {product['name']} ». Utilisez la photo jointe comme seule "
+        f"référence : c'est le produit exact ({look.rstrip('.')}). Reproduisez-le à l'identique : même forme et "
+        "proportions, mêmes matières et finition, mêmes couleurs, même mise en page de l'étiquette"
+        + (f" et le même texte imprimé (« {text} »)" if text else "")
+        + (f", taille réelle {size}" if size else "") + ". Ne redessinez, ne simplifiez, ne traduisez et "
+        "n'ajoutez rien.\n\n"
+        "Créez 3 images photoréalistes séparées, une par vue, carrées 1:1, 1536 px au moins :\n"
+        "1. Vue de trois-quarts, produit tourné de 45 degrés, caméra à mi-hauteur du produit.\n"
+        "2. Vue de profil, caméra à mi-hauteur du produit.\n"
+        "3. Vue plongeante d'environ 30 degrés, comme posé sur une table.\n\n"
+        "Pour chaque vue : fond blanc uni, lumière de studio douce et égale venant de l'avant gauche, légère "
+        "ombre de contact sous le produit, netteté sur tout le produit, aucun accessoire, aucune main, aucun "
+        "texte ni filigrane ajouté. Gardez la même distance de caméra dans toutes les vues, pour que le produit "
+        "ait la même taille sur chaque image.")
+    return {"en": en, "fr": fr}
+
+
+def _update(folder, product_id, change):
+    """Modifie une fiche sans changer la version du catalogue : les vues ne changent pas l'appariement."""
+    with LOCK:
+        catalog = load_catalog(folder)
+        product = next((p for p in catalog["products"] if p["id"] == product_id), None)
+        if not product:
+            raise KeyError(product_id)
+        change(product)
+        replace_json(catalog_path(folder), catalog)
+    return product
+
+
+def add_view(folder, product_id, image_bytes, extension, angle, tool):
+    if extension.lower() not in EXTENSIONS:
+        raise ValueError("Visuel accepté : PNG, JPG ou WebP.")
+    if not image_bytes or len(image_bytes) > 8 * 1024 * 1024:
+        raise ValueError("La vue doit peser entre 1 octet et 8 Mo.")
+    tool = text_of(tool, "")[:80]
+    if not tool:
+        raise ValueError("Indiquez l'outil qui a produit cette vue (ou « photo » si c'est une vraie photo).")
+
+    def change(product):
+        views = product.setdefault("views", [])
+        if len(views) >= MAX_VIEWS:
+            raise ValueError(f"{MAX_VIEWS} vues au plus par produit.")
+        name = f"product-{product_id}-vue-{now().replace(':', '').replace('-', '')[:15]}{extension.lower()}"
+        (folder / name).write_bytes(image_bytes)
+        views.append({"image": name, "angle": one_of(angle, list(ANGLES), "autre"), "tool": tool,
+                      "provenance": f"Vue produite avec {tool} à partir du visuel du produit ({product['provenance']})",
+                      "added_at": now()})
+
+    return _update(folder, product_id, change)
+
+
+def remove_view(folder, product_id, index):
+    def change(product):
+        views = product.get("views", [])
+        if not 0 <= index < len(views):
+            raise ValueError("Vue inconnue.")
+        views.pop(index)
+
+    return _update(folder, product_id, change)
+
+
 def public(product):
-    return dict(product, effective=effective(product))
+    return dict(product, effective=effective(product), views_prompt=views_prompt(product), angles=ANGLES)
