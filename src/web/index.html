@@ -14,7 +14,6 @@
 <script src="/ui/products.js" defer></script>
 <script src="/ui/compare.js" defer></script>
 <script src="/ui/ethics.js" defer></script>
-<script src="/ui/opportunities.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">Aller au contenu</a>
@@ -41,21 +40,6 @@
   </header>
 
   <form id="upload" class="card form-card">
-    <div class="option-cards" role="radiogroup" aria-label="Parcours du projet">
-      <label class="option-card">
-        <input type="radio" name="parcours" value="placement_contrat" checked>
-        <span class="oc-top"><span class="oc-ck"></span></span>
-        <span class="oc-title">Placement après contrat</span>
-        <span class="oc-text">Vous avez déjà un produit ou un sponsor à intégrer : le parcours complet de SceneLine.</span>
-      </label>
-      <label class="option-card">
-        <input type="radio" name="parcours" value="recherche_opportunites">
-        <span class="oc-top"><span class="chip out">En développement</span><span class="oc-ck"></span></span>
-        <span class="oc-title">Recherche d’opportunités</span>
-        <span class="oc-text">Vous n’avez pas encore de sponsor : SceneLine évalue ce que votre œuvre permettrait de monétiser, avant tout démarchage.</span>
-      </label>
-    </div>
-
     <label class="dropzone" for="video">
       <span class="drop-icon" aria-hidden="true"></span>
       <strong id="filename">Choisir une vidéo</strong>
@@ -124,21 +108,7 @@
       <p id="overview-meta" class="meta-line"></p>
     </section>
 
-    <section id="opportunity-report" class="block" hidden aria-label="Rapport d’opportunités">
-      <div class="block-head"><h2>Rapport d’opportunités</h2><p class="muted">Ce que votre œuvre permettrait de monétiser, avant tout démarchage. Chaque chiffre vient de l’analyse déjà faite : aucune nouvelle estimation.</p></div>
-      <div id="opp-kpis" class="kpi-row"></div>
-      <div id="opp-list" class="rows"></div>
-      <div class="block-head"><h2>Conseils de monétisation</h2></div>
-      <ul id="opp-tips" class="axbody" style="gap:8px"></ul>
-      <p id="opp-disclaimer" class="note-line"></p>
-      <p id="opp-directory-notice" class="muted"></p>
-      <div class="card-foot">
-        <a id="opp-pdf" class="link" download>Télécharger le dossier de présentation (PDF)</a>
-        <button type="button" id="opp-integrate" class="btn primary">Partenaire trouvé ? Intégrer son produit</button>
-      </div>
-    </section>
-
-    <section class="block" id="candidates-block">
+    <section class="block">
       <div class="block-head"><h2>Placements proposés</h2><p class="muted">Classés par score, chacun vérifié sur six images. Rien n’est modifié : ce sont des propositions que vous validerez à l’étape suivante. Ouvrez un placement pour voir l’avis du Cultural Integrity Guard.</p></div>
       <div id="candidates" class="rows"></div>
     </section>

@@ -1,5 +1,4 @@
 """Local SceneLine upload and analysis interface."""
-import io
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor
@@ -10,7 +9,7 @@ import subprocess
 import sys
 from uuid import uuid4
 
-from flask import Flask, abort, jsonify, request, send_file, send_from_directory
+from flask import Flask, abort, jsonify, request, send_from_directory
 from video_analyzer.review import gemini_keys, replace_json
 from video_analyzer.understand import PRIMARY_MODEL as DEFAULT_GEMINI_MODEL
 from product_matcher import catalog
@@ -21,7 +20,6 @@ from product_matcher import matching
 from generation import kit
 from generation import kling
 from integration import render
-from opportunity_finder import mediakit, report as opportunity_report
 
 ROOT = Path(__file__).resolve().parents[2]  # racine du dépôt (src/<module>/<fichier>.py)
 SRC = ROOT / "src"
@@ -149,7 +147,6 @@ def attach_guard(folder, result):
         "opportunities": {o["key"]: guard.assess(o, by_id[o["scene_id"]], scenes, context)
                           for o in result.get("opportunities", []) if o.get("decision") and o["scene_id"] in by_id},
     }
-    result["parcours"] = (context or {}).get("parcours", "placement_contrat")
 
 
 @app.get("/api/jobs/<job_id>")
@@ -429,24 +426,6 @@ def job_file(job_id, name):
     if not re.fullmatch(r"(?:source\.mp4|plan-\d+\.jpg|win-\d+-\d+\.jpg|analysis\.json|sceneline\.json|run\.log|product-[a-z0-9-]+\.(?:png|jpe?g|webp)|(?:render|export)-p-\d+-\d+-r\d+(?:-original|-edited)?\.mp4|kit-p-\d+-\d+-r\d+(?:-plan\.mp4|-(?:debut|fin)(?:-16x9)?\.png|-produit\.png|-prompt-(?:en|fr)\.txt|-LISEZ-MOI\.md|\.zip))", name):
         abort(404)
     return send_from_directory(folder, name)
-
-
-@app.get("/api/jobs/<job_id>/opportunity-report")
-def opportunity_report_json(job_id):
-    try:
-        return jsonify(opportunity_report.build(ready_job(job_id)))
-    except ValueError as error:
-        return jsonify(message=str(error)), 409
-
-
-@app.get("/api/jobs/<job_id>/opportunity-report.pdf")
-def opportunity_report_pdf(job_id):
-    try:
-        pdf_bytes = mediakit.build_pdf(ready_job(job_id))
-    except ValueError as error:
-        return jsonify(message=str(error)), 409
-    return send_file(io.BytesIO(pdf_bytes), mimetype="application/pdf",
-                     as_attachment=True, download_name="rapport-opportunites.pdf")
 
 
 # ----------------------------------------------------------------------------- génération automatique (Kling)

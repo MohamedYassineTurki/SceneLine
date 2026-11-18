@@ -32,7 +32,6 @@ flowchart LR
 | Chaque décision est **signée, datée, liée à une révision par empreinte SHA-256**, dans un journal | [`producer_review/decisions.py`](../src/producer_review/decisions.py) · `digest()` |
 | La vidéo originale n'est **jamais modifiée** ; une révision modifiée après approbation doit être décidée à nouveau | [`integration/render.py`](../src/integration/render.py) |
 | Les règles de décision sont du code lisible, pas le texte libre d'un modèle | [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) · `classify()` |
-| *En développement* · un créateur qui n'a pas encore de sponsor (parcours **Recherche d'opportunités**) garde la main sur la décision de démarcher ou non ; aucune garantie de revenu n'est jamais affichée comme un fait | [`opportunity_finder/report.py`](../src/opportunity_finder/report.py) |
 
 ## 2 · Les droits : *consentement, droits d'auteur, droit à l'image*
 
@@ -72,7 +71,6 @@ flowchart LR
 | Repères jaunes sur la frise : où la vidéo a été modifiée | [`web/compare.js`](../src/web/compare.js) |
 | Chaque proposition explique **pourquoi** cette surface, ce produit, ce risque | [`web/products.js`](../src/web/products.js) |
 | L'application dit aussi **ce qu'elle ne fait pas** (page Éthique 360) | [`web/ethics.js`](../src/web/ethics.js) |
-| *En développement* · parcours **Recherche d'opportunités** : annuaire d'annonceurs marqué **« Annuaire de démonstration »** (3 à 5 annonceurs fictifs) ; sans correspondance, des types de partenaires génériques, jamais une entreprise réelle non inscrite ; avertissement que les revenus dépendent des accords conclus avec les annonceurs | [`opportunity_finder/advertisers.py`](../src/opportunity_finder/advertisers.py) |
 
 ## 6 · La planète : *quel coût énergétique pour quel bénéfice ?*
 
