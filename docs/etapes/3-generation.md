@@ -34,6 +34,11 @@ flowchart LR
    (cadrage vérifié) est envoyée à l'outil vidéo comme **première image attendue** ; sans elle, la maquette fixe
    la taille et la position.
 
+   Dès qu'elle est importée, l'image de référence **devient la consigne principale** : le prompt s'ouvre sur elle
+   (« MAIN REFERENCE »), demande de reproduire le produit exactement comme sur cette image (place, taille, angle,
+   lumière, ombre, rendu) et retire tout ce qui pourrait la contredire. Les photos du produit ne servent plus qu'à
+   garder l'étiquette exacte ; tout le reste (caméra, personnes, gestes, rythme) vient de la vidéo d'origine.
+
 Le prompt vidéo reprend la taille chiffrée, le point de pose, la lumière, l'ombre et le rendu de caméra, et
 demande un objet posé comme un vrai accessoire (tourné, jamais face caméra comme une publicité). Une **version
 courte** (moins de 3 000 caractères) est prête pour Kling 3.0 Omni, dont la limite est de 3 072 caractères.

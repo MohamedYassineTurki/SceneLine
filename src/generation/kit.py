@@ -197,6 +197,8 @@ def realism(block, lang, views, plan=None, name="", guide=None):
 
 def build_prompts(revision, product, seconds, d, views=0, plan=None, guide=None):
     """Assemble les prompts à partir des descripteurs. Un champ manquant est omis, jamais inventé."""
+    if guide and guide["kind"] == "reference":
+        return reference_prompts(revision, product, seconds, d, views, plan, guide)
     scale = revision.get("scale", 1.0)
     size_en = f" It appears at {round(scale * 100)}% of its reference size." if scale != 1 else ""
     size_fr = f" Il apparaît à {round(scale * 100)} % de sa taille de référence." if scale != 1 else ""
@@ -273,11 +275,98 @@ def build_prompts(revision, product, seconds, d, views=0, plan=None, guide=None)
     return prompt_en, prompt_fr
 
 
+# --------------------------------------------------------------------------- prompts guidés par l'image de référence
+
+def _size_hint(plan, lang):
+    if not plan:
+        return ""
+    if lang == "en":
+        return f" (about {plan['target_pct']}% of the image height, smaller than the {plan['reference_en']} next to it)"
+    return f" (environ {plan['target_pct']} % de la hauteur de l'image, plus petit que l'objet voisin : {plan['reference_fr']})"
+
+
+def reference_prompts(revision, product, seconds, d, views, plan, guide):
+    """Avec une image de référence importée, elle devient LA consigne : le produit y a déjà la bonne place, la bonne
+    taille et le bon rendu. Le prompt la place en tête et retire tout ce qui pourrait la contredire (position de la
+    maquette, lumière estimée, angle imposé) : l'outil vidéo n'a plus qu'à la reproduire sur toutes les images."""
+    ref, name, n = guide["id"], product["name"], round(seconds)
+    en, fr = d["en"], d["fr"]
+    surface_en = en.get("surface_name") or revision["surface"]
+    surface_fr = fr.get("surface_name") or revision["surface"]
+
+    def join(values):
+        return "; ".join(v for v in values if v)
+
+    angles_en = f" and @image_2 (the same product from other angles)" if views else ""
+    angles_fr = f" et @image_2 (le même produit sous d'autres angles)" if views else ""
+    prompt_en = (
+        f"MAIN REFERENCE: @{ref}. It is the first frame of this shot with {name} already added on the {surface_en}. "
+        f"It is the target result: reproduce it exactly.\n\n"
+        f"TASK: Edit the input video so that every frame shows {name} exactly as it appears in @{ref}: same position "
+        f"on the {surface_en}, same size{_size_hint(plan, 'en')}, same angle and label orientation, same light, "
+        "reflections, contact shadow, colors, softness and grain. The object stays perfectly still from the first "
+        "frame to the last. Nobody touches it, moves it or looks at it. If something passes in front of it, it hides "
+        "it naturally.\n\n"
+        f"PRODUCT IDENTITY: use @image_1 (product photo){angles_en} only to keep the label, text and shape accurate. "
+        f"Never use them to change the object's size, brightness, color or angle: those come from @{ref}.\n\n"
+        "EVERYTHING ELSE COMES FROM THE INPUT VIDEO, not from the reference image: the camera (locked, no zoom, no "
+        f"pan, no cut, no reframing), the framing, the setting ({en.get('setting', '')}), the elements: "
+        f"{join(en.get('fixed_elements', []))}, the lighting, the people: {join(en.get('people', []))}, their faces, "
+        f"gestures and the timing of their movements over the {n} seconds. Ignore any other difference between "
+        f"@{ref} and the video.\n\n"
+        "DO NOT: add any other object, person, text, subtitle or logo; enlarge, brighten, sharpen or turn the "
+        "object toward the camera; change the faces or the set; add music, dialogue or sound effects; change the "
+        "speed of the action.")
+    prompt_fr = (
+        f"RÉFÉRENCE PRINCIPALE : @{ref}. C'est la première image de ce plan, avec {name} déjà posé sur la surface "
+        f"({surface_fr}). C'est le résultat attendu : reproduisez-le exactement.\n\n"
+        f"TÂCHE : modifiez la vidéo d'entrée pour que chaque image montre {name} exactement comme dans @{ref} : même "
+        f"position, même taille{_size_hint(plan, 'fr')}, même angle et même orientation de l'étiquette, même lumière, "
+        "reflets, ombre de contact, couleurs, douceur et grain. L'objet reste parfaitement immobile de la première "
+        "à la dernière image. Personne ne le touche, ne le déplace ni ne le regarde. Si quelque chose passe devant, "
+        "il le masque naturellement.\n\n"
+        f"IDENTITÉ DU PRODUIT : servez-vous de @image_1 (photo du produit){angles_fr} uniquement pour garder "
+        "l'étiquette, le texte et la forme exacts. Jamais pour changer la taille, la luminosité, la couleur ou "
+        f"l'angle de l'objet : ils viennent de @{ref}.\n\n"
+        "TOUT LE RESTE VIENT DE LA VIDÉO D'ENTRÉE, pas de l'image de référence : la caméra (fixe, ni zoom, ni "
+        f"panoramique, ni coupe, ni recadrage), le cadrage, le lieu ({fr.get('setting', '')}), les éléments : "
+        f"{join(fr.get('fixed_elements', []))}, la lumière, les personnes : {join(fr.get('people', []))}, leurs "
+        f"visages, leurs gestes et le rythme de leurs mouvements pendant les {n} secondes. Ignorez toute autre "
+        f"différence entre @{ref} et la vidéo.\n\n"
+        "NE PAS : ajouter un autre objet, une personne, un texte, un sous-titre ou un logo ; agrandir, éclaircir, "
+        "rendre plus net ou tourner l'objet vers la caméra ; changer les visages ou le décor ; ajouter musique, "
+        "dialogue ou bruitage ; changer la vitesse de l'action.")
+    return prompt_en, prompt_fr
+
+
+def reference_short(revision, product, d, views, plan, guide):
+    ref, name = guide["id"], product["name"]
+    surface = d["en"].get("surface_name") or revision["surface"]
+    angles = " and @image_2 (other angles)" if views else ""
+    parts = [
+        f"MAIN REFERENCE: @{ref} is the first frame of this shot with {name} already added on the {surface}. "
+        "It is the target result.",
+        f"Edit the input video so that every frame shows {name} exactly as in @{ref}: same position, same size"
+        f"{_size_hint(plan, 'en')}, same angle and label orientation, same light, reflections, contact shadow, "
+        "colors, softness and grain. It stays perfectly still from the first to the last frame; nobody touches it.",
+        f"Use @image_1 (product photo){angles} only to keep the label and shape accurate, never to change its size, "
+        f"brightness, color or angle: those come from @{ref}.",
+        "Everything else comes from the input video, not from the reference image: same locked camera (no zoom, no "
+        "pan, no cut), framing, people, faces, gestures, timing, set and light. Ignore any other difference between "
+        f"@{ref} and the video.",
+        "Do not add any other object, text, logo or sound. Do not enlarge, brighten, sharpen or turn the object "
+        "toward the camera.",
+    ]
+    return "\n\n".join(parts)[:SHORT_LIMIT]
+
+
 SHORT_LIMIT = 3000   # Kling 3.0 Omni refuse au-delà de 3 072 caractères ; un prompt coupé perd ses consignes de taille
 
 
 def build_short(revision, product, d, views=0, plan=None, guide=None):
     """Version compacte du prompt (anglais), pour les outils à prompt court : l'essentiel d'abord, jamais coupé."""
+    if guide and guide["kind"] == "reference":
+        return reference_short(revision, product, d, views, plan, guide)
     en = d["en"]
     name = product["name"]
     obj = (en.get("object_description") or product["description"]).rstrip(".")
