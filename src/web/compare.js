@@ -73,7 +73,6 @@
     const base = baseUrl(), version = "?v=" + encodeURIComponent((kit.reference_at || kit.created_at) || "");
     const box = node("div", null, "reference-block");
     const plan = kit.plan;
-    box.append(node("h3", "Image de référence du placement", "sub-title"));
     const fr = (n) => String(n).replace(".", ",");
     if (plan) box.append(node("p", "Taille mesurée : " + fr(plan.target_pct) + " % de la hauteur de l’image (environ " + plan.target_px
       + " px). Objet repère : " + plan.reference_fr + ", " + fr(plan.reference_height_cm) + " cm ; produit : "
@@ -86,9 +85,9 @@
     box.append(row);
 
     const steps = node("ol", null, "reference-steps");
-    steps.append(node("li", "Copiez le prompt ci-dessous et donnez-le à un outil d’image (ChatGPT, Gemini…), avec la maquette et l’asset du produit."),
-      node("li", "Importez l’image obtenue. SceneLine vérifie qu’elle garde le cadrage du plan."),
-      node("li", "La génération vidéo la reçoit comme première image attendue. Sans elle, c’est la maquette qui guide la taille et la position."));
+    steps.append(node("li", "Téléchargez la maquette, puis donnez-la à un outil d’image (ChatGPT, Gemini…) avec l’asset du produit et le prompt ci-dessous."),
+      node("li", "Vérifiez le résultat : le produit garde la taille et la place de la maquette, et paraît filmé avec la scène."),
+      node("li", "Importez l’image. SceneLine vérifie le cadrage, puis l’envoie à l’outil vidéo comme première image attendue."));
     box.append(steps);
     let lang = "en";
     const text = node("textarea", null, "views-prompt"); text.readOnly = true; text.rows = 8;
@@ -120,7 +119,7 @@
       remove.onclick = async () => { await call("/proposals/" + proposal.id + "/reference", {method: "DELETE"}); await window.reloadProject(); };
       actions.append(remove);
     }
-    box.append(input, actions, status, node("p", "Facultatif, mais recommandé : c’est la meilleure garantie que le produit garde la bonne taille, la bonne lumière et la bonne netteté.", "ink-note"));
+    box.append(input, actions, status);
     return box;
   }
 
@@ -428,15 +427,49 @@
     }
     card.append(message);
     if (kit) {
-      const place = node("div", null, "gen-choice");
-      const show = () => place.replaceChildren(genState(proposal.id).choice === "auto" ? autoPanel(proposal, kit) : manualPanel(kit, proposal));
-      const content = node("div", null, "stack-sm");
-      content.append(node("h3", "Contenu du kit", "sub-title"), kitMedia(kit));
-      if (kit.guide) content.append(referenceBlock(kit, proposal));
-      const choose = node("div", null, "stack-sm");
-      choose.append(node("h3", "Comment produire la vidéo ?"), optionCards(proposal, show));
-      card.append(content, node("hr", null, "hr"), choose, place, build);
-      show();
+      // Trois temps, dans l'ordre : le kit, l'image de référence (obligatoire), puis la vidéo.
+      // La vidéo reste verrouillée tant que l'image de référence n'est pas importée : c'est elle qui fixe la taille,
+      // la place et le rendu du produit, et l'outil vidéo n'a plus qu'à la reproduire.
+      const ready = Boolean(kit.reference);
+      const track = node("ol", null, "gen-track");
+      for (const [label, state] of [["Kit préparé", "done"], ["Image de référence", ready ? "done" : "current"],
+        ["Vidéo générée", ready ? "current" : "locked"]]) {
+        const li = node("li", null, "gen-track-step " + state);
+        li.append(node("span", state === "done" ? "✓" : "", "dot"), node("span", label));
+        if (state === "current") li.setAttribute("aria-current", "step");
+        track.append(li);
+      }
+      card.append(track);
+
+      const kitPart = node("details", null, "gen-part");
+      kitPart.open = !ready;
+      kitPart.append(node("summary", "1 · Contenu du kit"), kitMedia(kit));
+      card.append(kitPart);
+
+      const refPart = node("section", null, "gen-part");
+      refPart.append(node("h3", "2 · Image de référence" + (ready ? "" : " · obligatoire"), "sub-title"));
+      if (kit.guide) refPart.append(referenceBlock(kit, proposal));
+      else {
+        const redo = node("button", "Refaire le kit", "btn secondary small"); redo.type = "button"; redo.onclick = () => build.click();
+        refPart.append(node("p", "Ce kit a été préparé avant l’ajout de la maquette mesurée. Refaites-le pour obtenir la maquette et l’image de référence.", "badge uncertain"), redo);
+      }
+      card.append(refPart);
+
+      const videoPart = node("section", null, "gen-part");
+      videoPart.append(node("h3", "3 · Générer la vidéo", "sub-title"));
+      if (ready) {
+        const place = node("div", null, "gen-choice");
+        const show = () => place.replaceChildren(genState(proposal.id).choice === "auto" ? autoPanel(proposal, kit) : manualPanel(kit, proposal));
+        videoPart.append(optionCards(proposal, show), place);
+        card.append(videoPart, build);
+        show();
+      } else {
+        const lock = node("div", null, "gen-locked");
+        lock.append(node("b", "Importez d’abord l’image de référence."),
+          node("p", "C’est elle qui donne au produit la bonne taille, la bonne place, la bonne lumière et le bon rendu. L’outil vidéo n’a ensuite plus qu’à la reproduire sur chaque image du plan.", "muted"));
+        videoPart.append(lock);
+        card.append(videoPart, build);
+      }
     }
     return card;
   }

@@ -173,8 +173,13 @@ def build_request(folder, proposal_id, model, mode, public_base=None, token=None
     if not kit or kit["revision"] != revision["n"]:
         raise KlingError("Préparez d’abord le kit de la révision approuvée.", 409)
     spec = MODELS[model]
-    prompt = kit["prompt_en"] + ("\n\nThe product to add is the object shown in the reference image @image_1 "
-                                 "(white background): reproduce its shape, colors and label faithfully.")
+    guide = kit.get("guide") or {}
+    if not kit.get("reference") or guide.get("kind") != "reference":
+        raise KlingError("Importez d’abord l’image de référence du placement (étape 3 · 2) : "
+                         "c’est elle qui fixe la taille, la place et le rendu du produit.", 409)
+    # L'image de référence reste la consigne principale jusqu'au dernier mot du prompt.
+    prompt = kit["prompt_en"] + (f"\n\nReminder: the result must match @{guide['id']} exactly. @image_1 only "
+                                 "confirms the label and shape of the product.")
     extra = "\n\nDo not: " + kit["negative_en"]
     if len(prompt) + len(extra) <= spec["prompt_max"]:
         prompt += extra

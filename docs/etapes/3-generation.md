@@ -16,9 +16,8 @@ flowchart LR
     M --> C[Taille apparente<br/>calculée par le code]
     C --> A[Produit accordé à la scène<br/>lumière · couleur · netteté · grain]
     A --> Q[Maquette sur la première image<br/>ombre de contact]
-    Q -.->|facultatif| I[Outil d'image<br/>rendu photoréaliste]
+    Q --> I[Outil d'image<br/>rendu photoréaliste]
     I --> R[Image de référence]
-    Q --> V[Outil vidéo]
     R --> V
 ```
 
@@ -29,10 +28,11 @@ flowchart LR
 2. **Accord avec la scène.** Le visuel est réduit à cette taille (il perd le détail que la caméra ne verrait
    pas), puis sa luminosité, sa dominante, sa saturation, sa netteté et son grain sont alignés sur la zone de pose.
 3. **Maquette.** Le produit accordé est posé sur la première image, avec une ombre de contact.
-4. **Image de référence (facultative, recommandée).** SceneLine fournit un prompt pour un outil d'image
+4. **Image de référence (obligatoire).** SceneLine fournit un prompt pour un outil d'image
    (ChatGPT, Gemini…) qui rend la maquette photoréaliste sans changer ni taille ni position. L'image importée
-   (cadrage vérifié) est envoyée à l'outil vidéo comme **première image attendue** ; sans elle, la maquette fixe
-   la taille et la position.
+   (cadrage vérifié) est envoyée à l'outil vidéo comme **première image attendue**. Dans l'interface, l'étape 3
+   se fait en trois temps : **1 · kit**, **2 · image de référence**, **3 · vidéo** ; la génération reste
+   verrouillée, dans l'interface comme sur le serveur, tant que l'image de référence n'est pas importée.
 
    Dès qu'elle est importée, l'image de référence **devient la consigne principale** : le prompt s'ouvre sur elle
    (« MAIN REFERENCE »), demande de reproduire le produit exactement comme sur cette image (place, taille, angle,
