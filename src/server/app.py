@@ -473,16 +473,23 @@ def import_external(job_id, proposal_id):
                                         Path(upload.filename or "").suffix or ".mp4",
                                         request.form.get("tool"), request.form.get("note"),
                                         request.form.get("fit", "contain"), request.form.get("anchor", 0.5),
-                                        request.form.get("lead_ms", 0))
+                                        request.form.get("lead_ms", render.LEAD_MS), request.form.get("force") == "1")
     except render.RenderError as error:
         return jsonify(message=str(error)), error.status
     return jsonify(record), 201
+
+@app.delete("/api/jobs/<job_id>/proposals/<proposal_id>/render")
+def delete_render(job_id, proposal_id):
+    try:
+        return jsonify(render.remove_render(ready_job(job_id), proposal_id))
+    except render.RenderError as error:
+        return jsonify(message=str(error)), error.status
 
 @app.post("/api/jobs/<job_id>/proposals/<proposal_id>/reassemble")
 def reassemble(job_id, proposal_id):
     body = request.get_json(silent=True) or {}
     try:
-        return jsonify(render.reassemble(ready_job(job_id), proposal_id, body.get("lead_ms", 0)))
+        return jsonify(render.reassemble(ready_job(job_id), proposal_id, body.get("lead_ms", render.LEAD_MS)))
     except render.RenderError as error:
         return jsonify(message=str(error)), error.status
 

@@ -40,8 +40,13 @@ de l'original.
 ## Assemblage
 - Les **bandes noires** ajoutées par un outil (un 16:9 autour d'un plan large) sont détectées et retirées
   automatiquement.
-- L'extrait final est : **original avant** → **plan édité** sur l'intervalle approuvé → **original après**,
-  avec l'**audio source conservé** de bout en bout.
+- L'extrait final est : **1 s d'original avant** → **plan édité** sur l'intervalle approuvé → **1 s d'original
+  après**, avec l'**audio source conservé** de bout en bout.
+- **La vidéo doit être celle de ce placement.** Avant d'intégrer, SceneLine compare la vidéo importée au plan
+  d'origine sur cinq instants. Si un autre placement lui ressemble nettement plus, l'import est refusé et
+  SceneLine nomme le bon placement ; une vidéo très transformée peut être importée quand même, à la demande du
+  producteur, et le relevé le note. Un placement sans kit ni image de référence n'a pas encore de vidéo : aucun
+  import n'est proposé. Un résultat intégré par erreur peut être retiré.
 - Seule la **révision approuvée** d'une proposition peut recevoir un rendu, et le rendu lui est lié par
   son empreinte.
 

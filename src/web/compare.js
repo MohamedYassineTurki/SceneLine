@@ -484,26 +484,40 @@
     const status = node("span", current ? "Résultat intégré" : "En attente du résultat", "chip " + (current ? "ok" : "warn"));
     card.append(head(proposal, status),
       io("La vidéo produite par l’outil de génération", "Extrait avec l’original et son audio, plus la comparaison"));
-    if (!kit && !current) {
-      const hint = node("p", null, "note-line");
-      hint.append(document.createTextNode("Conseil : préparez d’abord le kit à l’étape 3. "));
-      const back = node("button", "Aller au kit", "link"); back.type = "button"; back.onclick = () => go(3);
+    const ready = Boolean(kit && kit.reference);
+    if (!ready && !current) {
+      // Une vidéo ne s'intègre que sur le placement pour lequel elle a été générée : sans kit ni image de
+      // référence, ce placement n'a pas encore de vidéo, donc rien à importer ici.
+      card.classList.add("step-card-waiting");
+      const hint = node("div", null, "gen-locked");
+      hint.append(node("b", "Pas encore de vidéo pour ce placement."),
+        node("p", kit ? "Importez son image de référence à l’étape 3, générez la vidéo, puis revenez ici."
+          : "Préparez son kit et son image de référence à l’étape 3, générez la vidéo, puis revenez ici.", "muted"));
+      const back = node("button", "Aller à l’étape 3", "btn secondary small"); back.type = "button"; back.onclick = () => go(3);
       hint.append(back); card.append(hint);
+      return card;
     }
     if (current) {
       for (const warning of record.warnings) card.append(node("p", warning, "badge uncertain"));
       if (record.kit) card.append(node("p", "Lié au kit du " + when(record.kit.created_at) + " (empreinte du prompt " + record.kit.prompt_sha + ").", "note-line"));
+      if (record.match) card.append(node("p", record.match.forced ? "Importée sans vérification de correspondance, à votre demande."
+        : "Vérifiée : la vidéo correspond à ce plan (ressemblance " + Math.round(record.match.score * 100) + " %).", "note-line"));
       const actions = node("div", null, "decide");
       const open = node("button", "Voir la comparaison", "btn secondary small"); open.type = "button";
       open.onclick = () => { select(proposal.id, data); get("cmp-player").scrollIntoView({block: "start", behavior: "smooth"}); };
-      actions.append(open);
+      const drop = node("button", "Retirer ce résultat", "link"); drop.type = "button";
+      drop.onclick = async () => {
+        if (!confirm("Retirer la vidéo intégrée sur ce placement ? L’original n’est pas touché.")) return;
+        await call("/proposals/" + proposal.id + "/render", {method: "DELETE"}); selected = null; await window.reloadProject();
+      };
+      actions.append(open, drop);
       card.append(actions);
       const options = node("details", null, "disclosure");
       options.append(node("summary", "Options de l’extrait"));
       const inner = node("div", null, "disclosure-body");
       const lead = node("select"); lead.title = "Contexte conservé avant le placement";
-      lead.append(...[["0", "L’extrait commence dès la première image du placement"], ["3000", "L’extrait garde 3 s d’original avant le placement"]]
-        .map(([value, text]) => { const o = node("option", text); o.value = value; o.selected = value === String(record.provenance.lead_ms || 0); return o; }));
+      lead.append(...[["1000", "1 s d’original avant le placement (recommandé)"], ["0", "L’extrait commence dès la première image du placement"], ["3000", "3 s d’original avant le placement"]]
+        .map(([value, text]) => { const o = node("option", text); o.value = value; o.selected = value === String(record.provenance.lead_ms ?? 1000); return o; }));
       const redo = node("button", "Réassembler l’extrait", "btn quiet small"); redo.type = "button";
       redo.onclick = async () => {
         redo.disabled = true;
@@ -519,6 +533,12 @@
       card.append(node("p", "Un résultat existe pour la révision " + record.revision + ". Importez-en un pour la révision " + proposal.approved_revision + ".", "badge uncertain"));
     }
 
+    const target = node("div", null, "import-target");
+    const thumb = node("img"); thumb.src = baseUrl() + kit.frames_native.debut + "?v=" + encodeURIComponent(kit.created_at); thumb.alt = "Première image du plan";
+    const targetText = node("div");
+    targetText.append(node("b", "Vidéo attendue : " + kit.product_name + " · " + ms(proposal.latest.start_ms) + " – " + ms(proposal.latest.end_ms)),
+      node("p", "Importez la vidéo générée pour ce plan. SceneLine vérifie qu’elle lui correspond avant de l’intégrer, avec 1 s d’original avant et après.", "muted"));
+    target.append(thumb, targetText);
     const form = node("form", null, "import-grid");
     const tool = node("input"); tool.placeholder = "Outil utilisé, par exemple Google Flow"; tool.maxLength = 120; tool.required = true; tool.setAttribute("aria-label", "Outil de génération utilisé");
     const note = node("input"); note.placeholder = "Note : modèle, nombre d’essais (facultatif)"; note.maxLength = 300; note.setAttribute("aria-label", "Note de provenance");
@@ -532,28 +552,35 @@
     drop.append(dropLabel, file);
     const submit = node("button", current ? "Remplacer le résultat" : "Intégrer le résultat", "btn primary");
     const message = node("p", null, "status");
-    const foot = node("div", null, "form-foot"); foot.append(message, submit);
+    const force = node("button", "Importer quand même", "link"); force.type = "button"; force.hidden = true;
+    const foot = node("div", null, "form-foot"); foot.append(message, force, submit);
     form.append(tool, note, fit, drop, foot);
-    form.onsubmit = async (event) => {
-      event.preventDefault();
-      submit.disabled = true; message.classList.remove("error");
-      message.textContent = "Assemblage en cours (quelques secondes)…";
+    const send = async (forced) => {
+      submit.disabled = true; force.hidden = true; message.classList.remove("error");
+      message.textContent = "Vérification et assemblage (quelques secondes)…";
       const body = new FormData();
       body.set("video", file.files[0]); body.set("tool", tool.value); body.set("note", note.value);
       body.set("fit", fit.value.startsWith("cover") ? "cover" : "contain"); body.set("anchor", fit.value === "cover-center" ? "0.5" : "0.7");
+      if (forced) body.set("force", "1");
       try {
         await call("/proposals/" + proposal.id + "/external", {method: "POST", body});
         selected = proposal.id; await window.reloadProject();
         get("cmp-player").scrollIntoView({block: "start", behavior: "smooth"});
-      } catch (error) { message.textContent = error.message; message.classList.add("error"); }
+      } catch (error) {
+        message.textContent = error.message; message.classList.add("error");
+        // Seule une vidéo très transformée peut être importée sans correspondance ; jamais celle d'un autre placement.
+        force.hidden = !/ne ressemble pas/.test(error.message);
+      }
       submit.disabled = false;
     };
+    form.onsubmit = (event) => { event.preventDefault(); send(false); };
+    force.onclick = () => { if (form.reportValidity()) send(true); };
     if (current) {
       const replace = node("details", null, "disclosure");
       replace.append(node("summary", "Remplacer par un autre résultat"));
-      const inner = node("div", null, "disclosure-body"); inner.append(form); replace.append(inner);
+      const inner = node("div", null, "disclosure-body"); inner.append(target, form); replace.append(inner);
       card.append(replace);
-    } else card.append(form);
+    } else card.append(target, form);
     return card;
   }
 
@@ -632,7 +659,8 @@
     if (!approved.length) kitList.append(node("p", "Approuvez un placement à l’étape 2 pour préparer son kit.", "empty"));
     step3Gate(data);
     const list = get("integrate-list");
-    list.replaceChildren(...approved.map(p => integrationCard(p, data)));
+    const rank = (p) => data.renders[p.id] ? 0 : approvedKit(p, data)?.reference ? 1 : 2;
+    list.replaceChildren(...[...approved].sort((a, b) => rank(a) - rank(b)).map(p => integrationCard(p, data)));
     if (!approved.length) list.append(node("p", "Approuvez un placement à l’étape 2 pour pouvoir intégrer un résultat.", "empty"));
 
     const ready = Object.keys(data.renders);

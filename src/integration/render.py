@@ -18,12 +18,18 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 
+import cv2
+import numpy as np
+
 from product_matcher.catalog import load_catalog
 from producer_review.decisions import decision_for, digest, read
 from video_analyzer.review import replace_json
 
 LOCK = threading.RLock()
-CONTEXT_MS = 3000          # contexte conservé avant et après l'intervalle
+CONTEXT_MS = 1000          # original conservé APRÈS le plan édité
+LEAD_MS = 1000             # original conservé AVANT le plan édité : le spectateur voit la scène, puis le placement
+MATCH_MIN = 0.70           # ressemblance minimale entre la vidéo importée et le plan d'origine
+MATCH_MARGIN = 0.05        # un autre placement qui ressemble nettement plus : la vidéo n'est pas pour celui-ci
 EXTERNAL_LABEL = "Aperçu illustratif réalisé avec un outil externe"
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".webm", ".mkv"}
 MAX_UPLOAD = 200 * 1024 * 1024
@@ -234,7 +240,7 @@ def retime(source, edited_path, start_ms, end_ms, region, target):
     return round(float(np.mean(np.abs(np.array(path) - linear))) / fps_edit, 2)
 
 
-def assemble(folder, proposal_id, edited_path, tool, note, fit="contain", anchor=0.5, lead_ms=0):
+def assemble(folder, proposal_id, edited_path, tool, note, fit="contain", anchor=0.5, lead_ms=LEAD_MS):
     """Original/édité sur un extrait identique, audio source conservé."""
     proposal, revision, decision = approved_revision(folder, proposal_id)
     source = folder / "source.mp4"
@@ -248,7 +254,7 @@ def assemble(folder, proposal_id, edited_path, tool, note, fit="contain", anchor
         edited_path = aligned
     duration_ms = round(info["duration"] * 1000)
     start, end = revision["start_ms"], revision["end_ms"]
-    ex_start = max(0, start - max(0, int(lead_ms)))   # 0 : l'extrait commence avec le placement, sans apparition en cours de plan
+    ex_start = max(0, start - max(0, int(lead_ms)))   # 1 s d'original avant le plan édité, par défaut
     ex_end = min(duration_ms, end + CONTEXT_MS)
     length = (end - start) / 1000
     pre = (start - ex_start) / 1000
@@ -330,7 +336,92 @@ def assemble(folder, proposal_id, edited_path, tool, note, fit="contain", anchor
     return record
 
 
-def import_external(folder, proposal_id, data, extension, tool, note, fit="contain", anchor=0.5, lead_ms=0):
+# --------------------------------------------------------------------------- la vidéo est-elle pour ce plan ?
+
+def _grab(path, seconds):
+    cap = cv2.VideoCapture(str(path))
+    cap.set(cv2.CAP_PROP_POS_MSEC, max(0.0, seconds * 1000))
+    ok, frame = cap.read()
+    cap.release()
+    return frame if ok else None
+
+
+def _picture(frame):
+    """Image sans bandes noires, en niveaux de gris, réduite et normalisée : comparable d'un outil à l'autre."""
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    rows = np.where(gray.mean(axis=1) > 20)[0]
+    cols = np.where(gray.mean(axis=0) > 20)[0]
+    if len(rows) > 10 and len(cols) > 10:
+        gray = gray[rows[0]:rows[-1] + 1, cols[0]:cols[-1] + 1]
+    small = cv2.GaussianBlur(cv2.resize(gray, (96, 54), interpolation=cv2.INTER_AREA).astype(np.float32), (0, 0), 1.0)
+    return (small - small.mean()) / (small.std() + 1e-3)
+
+
+def match_score(source, start_ms, end_ms, edited):
+    """Ressemblance (de -1 à 1) entre la vidéo importée et le plan d'origine, sur cinq instants."""
+    cap = cv2.VideoCapture(str(edited))
+    duration = cap.get(cv2.CAP_PROP_FRAME_COUNT) / (cap.get(cv2.CAP_PROP_FPS) or 25)
+    cap.release()
+    length = (end_ms - start_ms) / 1000
+    values = []
+    for f in (0.1, 0.3, 0.5, 0.7, 0.9):
+        frame = _grab(edited, f * duration)
+        if frame is None:
+            continue
+        picture = _picture(frame)
+        best = -1.0
+        for dt in (-0.4, 0.0, 0.4):
+            original = _grab(source, start_ms / 1000 + f * length + dt)
+            if original is not None:
+                best = max(best, float((picture * _picture(original)).mean()))
+        values.append(best)
+    return round(float(np.mean(values)), 3) if values else 0.0
+
+
+def check_match(folder, proposal_id, revision, edited):
+    """Refuse une vidéo qui n'est pas celle de ce placement, et dit à quel placement elle correspond."""
+    source = folder / "source.mp4"
+    own = match_score(source, revision["start_ms"], revision["end_ms"], edited)
+    best = None
+    for pid in read(folder, "proposals.json", {"proposals": {}})["proposals"]:
+        if pid == proposal_id:
+            continue
+        try:
+            _, other, _ = approved_revision(folder, pid)
+        except RenderError:      # placement non approuvé : il ne peut pas recevoir de vidéo
+            continue
+        value = match_score(source, other["start_ms"], other["end_ms"], edited)
+        if not best or value > best[0]:
+            best = (value, other)
+    here = f"{clock(revision['start_ms'])}–{clock(revision['end_ms'])}"
+    if best and best[0] > own + MATCH_MARGIN and best[0] >= MATCH_MIN:
+        product = product_of(folder, best[1])
+        name = product["name"] if product else best[1]["product_id"]
+        raise RenderError(f"Cette vidéo correspond au placement {name} {clock(best[1]['start_ms'])}–{clock(best[1]['end_ms'])}, "
+                          f"pas à celui-ci ({here}). Importez-la sur le bon placement.", 422)
+    if own < MATCH_MIN:
+        raise RenderError(f"Cette vidéo ne ressemble pas au plan d'origine ({here}) : vérifiez que c'est la bonne. "
+                          "Si l'outil a beaucoup transformé le plan, importez-la quand même.", 422)
+    return own
+
+
+def remove_render(folder, proposal_id):
+    """Retire un résultat intégré par erreur : l'extrait, le plan importé et sa ligne du relevé."""
+    with LOCK:
+        store = read(folder, "renders.json", {"renders": {}})
+        record = store["renders"].pop(proposal_id, None)
+        if not record:
+            raise RenderError("Aucun résultat intégré pour ce placement.", 404)
+        replace_json(folder / "renders.json", store)
+    for name in (record["original"], record["edited"]):
+        (folder / name).unlink(missing_ok=True)
+    for stored in folder.glob(f"external-{proposal_id}-r{record['revision']}.*"):
+        stored.unlink(missing_ok=True)
+    return {"removed": proposal_id}
+
+
+def import_external(folder, proposal_id, data, extension, tool, note, fit="contain", anchor=0.5, lead_ms=LEAD_MS,
+                    force=False):
     tool = (tool or "").strip()[:120]
     if not tool:
         raise RenderError("Indiquez l'outil externe utilisé pour l'aperçu.")
@@ -339,13 +430,24 @@ def import_external(folder, proposal_id, data, extension, tool, note, fit="conta
     if not data or len(data) > MAX_UPLOAD:
         raise RenderError("Le plan importé doit peser entre 1 octet et 200 Mo.")
     _, revision, _ = approved_revision(folder, proposal_id)
+    kit = read(folder, "kits.json", {"kits": {}})["kits"].get(proposal_id)
+    if not kit or kit["revision"] != revision["n"] or not kit.get("reference"):
+        raise RenderError("Ce placement n'a pas encore de kit avec son image de référence (étape 3) : "
+                          "la vidéo à intégrer doit être produite à partir de ce kit.", 409)
     final = folder / f"external-{proposal_id}-r{revision['n']}{extension.lower()}"
     staging = final.with_name("staging-" + final.name)
     staging.write_bytes(data)
     try:
+        match = None if force else check_match(folder, proposal_id, revision, staging)
         record = assemble(folder, proposal_id, staging, tool, (note or "").strip()[:300],
                           "cover" if fit == "cover" else "contain", min(1.0, max(0.0, float(anchor))), lead_ms)
         staging.replace(final)          # le plan reçu n'est conservé qu'après validation et assemblage
+        if match is not None or force:
+            with LOCK:
+                store = read(folder, "renders.json", {"renders": {}})
+                store["renders"][proposal_id]["match"] = {"score": match, "forced": bool(force)}
+                replace_json(folder / "renders.json", store)
+            record["match"] = {"score": match, "forced": bool(force)}
         return record
     except subprocess.TimeoutExpired:
         raise RenderError("Le traitement vidéo a dépassé le délai.", 504) from None
@@ -390,5 +492,13 @@ def reassemble(folder, proposal_id, lead_ms):
     except (TypeError, ValueError):
         raise RenderError("Contexte avant le placement invalide.") from None
     prov = record["provenance"]
-    return assemble(folder, proposal_id, stored, prov["tool"], prov["note"], prov.get("fit", "contain"),
-                    prov.get("anchor", 0.7), lead)
+    match = record.get("match")
+    fresh = assemble(folder, proposal_id, stored, prov["tool"], prov["note"], prov.get("fit", "contain"),
+                     prov.get("anchor", 0.7), lead)
+    if match:
+        with LOCK:
+            store = read(folder, "renders.json", {"renders": {}})
+            store["renders"][proposal_id]["match"] = match
+            replace_json(folder / "renders.json", store)
+        fresh["match"] = match
+    return fresh
