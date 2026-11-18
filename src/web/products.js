@@ -73,17 +73,17 @@
     return card;
   }
 
-  // Vues sous d'autres angles : un prompt pour un outil d'image, puis l'import des vues obtenues.
-  // Elles accompagnent le visuel principal jusqu'à l'outil vidéo, qui rend mieux la forme selon l'angle de la caméra.
+  // Planche d'angles (facultative) : un prompt pour un outil d'image, puis l'import d'une seule photo.
+  // Elle accompagne le visuel principal jusqu'à l'outil vidéo, qui rend mieux la forme selon l'angle de la caméra.
   function viewsBlock(product) {
-    const views = product.views || [];
+    const view = (product.views || [])[0];
     const box = node("details", null, "views");
-    box.append(node("summary", "Autres angles · " + views.length + "/3 vue" + (views.length > 1 ? "s" : "")));
-    box.append(node("p", "Donnez ce prompt et le visuel du produit à un outil d’image (Gemini, ChatGPT…), puis importez les vues obtenues. Elles aident l’outil vidéo à rendre le produit sous le bon angle.", "muted"));
+    box.append(node("summary", "Autres angles · facultatif" + (view ? " · photo importée" : "")));
+    box.append(node("p", "Pour une intégration plus naturelle : donnez ce prompt et le visuel du produit à un outil d’image (ChatGPT, Gemini…), puis importez la photo obtenue. Sans elle, SceneLine utilise le visuel principal.", "muted"));
     let lang = "en";
     const text = node("textarea", null, "views-prompt");
     text.readOnly = true; text.rows = 7; text.value = product.views_prompt[lang];
-    text.setAttribute("aria-label", "Prompt pour générer d’autres angles de " + product.name);
+    text.setAttribute("aria-label", "Prompt pour générer les angles de " + product.name);
     const bar = node("div", null, "views-bar");
     const copy = node("button", "Copier le prompt", "btn secondary small"); copy.type = "button";
     copy.onclick = async () => {
@@ -96,39 +96,27 @@
     bar.append(copy, swap);
     box.append(text, bar);
 
-    if (views.length) {
-      const list = node("div", null, "views-list");
-      views.forEach((view, index) => {
-        const item = node("figure", null, "view");
-        const img = node("img"); img.src = base() + view.image; img.alt = (product.angles[view.angle] || "Vue") + " de " + product.name; img.loading = "lazy";
-        const remove = node("button", "Retirer", "link"); remove.type = "button";
-        remove.onclick = async () => { await api("/products/" + product.id + "/views/" + index, {method: "DELETE"}); await load(); };
-        item.append(img, node("figcaption", (product.angles[view.angle] || "Vue") + " · " + view.tool), remove);
-        list.append(item);
-      });
-      box.append(list);
+    if (view) {
+      const item = node("figure", null, "view");
+      const img = node("img"); img.src = base() + view.image; img.alt = "Planche d’angles de " + product.name; img.loading = "lazy";
+      const remove = node("button", "Retirer", "link"); remove.type = "button";
+      remove.onclick = async () => { await api("/products/" + product.id + "/views/0", {method: "DELETE"}); await load(); };
+      item.append(img, remove);
+      box.append(item);
     }
-    if (views.length < 3) {
-      const form = node("form", null, "views-form");
-      const file = node("input"); file.type = "file"; file.accept = ".png,.jpg,.jpeg,.webp"; file.required = true;
-      file.setAttribute("aria-label", "Image de la vue");
-      const angle = node("select"); fill(angle, product.angles); angle.setAttribute("aria-label", "Angle de la vue");
-      angle.value = ["trois_quarts", "profil", "plongee"].find(a => !views.some(v => v.angle === a)) || "autre";
-      const tool = node("input"); tool.placeholder = "Outil utilisé (ex. Gemini)"; tool.required = true; tool.maxLength = 80;
-      tool.setAttribute("aria-label", "Outil qui a produit la vue");
-      const add = node("button", "Ajouter la vue", "btn secondary small");
-      const status = node("p", null, "status");
-      form.append(file, angle, tool, add, status);
-      form.onsubmit = async (event) => {
-        event.preventDefault();
-        const body = new FormData();
-        body.append("image", file.files[0]); body.append("angle", angle.value); body.append("tool", tool.value);
-        add.disabled = true;
-        try { await api("/products/" + product.id + "/views", {method: "POST", body}); await load(); }
-        catch (error) { status.className = "status error"; status.textContent = error.message; add.disabled = false; }
-      };
-      box.append(form);
-    }
+    const input = node("input"); input.type = "file"; input.accept = ".png,.jpg,.jpeg,.webp"; input.hidden = true;
+    const pick = node("button", view ? "Remplacer la photo" : "Importer la photo", "btn secondary small"); pick.type = "button";
+    const status = node("p", null, "status");
+    pick.onclick = () => input.click();
+    input.onchange = async () => {
+      if (!input.files[0]) return;
+      const body = new FormData();
+      body.append("image", input.files[0]);
+      pick.disabled = true; status.className = "status"; status.textContent = "Import…";
+      try { await api("/products/" + product.id + "/views", {method: "POST", body}); await load(); }
+      catch (error) { status.className = "status error"; status.textContent = error.message; pick.disabled = false; }
+    };
+    box.append(input, pick, status);
     return box;
   }
 

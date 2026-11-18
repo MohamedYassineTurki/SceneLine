@@ -11,8 +11,9 @@
 2. Le **catalogue** : il ajoute chaque produit avec sa catégorie, sa taille, son **pays d'origine**, ses
    **marchés visés** et la **provenance du visuel** (obligatoire : chaque image doit avoir une origine et une licence).
    Pour chaque produit, SceneLine fournit aussi un **prompt « autres angles »** à donner à un outil d'image
-   (trois-quarts, profil, vue plongeante, sur fond blanc, sans rien redessiner). Le producteur importe jusqu'à
-   trois vues, avec l'outil utilisé ; elles accompagnent le visuel principal jusqu'à l'outil vidéo.
+   (ChatGPT, Gemini…) : une seule image avec le produit de face, de trois-quarts et en plongée, sur fond blanc,
+   sans rien redessiner. L'import de cette photo est **facultatif** ; elle accompagne le visuel principal
+   jusqu'à l'outil vidéo et l'aide à rendre la bonne forme sous l'angle de la caméra.
 3. **Lancer l'appariement** : SceneLine propose, pour chaque placement, le produit le plus cohérent.
 4. Chaque proposition affiche le plan, le produit, le score, l'avis du **Cultural Integrity Guard**, et trois
    actions : **Accepter**, **Refuser**, **Ajuster…** (décaler, réduire, changer de produit, d'intervalle).

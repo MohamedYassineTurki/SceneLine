@@ -165,9 +165,8 @@ def realism(block, lang, views):
             "grain, noise, motion blur, contrast and color grading as its surroundings; it is never cleaner, "
             "sharper or brighter than the rest of the image." if block.get("camera_look") else "",
             f"Occlusion: {block['occlusion']}; whatever passes in front of it hides it naturally." if occluded else "",
-            f"Reference images @image_2{', @image_3' if views > 1 else ''}{', @image_4' if views > 2 else ''} show "
-            "the same product from other angles: use them to render its true shape from this camera angle."
-            if views else "",
+            "Reference image @image_2 is a sheet showing the same product from several angles: use it to render "
+            "its true shape, label and top from this camera's viewing angle." if views else "",
         ]
     else:
         parts = [
@@ -180,9 +179,9 @@ def realism(block, lang, views):
             "grain, bruit, flou de mouvement, contraste et étalonnage que son entourage ; il n'est jamais plus "
             "propre, plus net ni plus lumineux que le reste de l'image." if block.get("camera_look") else "",
             f"Occultation : {block['occlusion']} ; ce qui passe devant le masque naturellement." if occluded else "",
-            f"Les images de référence @image_2{', @image_3' if views > 1 else ''}{', @image_4' if views > 2 else ''} "
-            "montrent le même produit sous d'autres angles : servez-vous-en pour rendre sa vraie forme sous cet "
-            "angle de caméra." if views else "",
+            "L'image de référence @image_2 est une planche qui montre le même produit sous plusieurs angles : "
+            "servez-vous-en pour rendre sa vraie forme, son étiquette et son dessus sous l'angle de cette caméra."
+            if views else "",
         ]
     return " ".join(p for p in parts if p)
 
@@ -334,8 +333,8 @@ def build_kit(folder, proposal_id, client=None):
         cv2.imwrite(str(folder / f"{stem}-{name}-16x9.png"), widen_16x9(frames[name]))
     asset_png(folder, product, folder / f"{stem}-produit.png")
     views = []
-    for i, view in enumerate(product.get("views", [])[:3], 1):
-        name = f"{stem}-vue-{i}.png"
+    for i, view in enumerate(product.get("views", [])[:1], 1):
+        name = f"{stem}-angles.png"
         asset_png(folder, dict(product, asset=view["image"]), folder / name)
         views.append({"file": name, "angle": view["angle"], "tool": view["tool"]})
 
@@ -355,7 +354,7 @@ def build_kit(folder, proposal_id, client=None):
         f"{stem}-produit.png": "Asset produit",
     }
     for i, view in enumerate(views, 1):
-        files[view["file"]] = f"Autre angle du produit ({view['angle']}, {view['tool']})"
+        files[view["file"]] = "Planche d’angles du produit (facultative)"
     (folder / f"{stem}-prompt-en.txt").write_text(prompt_en + "\n\nNEGATIVE PROMPT: " + NEGATIVE_EN + "\n", encoding="utf-8")
     (folder / f"{stem}-prompt-fr.txt").write_text(prompt_fr + "\n\nPROMPT NÉGATIF : " + NEGATIVE_FR + "\n", encoding="utf-8")
     files[f"{stem}-prompt-en.txt"], files[f"{stem}-prompt-fr.txt"] = "Prompt (anglais)", "Prompt (français)"

@@ -17,7 +17,7 @@
 ## Le kit de génération
 Pour un placement approuvé, [`generation/kit.py`](../../src/generation/kit.py) assemble :
 - **la scène** : le plan source exact (sans audio), découpé sur l'intervalle approuvé ;
-- **l'asset** : le visuel propre du produit, sur un fond carré de 1024 px, et ses **autres angles** s'il y en a ;
+- **l'asset** : le visuel propre du produit, sur un fond carré de 1024 px, et sa **planche d'angles** si le producteur l'a importée ;
 - **le prompt**, en français et en anglais : la description du plan (rédigée par Gemini à partir de trois images),
   l'emplacement précis sur une surface existante, **ce qui ne doit pas changer** (personnes, décor, cadrage,
   rythme des gestes), un **prompt négatif** et des réglages conseillés ;

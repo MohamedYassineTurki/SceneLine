@@ -185,13 +185,13 @@ def build_request(folder, proposal_id, model, mode, public_base=None, token=None
                          if PLATFORM_KEY else
                          "Indiquez l’adresse publique (https) de votre tunnel : Kling doit pouvoir télécharger le plan.", 503 if PLATFORM_KEY else 400)
     asset = {"type": "refer_image", "url": b64(folder / kit["asset"]), "id": "image_1"}
-    # Autres angles du produit : images de référence supplémentaires (image_2 à image_4), citées par le prompt du kit.
+    # Planche d'angles du produit (facultative) : image de référence image_2, citée par le prompt du kit.
     views = [{"type": "refer_image", "url": b64(folder / name), "id": f"image_{i}"}
-             for i, name in enumerate(kit.get("views", [])[:3], 2)]
+             for i, name in enumerate(kit.get("views", [])[:1], 2)]
     sent = ["Le prompt du kit (anglais)", "L’image du produit, sur fond blanc",
             "Le plan vidéo source, sans audio (via un lien temporaire à usage unique)"]
     if views:
-        sent.insert(2, f"{len(views)} autre(s) angle(s) du produit")
+        sent.insert(2, "La planche d’angles du produit")
     contents = [{"type": "prompt", "text": prompt}, asset, *views,
                 {"type": "base_video", "url": public_base.rstrip("/") + f"/pub/{token}/plan.mp4", "id": "video_1"}]
     low, high = spec["seconds"]

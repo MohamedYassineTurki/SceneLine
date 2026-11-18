@@ -514,3 +514,5 @@ fieldset.plain > legend { padding: 0 0 6px; font-size: .875rem; font-weight: 500
 .views-list img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; border: var(--border); border-radius: 8px; }
 .views-form { display: grid; gap: 6px; }
 .views-form input, .views-form select { font: inherit; font-size: .8125rem; width: 100%; max-width: 100%; box-sizing: border-box; min-width: 0; }
+.product .views .view { margin: 0 0 8px; text-align: center; }
+.product .views .view img { width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; border: var(--border); border-radius: 8px; }
