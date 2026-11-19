@@ -58,6 +58,20 @@ flowchart LR
    lumière, ombre, rendu) et retire tout ce qui pourrait la contredire. Les photos du produit ne servent plus qu'à
    garder l'étiquette exacte ; tout le reste (caméra, personnes, gestes, rythme) vient de la vidéo d'origine.
 
+![Sans et avec image de référence](../media/etape-3-reference-avant-apres.jpg)
+
+*Le même plan de la série tunisienne. À gauche, l'outil vidéo seul (Kling AI 3.0 Omni) devine : la canette est deux
+fois trop grande, flotte devant la cafetière et fait face à la caméra. À droite, avec l'image de référence (Kling AI
+4.0 Flash) : 5,6 % de la hauteur de l'image comme mesuré, posée sur le plateau, dans la lumière de la pièce.*
+
+Ce que ce test a appris, et que SceneLine applique désormais à tout placement :
+- **la taille vient du code**, pas du modèle : un premier prompt disait « à peu près la hauteur de la théière » ; une
+  canette de 11,5 cm fait la moitié d'une cafetière de 22 cm ;
+- **le produit ne cache jamais l'objet repère** et **sa base est sur la même ligne que lui** : rien ne flotte ;
+- **un prompt trop long est coupé** par Kling 3.0 Omni (3 072 caractères) : SceneLine prépare une version courte ;
+- **l'image de référence est la consigne principale** : dès qu'elle existe, le prompt s'ouvre sur elle et retire
+  tout ce qui pourrait la contredire.
+
 Le prompt vidéo reprend la taille chiffrée, le point de pose, la lumière, l'ombre et le rendu de caméra, et
 demande un objet posé comme un vrai accessoire (tourné, jamais face caméra comme une publicité). Une **version
 courte** (moins de 3 000 caractères) est prête pour Kling 3.0 Omni, dont la limite est de 3 072 caractères.

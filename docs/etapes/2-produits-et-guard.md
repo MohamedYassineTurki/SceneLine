@@ -76,6 +76,16 @@ propositions, avec cette explication :
 
 Si le lieu n'est pas déclaré, le critère n'est pas évalué, et SceneLine le dit.
 
+**Testé dans les deux sens.** Avec exactement les mêmes produits :
+
+| | Série française (Paris) | Série tunisienne (Tunis) |
+|---|---|---|
+| Badoit 1 L · marché France | Proposée · risque faible | **Écartée sur 6 placements sur 6** |
+| Boga Cidre · marché Tunisie | **Écartée** · risque élevé | **Proposée sur 6 placements** (« boisson emblématique des foyers tunisiens ») |
+
+Dans la série tunisienne, le Guard note la Boga en **risque moyen** et le dit : une marque aussi ancrée dans le
+quotidien est un symbole culturel fort, à confirmer par le réalisateur. Il ne bloque rien ; il éclaire la décision.
+
 ## Décisions signées
 Chaque proposition a des **révisions**. Chaque décision (accepter, refuser, ajuster, réviser) enregistre
 le nom de l'approbateur, la date, un commentaire et l'**empreinte SHA-256** de la révision décidée.

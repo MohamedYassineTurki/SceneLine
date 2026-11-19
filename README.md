@@ -13,7 +13,7 @@
 [![Kling AI](https://img.shields.io/badge/Kling%20AI-4.0-0066cc)](src/generation/kling.py)
 [![FFmpeg](https://img.shields.io/badge/FFmpeg-local-0066cc?logo=ffmpeg&logoColor=white)](src/integration/render.py)
 
-[Démo](#-démonstration-réelle) · [Le problème](#-le-problème) · [Les 4 étapes](#-les-4-étapes) · [Architecture](#-architecture) · [Éthique 360](#-éthique-360) · [Stack](#-stack-technique) · [Lancer](#-lancer-sceneline)
+[Démo](#-démonstration-réelle) · [Deux séries](#-deux-séries-deux-cultures-deux-langues) · [Image de référence](#-limage-de-référence-le-placement-ne-se-devine-plus) · [Le problème](#-le-problème) · [Les 4 étapes](#-les-4-étapes) · [Architecture](#-architecture) · [Éthique 360](#-éthique-360) · [Stack](#-stack-technique) · [Lancer](#-lancer-sceneline)
 
 </div>
 
@@ -40,16 +40,59 @@
 <sub>Étape 4 · la version éditée, avec l'étiquette « Placement virtuel » et le repère jaune de l'intervalle modifié.</sub>
 </div>
 
-Ce que montre l'enregistrement, sur ce test :
+---
 
-| | Résultat réel |
-|---|---|
-| Analyse | **12 scènes**, **48 plans**, **27 intervalles examinés**, **8 placements proposés**, **4 scènes protégées** (7 intervalles jamais envoyés au modèle) |
-| Sobriété | **4 min 16** de traitement, **58 appels** Gemini (1 au modèle complet, 57 au modèle léger), 389 images envoyées, **0 échec** |
-| Badoit 1 L (France) | **Proposée** dans la cuisine : cohérence 9/10, discrétion 8/10, faisabilité 9/10, **risque faible** |
-| Boga Cidre (Tunisie) | **Écartée, risque élevé** : la campagne vise la Tunisie, l'action se passe à Paris |
-| Génération | Plan de travail en inox (00:30 – 00:40) régénéré par Kling AI 4.0, **recalé de 7,0 s à 9,5 s** sur le dialogue d'origine |
-| Transparence | Étiquette « Placement virtuel · Badoit 1 L » et relevé des modifications |
+## 🌍 Deux séries, deux cultures, deux langues
+
+SceneLine a été testé de bout en bout sur **deux épisodes réels**, avec **les mêmes produits** : une série française
+tournée à Paris, et une série tunisienne dialoguée en **darija**. Les deux parcours vont jusqu'au plan généré et
+intégré dans l'épisode.
+
+| | 🇫🇷 Série française · « BALTRINGUE #1 » | 🇹🇳 Série tunisienne |
+|---|---|---|
+| Épisode | 4 min 38 · cuisine de restaurant, Paris | 4 min 00 · salon familial à Tunis, puis une clinique |
+| Langue | Français, transcrit **en local** (faster-whisper) | Darija tunisienne, transcrite par **Gemini** : **57 répliques**, chacune en arabe d'origine **et** en français |
+| Analyse | 12 scènes · 48 plans · 27 intervalles · **8 placements** · 4 scènes protégées | 7 scènes · 67 plans · 30 intervalles · **8 placements** · aucune scène à protéger (comédie) |
+| Sobriété | 4 min 16 · 58 appels · 389 images · 0 échec | 7 min 29 · 72 appels · 483 images |
+| **Badoit 1 L** (marché : France) | ✅ **Proposée** dans la cuisine · risque faible | ⛔ **Écartée par le Guard sur 6 placements sur 6** : « l'action se passe à Tunis » |
+| **Boga Cidre** (marché : Tunisie) | ⛔ **Écartée** : l'action se passe à Paris | ✅ **Proposée sur 6 placements** : « une boisson emblématique des foyers tunisiens » |
+| Placement retenu | Badoit sur le plan de travail en inox (00:30 – 00:40) | Boga Cidre sur la table basse du salon (00:31 – 00:35) |
+| Génération | Kling AI 4.0, **recalé de 7,0 s à 9,5 s** sur le dialogue | Kling AI, **taille mesurée** et **image de référence**, recalé de 5,0 s à 4,5 s |
+| Intégration | Audio d'origine, étiquette, relevé | Vidéo **vérifiée comme étant celle de ce plan (ressemblance 99,6 %)**, 1 s d'original avant et après, audio d'origine |
+
+**Mêmes produits, décisions inverses.** Le Cultural Integrity Guard ne réagit pas à une marque, mais au **lieu de
+l'histoire déclaré par le producteur** et aux **marchés visés par la campagne**. La langue ne décide jamais du pays.
+
+**La darija, comprise pour de vrai.** Whisper, conçu pour les grandes langues, transformait la darija en phrases
+françaises inventées. SceneLine propose donc au producteur une transcription par Gemini pour la darija et l'arabe :
+avec le vrai dialogue, la compréhension de l'épisode passe de « une discussion animée dans un salon » à « une
+famille discute avec humour d'argent et de complexes autour d'un homme blessé, conduit ensuite à une clinique ».
+
+---
+
+## 🎯 L'image de référence : le placement ne se devine plus
+
+<div align="center">
+<img src="docs/media/etape-3-reference-avant-apres.jpg" alt="À gauche, sans image de référence : une canette trop grande qui flotte devant la cafetière. À droite, avec l'image de référence de SceneLine : la canette à la bonne taille, posée sur le plateau, dans la lumière de la scène" width="100%"><br>
+<sub>Le même plan de la série tunisienne. À gauche, l'outil vidéo seul (Kling AI 3.0 Omni) devine la taille et la
+place : la canette est deux fois trop grande, flotte et fait face à la caméra. À droite, avec l'image de référence
+préparée par SceneLine (Kling AI 4.0 Flash) : la taille mesurée, posée sur le plateau, avec la lumière et le grain
+de la scène.</sub>
+</div>
+
+Laisser un outil vidéo deviner donne un produit trop grand, trop net, trop lumineux, « collé ». SceneLine ne lui
+laisse plus rien à deviner :
+
+1. **Mesure.** Gemini repère un objet voisin et sa taille réelle (ici une cafetière de 22 cm) ; le **code** en déduit
+   la taille du produit à l'écran : la canette de 11,5 cm doit occuper **5,6 % de la hauteur de l'image, environ 60 px**.
+2. **Accord avec la scène.** Le produit est réduit à cette taille, puis sa luminosité, sa couleur, sa netteté et son
+   grain sont alignés sur l'endroit où il sera posé.
+3. **Image de référence.** La première image du plan reçoit le produit, à la place et à la taille mesurées. L'outil
+   vidéo la reçoit comme **premier plan attendu**, avec un prompt « MAIN REFERENCE » qui lui demande de la reproduire.
+4. **Contrôle.** À l'intégration, SceneLine vérifie que la vidéo reçue est bien celle de ce plan, la recale sur le
+   dialogue d'origine et la replace avec une seconde d'original avant et après.
+
+➡️ Détails : [Étape 3 · placement mesuré et image de référence](docs/etapes/3-generation.md#placement-mesuré-et-image-de-référence)
 
 ---
 
@@ -101,8 +144,8 @@ flowchart LR
 |---|---|---|---|
 | **1 · Analyse** | Détecte les plans, transcrit le dialogue, comprend chaque scène (lieu, époque, ton, sensibilité), **protège** les scènes sensibles, cherche des surfaces **de coupe à coupe**, applique des **règles écrites**, vérifie les finalistes sur six images | PySceneDetect, faster-whisper, FFmpeg (local) · Gemini Flash et Flash-Lite (et transcription de la darija) | [Étape 1](docs/etapes/1-analyse.md) |
 | **2 · Produits** | Catalogue avec origine, marchés et **provenance obligatoire** du visuel ; règles d'appariement ; **Cultural Integrity Guard** (5 critères) ; Accepter / Refuser / Ajuster, **signé et daté** | Python, Gemini Flash-Lite, SHA-256 | [Étape 2](docs/etapes/2-produits-et-guard.md) |
-| **3 · Génération** | Kit complet (plan, asset, prompt FR/EN, prompt négatif) ; génération **Kling AI par SceneLine**, sans clé à fournir par le créateur, avec son **accord pour ce placement** | Kling AI 4.0 API, lien public éphémère | [Étape 3](docs/etapes/3-generation.md) |
-| **4 · Intégration** | Retrait des bandes noires, **recalage temporel par programmation dynamique**, assemblage avec l'**audio d'origine**, comparaison Original / Version éditée, étiquette, relevé | OpenCV, NumPy, FFmpeg | [Étape 4](docs/etapes/4-integration.md) |
+| **3 · Génération** | **Taille et place mesurées**, produit accordé à la scène, **image de référence**, prompt « MAIN REFERENCE » ; deux façons de générer : **avec vos outils**, ou **intégrée** (SceneLine appelle lui-même les API), toujours avec l'**accord pour ce placement** | Gemini, OpenCV, OpenAI Images, Kling AI | [Étape 3](docs/etapes/3-generation.md) |
+| **4 · Intégration** | **Vérification que la vidéo est celle de ce plan**, retrait des bandes noires, **recalage temporel par programmation dynamique**, 1 s d'original avant et après, **audio d'origine**, comparaison, étiquette, relevé | OpenCV, NumPy, FFmpeg | [Étape 4](docs/etapes/4-integration.md) |
 
 ---
 
@@ -117,11 +160,12 @@ flowchart LR
     API --> M["matching.py<br/>règles produit × plan"]
     M --> G["guard.py<br/>Cultural Integrity Guard"]
     API --> DEC["decisions.py<br/>révisions signées"]
-    DEC --> K["kit.py · kling.py"]
+    DEC --> K["kit.py · placement.py<br/>taille mesurée · image de référence"]
+    K -->|"génération intégrée"| OAI[("OpenAI Images")]
     K -->|"accord par placement"| KL[("Kling AI")]
-    KL --> R["render.py<br/>recalage · assemblage · relevé"]
+    KL --> R["render.py<br/>vérification · recalage · assemblage · relevé"]
     classDef ext fill:#fff6cc,stroke:#1d1d1f
-    class GEM,KL ext
+    class GEM,KL,OAI ext
 ```
 
 Trois principes structurent tout le code :
@@ -145,7 +189,7 @@ engagement à l'endroit où le vérifier).
 | 🎨 **Créateurs** | Rien n'est modifié sans accord ; exclusions de catégories et d'intervalles ; décisions signées, datées, avec empreinte SHA-256 ; original intact |
 | ⚖️ **Droits** | Deux autorisations obligatoires à l'import ; provenance et licence exigées pour chaque visuel ; accord par placement avant tout envoi à Kling |
 | 🔒 **Données** | Plans et images calculés en local, transcription locale du français (la darija et l'arabe, au choix, par Gemini) ; scènes protégées jamais envoyées ; clé Kling de SceneLine gardée sur le serveur, jamais affichée ; appels et images envoyées affichés |
-| 🌐 **Cultures et langues** | Cultural Integrity Guard (historique, culturel, narratif, sensibilité, intention artistique) ; cohérence géographique ; **la langue ne décide jamais du pays** |
+| 🌐 **Cultures et langues** | Cultural Integrity Guard (historique, culturel, narratif, sensibilité, intention artistique) ; cohérence géographique ; **la langue ne décide jamais du pays** ; la **darija** transcrite pour de vrai, pas réinventée en français ; testé sur une série française **et** une série tunisienne |
 | 👁 **Transparence** | Étiquette « Placement virtuel · Produit » ; relevé des modifications (outil, approbateur, empreintes) ; chaque proposition explique son *pourquoi* |
 | 🌱 **Planète** | Aucune génération spéculative ; calcul lourd local ; modèle léger pour les volumes ; scores mis en cache |
 
@@ -162,7 +206,9 @@ engagement à l'endroit où le vérifier).
 | Parole locale | **faster-whisper 1.2** | Transcription horodatée du français, sur la machine |
 | Darija et arabe | **Gemini Flash** (audio) | Réplique d'origine en caractères arabes + traduction française, horodatées |
 | Compréhension | **Google Gemini** 3.5 Flash · 3.1 Flash-Lite | Scènes, surfaces, vérification, produits ; sorties JSON contraintes par schéma |
-| Génération | **Kling AI 4.0** (API Omni-Video) | Régénération du plan avec le produit, à la demande |
+| Placement mesuré | **Gemini** (repérage) · **OpenCV** | Taille apparente calculée, produit accordé à la scène, image de référence |
+| Image de référence | **OpenAI Images** (génération intégrée) ou l'outil du producteur | La première image du plan avec le produit en place |
+| Génération | **Kling AI** 3.0 Omni · 4.0 (API Omni-Video) | Régénération du plan avec le produit, guidée par l'image de référence |
 | Interface | **HTML, CSS, JavaScript** sans framework | Lisible, auditable, sans compilation ; police Inter ; thème clair |
 | Vidéo de présentation | **HyperFrames**, **GSAP**, Gemini TTS, ElevenLabs Sound Effects | La vidéo est elle-même du code ([`docs/VIDEO.md`](docs/VIDEO.md)) |
 
@@ -262,8 +308,8 @@ SceneLine/
 | [Architecture](docs/ARCHITECTURE.md) | Diagrammes, modules, API REST, choix techniques |
 | [Étape 1 · Analyse](docs/etapes/1-analyse.md) | Pipeline, protection des scènes, intervalles, score, règles |
 | [Étape 2 · Produits et Guard](docs/etapes/2-produits-et-guard.md) | Appariement, Cultural Integrity Guard, cohérence géographique, décisions signées |
-| [Étape 3 · Génération](docs/etapes/3-generation.md) | Kit, Kling AI, sécurité de la clé, accord par placement |
-| [Étape 4 · Intégration](docs/etapes/4-integration.md) | Recalage par programmation dynamique, assemblage, relevé |
+| [Étape 3 · Génération](docs/etapes/3-generation.md) | Placement mesuré, image de référence, deux façons de générer, Kling AI, accord par placement |
+| [Étape 4 · Intégration](docs/etapes/4-integration.md) | Vérification du bon plan, recalage par programmation dynamique, assemblage, relevé |
 | [Éthique 360](docs/ETHIQUE-360.md) | Les six angles, mécanisme par mécanisme, avec le code |
 | [Vidéo de présentation](docs/VIDEO.md) | Comment la vidéo a été construite en code |
 
@@ -271,9 +317,9 @@ SceneLine/
 
 ## 🙏 Crédits et droits
 
-- Extraits de **« BALTRINGUE #1 »** et entretien de **Yasmine Dimassi** publié par **Nawaat** : utilisés uniquement
-  pour démontrer le fonctionnement de SceneLine, ils restent la propriété de leurs auteurs. Les fichiers vidéo
-  sources ne sont pas versionnés.
+- Extraits de **« BALTRINGUE #1 »**, d'un **épisode de série tunisienne** et entretien de **Yasmine Dimassi**
+  publié par **Nawaat** : utilisés uniquement pour tester et démontrer le fonctionnement de SceneLine, ils restent
+  la propriété de leurs auteurs. Les fichiers vidéo sources ne sont pas versionnés.
 - **Badoit** et **Boga** sont des marques réelles utilisées comme exemples de test, sans partenariat ni soutien de
   ces marques. La provenance de chaque visuel est indiquée dans [`demo_products/`](demo_products).
 - Projet réalisé pour le hackathon **« IA Éthique 360 »**.

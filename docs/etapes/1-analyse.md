@@ -95,6 +95,22 @@ la proposition d'origine de SceneLine.
 - Les clés tournent, un quota épuisé est mémorisé, et chaque modèle est le secours de l'autre.
 - Le nombre d'appels et d'images envoyées est **affiché** au producteur.
 
+## La darija tunisienne, testée sur une vraie série
+Whisper, exécuté en local, est fait pour les grandes langues. Sur un épisode de série tunisienne, il a transformé la
+darija en phrases françaises inventées : rien n'était exploitable.
+SceneLine demande donc au producteur la **langue des dialogues** à l'import. Pour la darija et l'arabe, Gemini reçoit
+la piste audio seule, par extraits d'une minute ([`video_analyzer/transcribe.py`](../../src/video_analyzer/transcribe.py)),
+et rend chaque réplique **en arabe d'origine et en français**, horodatée :
+
+| | Avant (Whisper) | Après (Gemini, darija) |
+|---|---|---|
+| La réplique à 00:36 | « Je n'ai pas le droit à mettre face à quoi, qui interdite la charge de la station miedo » | « عزوز s'il te plaît. ما عادش تسمعني الكلام قدام ولدي… » → « Azzouz, s'il te plaît. Ne me fais plus entendre ce genre de langage devant mon fils. » |
+| Ce que comprend SceneLine | « Une discussion animée dans un salon » | « Une famille discute avec humour d'argent et de complexes autour d'un homme blessé, conduit ensuite à une clinique » |
+| Exactitude des temps | — | écart médian de **0,5 s** avec les débuts de parole mesurés |
+
+Sur cet épisode : **57 répliques**, **7 scènes** cohérentes (le salon, le dinar lancé, la clinique, l'ascenseur en
+panne), **8 placements proposés**, et aucune scène à protéger : c'est une comédie.
+
 ## Résultat
 `sceneline.json` : scènes, opportunités classées (surface, intervalle, score, catégories compatibles et à éviter,
 raison), avis du Guard par scène, et mesures du traitement (durée, appels, images envoyées).

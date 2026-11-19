@@ -50,6 +50,12 @@ de l'original.
 - Seule la **révision approuvée** d'une proposition peut recevoir un rendu, et le rendu lui est lié par
   son empreinte.
 
+### Sur la série tunisienne
+La vidéo de Kling pour la canette de Boga Cidre durait 5,0 s pour un plan de 4,5 s : elle a été recalée image par
+image. Avant cela, SceneLine a vérifié qu'elle correspondait bien au plan 00:31 – 00:35 (**ressemblance 99,6 %**,
+contre 32 % pour le plan de 00:08 : importée sur le mauvais placement, elle aurait été refusée, avec le nom du bon).
+L'extrait final garde **1 s d'original avant et après**, et l'audio est celui de l'épisode, à l'identique.
+
 ## Le relevé des modifications
 Chaque version éditée est accompagnée d'un relevé qui liste, pour chaque placement : le produit, le support,
 l'intervalle source, la révision et son **empreinte SHA-256**, l'**approbateur et la date**, l'**outil qui a produit

@@ -43,8 +43,16 @@ Une scène de recueillement n'est même pas examinée : elle ne peut pas recevoi
 ### 3. La culture n'est pas une langue
 Le Guard ne déduit **jamais** le pays de la langue parlée. Une série en français peut se passer à Tunis,
 à Dakar ou à Paris. Le lieu est **déclaré par le producteur**, et chaque produit porte les marchés visés
-par sa campagne. Dans notre démonstration, une Badoit est proposée dans une cuisine parisienne ; une Boga Cidre,
-marque tunisienne, y est écartée avec une explication. La même Boga serait la bonne réponse dans une série tunisienne.
+par sa campagne. Sur une série française, une Badoit est proposée dans une cuisine parisienne ; une Boga Cidre,
+marque tunisienne, y est écartée avec une explication. Sur une **série tunisienne**, avec les mêmes produits, c'est
+l'inverse : la Boga est proposée dans le salon, la Badoit écartée partout. Et la darija des dialogues est transcrite
+pour de vrai, pas réinventée en français.
+
+### 3 bis. Rien n'est laissé au hasard de la génération
+Un outil vidéo à qui l'on dit seulement « ajoute une canette » la rend trop grande, trop brillante, posée dans le
+vide. SceneLine **mesure** la taille du produit à partir d'un objet voisin, l'**accorde** à la lumière et au grain de
+la scène, et donne à l'outil une **image de référence** : la première image du plan, produit en place. Sur la série
+tunisienne, c'est ce qui a fait passer la canette d'un objet collé, deux fois trop grand, à un accessoire du décor.
 
 ### 4. Respecter le montage et le jeu
 Les intervalles suivent les **coupes** du montage, pour qu'un produit n'apparaisse pas au milieu d'un plan.
