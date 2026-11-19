@@ -6,7 +6,6 @@ Seule la dernière révision peut être décidée. Une révision approuvée n'es
 un changement de produit, d'intervalle ou de taille crée une nouvelle révision à approuver.
 """
 
-import hashlib
 import json
 import threading
 from datetime import datetime, timezone
@@ -14,6 +13,11 @@ from datetime import datetime, timezone
 from cultural_guard import guard
 from product_matcher.catalog import load_catalog
 from product_matcher.matching import load_matching, producer_interval_exclusion, rule_check
+from producer_review.revision_digest import (
+    REVISION_DIGEST_VERSION,
+    decision_matches_revision,
+    digest,
+)
 from video_analyzer.context import load_context
 from video_analyzer.review import replace_json
 
@@ -32,14 +36,11 @@ def read(folder, name, empty):
     return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else empty
 
 
-def digest(revision):
-    stable = {k: revision[k] for k in ("n", "product_id", "start_ms", "end_ms", "mode", "scale")}
-    return hashlib.sha256(json.dumps(stable, sort_keys=True).encode()).hexdigest()[:16]
-
-
-def decision_for(decisions, pid, n):
+def decision_for(decisions, pid, n, revision=None):
     # « reviser » ouvre une nouvelle révision : ce n'est pas une décision sur cette révision.
     found = [d for d in decisions if d["proposal_id"] == pid and d["revision"] == n and d["action"] != "reviser"]
+    if revision is not None:
+        found = [d for d in found if decision_matches_revision(d, revision)]
     return found[-1] if found else None
 
 
@@ -95,7 +96,7 @@ def sync_proposals(folder):
 
 def status_of(proposal, decisions):
     latest = proposal["revisions"][-1]
-    decision = decision_for(decisions, proposal["id"], latest["n"])
+    decision = decision_for(decisions, proposal["id"], latest["n"], latest)
     if not decision:
         return "en_attente"
     return {"accepter": "approuvee", "refuser": "refusee", "ajuster": "ajustement_demande"}[decision["action"]]
@@ -127,7 +128,8 @@ def view(folder):
     proposals = []
     for proposal in store["proposals"].values():
         latest = proposal["revisions"][-1]
-        approved = [r for r in proposal["revisions"] if (decision_for(decisions, proposal["id"], r["n"]) or {}).get("action") == "accepter"]
+        approved = [r for r in proposal["revisions"]
+                    if (decision_for(decisions, proposal["id"], r["n"], r) or {}).get("action") == "accepter"]
         status = status_of(proposal, decisions)
         proposals.append(dict(
             proposal, status=status, latest=latest,
@@ -210,7 +212,8 @@ def decide(folder, proposal_id, action, reviewer, comment="", adjustment=None, r
                 subject = revised   # l'entrée décrit la nouvelle révision ; l'ancienne décision reste intacte
         entry = {
             "id": f"d-{len(log['decisions']) + 1}", "proposal_id": proposal_id, "revision": subject["n"],
-            "revision_digest": digest(subject), "action": action, "reviewer": reviewer,
+            "revision_digest": digest(subject), "revision_digest_version": REVISION_DIGEST_VERSION,
+            "action": action, "reviewer": reviewer,
             "comment": comment, "payload": payload, "at": now()}
         log["decisions"].append(entry)
         replace_json(folder / "decisions.json", log)

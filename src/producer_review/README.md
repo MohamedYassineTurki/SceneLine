@@ -1,4 +1,4 @@
-# `producer_review/` · Propositions et décisions signées
+# `producer_review/` · Propositions et décisions traçables
 
 > **Rien n'est modifié sans l'accord du producteur**, et chaque accord est traçable.
 
@@ -7,6 +7,7 @@
 | Fichier | Rôle |
 |---|---|
 | [`decisions.py`](decisions.py) | Crée et révise les propositions à partir de l'appariement, enregistre les décisions, applique les ajustements |
+| [`revision_digest.py`](revision_digest.py) | Calcule et vérifie l'empreinte canonique d'une révision, avec compatibilité des anciennes décisions |
 
 ## Le cycle d'une proposition
 
@@ -22,8 +23,10 @@ stateDiagram-v2
 ```
 
 ## Traçabilité
-- Chaque décision enregistre **l'approbateur, la date, le commentaire** et l'**empreinte SHA-256** (`digest()`) de la
-  révision décidée.
+- Chaque décision enregistre **l'approbateur, la date, le commentaire** et l'**empreinte SHA-256 complète** de la
+  révision décidée : produit, intervalle, mode, taille, surface, région et alignement temporel.
+- Une décision n'est reconnue comme valide que si son empreinte correspond encore au contenu de la révision.
+- Les anciennes décisions à empreinte tronquée restent lisibles grâce à la version 1 du calcul.
 - Une révision modifiée après approbation **n'hérite pas** de l'accord : elle doit être décidée à son tour.
 - Chaque proposition garde son **origine** (placement de l'étape 1, score, raison) et l'historique complet.
 - Un refus ne déclenche aucun rendu ; seule une révision approuvée peut être générée et intégrée.
