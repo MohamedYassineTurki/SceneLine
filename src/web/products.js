@@ -345,7 +345,7 @@
     fill(get("pf-category"), labels.categories);
     chipChoices(get("pf-modes"), labels.modes, "modes", ["objet_pose"]);
     get("catalog").replaceChildren(...data.catalog.map(p => productCard(p)));
-    if (!data.catalog.length) get("catalog").append(node("p", "Aucun produit pour l’instant. Chargez le catalogue de démonstration ou ajoutez un produit.", "empty"));
+    if (!data.catalog.length) get("catalog").append(node("p", "Aucun produit pour l’instant. Chargez le catalogue d’exemple ou ajoutez un produit.", "empty"));
     get("demo-products").hidden = data.catalog.length > 0;
     const state = data.status;
     const matchStatus = get("match-status");

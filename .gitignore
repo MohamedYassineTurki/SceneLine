@@ -8,7 +8,6 @@ __pycache__/
 .gemini-keys
 .kling-key
 .openai-key
-.sceneline-demo
 .sceneline-public-url
 motion-video/.env
 
@@ -43,3 +42,7 @@ motion-video/interview/*.jpg
 
 validation/phase1-demo.md
 motion-video/interview/transcription-base.txt
+
+# Prototypes de conception (phase de design, avant l'application)
+design/prototype.html
+motion-video/reference/scenline-prototype.html

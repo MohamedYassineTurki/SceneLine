@@ -45,7 +45,7 @@ Autres styles possibles : T03 (visite cinématique de l'interface), T11 (film «
 | `assets/products/badoit.png`, `boga-cidre.png` | Produits détourés (photos fournies par l'équipe) |
 | `assets/footage/cuisine-original.mp4`, `cuisine-badoit-kling.mp4`, `plan-source.mp4` | Extrait original, version éditée (Kling), plan source. **Extraits d'une série : droits à vérifier avant publication publique. Dossier ignoré par git.** |
 | `assets/screens/00…05-*.png` | Captures 1440 px de l'interface réelle : accueil, analyse, produits (Guard), génération (Kling), intégration, Éthique 360 |
-| `reference/scenline-design-system.html`, `scenline-prototype.html` | Système de design et prototype Claude Design, pour reconstruire les écrans en HTML |
+| `reference/scenline-design-system.html` | Système de design de SceneLine, pour reconstruire les écrans en HTML |
 
 ## Encore à décider ou à fournir
 - **Le problème, avec ses sources** (30 % de la note) : témoignages, observations, chiffres sourcés. Rien n'est inventé dans la vidéo.

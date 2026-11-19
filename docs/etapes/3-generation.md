@@ -7,23 +7,21 @@
 
 ## Deux versions du parcours
 
-| | **Version finale · tout dans SceneLine** | **Version actuelle · avec vos outils** |
+| | **Génération intégrée · tout dans SceneLine** | **Avec vos outils** |
 |---|---|---|
 | Image de référence | Générée par une API d'image (OpenAI Images) à partir de la première image du plan, de la photo du produit, de sa planche d'angles et du prompt mesuré | Le producteur la génère avec l'outil de son choix (ChatGPT, Gemini…) et l'importe |
 | Vidéo | Envoyée directement à Kling AI avec le prompt « MAIN REFERENCE » | Kling AI par l'API, ou n'importe quel outil vidéo, puis import |
 | Intégration | Automatique : vérification du bon placement, recalage, 1 s d'original avant et après | Identique, après l'import à l'étape 4 |
 | Pour le producteur | Un accord, un bouton, une barre de progression : il ne quitte pas SceneLine | Il passe par ses outils puis revient |
 
-Le choix se fait en haut de l'étape 3. La version finale a besoin de deux clés **sur le serveur** :
-`OPENAI_API_KEY` (ou le fichier `.openai-key`) pour l'image, et la clé Kling de SceneLine avec son adresse publique
-(voir plus bas). Le modèle d'image se règle avec `SCENELINE_IMAGE_MODEL`.
+Le choix se fait en haut de l'étape 3. Les deux versions sont complètes et suivent le même parcours : kit mesuré,
+image de référence, vidéo, puis intégration vérifiée. Elles ne diffèrent que par **qui appelle les outils de
+génération** : le producteur, avec ses propres outils, ou SceneLine, avec ses propres crédits d'API.
 
-> **En développement · financement des API.** La version finale est entièrement écrite
-> ([`generation/pipeline.py`](../../src/generation/pipeline.py)), mais les crédits des API d'image et de vidéo ne
-> sont pas encore financés. En attendant, un **mode démonstration** (fichier `.sceneline-demo`) rejoue, pour un
-> plan déjà traité, l'image et la vidéo **réellement générées plus tôt** avec ces mêmes outils
-> (`output/demo-assets/`). Le kit média, la vérification de correspondance et l'intégration sont les vrais ; le
-> relevé des modifications nomme les outils qui ont réellement produit l'image et la vidéo.
+La génération intégrée ([`generation/pipeline.py`](../../src/generation/pipeline.py)) a besoin de deux clés
+**sur le serveur** : `OPENAI_API_KEY` (ou le fichier `.openai-key`) pour l'image de référence, et la clé Kling de
+SceneLine avec son adresse publique (voir plus bas). Le modèle d'image se règle avec `SCENELINE_IMAGE_MODEL`. Tant
+que ces clés ne sont pas configurées, l'interface le dit et propose la version « avec vos outils ».
 
 ## Placement mesuré et image de référence
 

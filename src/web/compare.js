@@ -409,8 +409,8 @@
   /* ---------------------------------------------------------------- deux versions du parcours de génération
 
      Version actuelle : le producteur passe par ses outils (image de référence, vidéo) et revient importer.
-     Version finale : SceneLine appelle lui-même l'API d'image puis Kling, et intègre ; on ne quitte pas SceneLine. */
-  let pipelineInfo = {ready: false, demo: false};
+     Génération intégrée : SceneLine appelle lui-même l'API d'image puis Kling, et intègre ; on ne quitte pas SceneLine. */
+  let pipelineInfo = {ready: false};
   fetch("/api/pipeline", {cache: "no-store"}).then(r => r.json()).then(info => { pipelineInfo = info; paintVersionSwitch(); }).catch(() => {});
   const LEDES = {
     current: "<strong>Votre outil, nos mesures.</strong> SceneLine prépare la scène, le produit, la place et la taille mesurées, et les prompts : vous produisez l’image de référence et la vidéo avec vos outils, puis vous les importez.",
@@ -424,7 +424,7 @@
   function paintVersionSwitch() {
     const box = get("version-switch");
     if (!box) return;
-    box.replaceChildren(...[["final", "Version finale · tout dans SceneLine"], ["current", "Version actuelle · avec vos outils"]].map(([value, label]) => {
+    box.replaceChildren(...[["final", "Génération intégrée · tout dans SceneLine"], ["current", "Avec vos outils"]].map(([value, label]) => {
       const l = node("label", null, "version-option" + (version() === value ? " on" : ""));
       const input = node("input"); input.type = "radio"; input.name = "sceneline-version"; input.value = value; input.checked = version() === value;
       input.onchange = () => { try { localStorage.setItem("sceneline-version", value); } catch {} paintVersionSwitch(); if (lastData) window.reloadProject(); };
@@ -509,7 +509,7 @@
       }
       if (run.state === "error") box.append(node("p", run.message, "status error"));
       if (!pipelineInfo.ready) {
-        box.append(node("p", "La génération intégrée n’est pas configurée sur ce serveur. Utilisez la version avec vos outils.", "badge uncertain"));
+        box.append(node("p", "Pour activer la génération intégrée, ajoutez sur le serveur les clés d’API de génération d’image (OpenAI) et de vidéo (Kling AI). En attendant, la version « avec vos outils » produit le même résultat.", "badge uncertain"));
         return;
       }
       const sent = node("ul", null, "sendlist");
@@ -564,7 +564,7 @@
     }
     card.append(message);
     if (version() === "final") {
-      // Version finale : un seul panneau, du kit média à la vidéo générée ; rien à préparer à la main.
+      // Génération intégrée : un seul panneau, du kit média à la vidéo générée ; rien à préparer à la main.
       card.replaceChildren(head(proposal, null), finalPanel(kit, proposal, data));
       return card;
     }

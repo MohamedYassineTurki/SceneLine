@@ -195,7 +195,7 @@ def run_matching(folder, model=PRIMARY_MODEL):
     context = load_context(folder)
     catalog = load_catalog(folder)
     if not catalog["products"]:
-        raise ValueError("Le catalogue est vide. Ajoutez des produits ou chargez le catalogue de démonstration.")
+        raise ValueError("Le catalogue est vide. Ajoutez des produits ou chargez le catalogue d'exemple.")
     metrics = Metrics()
     client = Gemini(BACKUP_MODEL, model, metrics)  # modèle léger d'abord ; le modèle complet en secours
     scenes = {s["id"]: s for s in sceneline["scenes"]}

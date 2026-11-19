@@ -189,13 +189,21 @@ placez la clé dans `KLING_API_KEY` (ou le fichier `.kling-key`) et l'adresse pu
 `SCENELINE_PUBLIC_URL` (ou `.sceneline-public-url`). Les créateurs n'ont aucune clé à fournir.
 Voir [Étape 3 · configuration](docs/etapes/3-generation.md#configuration-du-serveur).
 
-**Version finale, sans quitter SceneLine.** À l'étape 3, un seul accord suffit : SceneLine génère l'image de
-référence (API d'image), puis la vidéo (Kling AI), et l'intègre. Elle demande aussi `OPENAI_API_KEY` sur le
-serveur. Les crédits de ces API ne sont pas encore financés : la démonstration rejoue des résultats réellement
-générés plus tôt pour le même plan, et l'indique à l'écran ([détails](docs/etapes/3-generation.md#deux-versions-du-parcours)).
+**Deux façons de générer, au choix à l'étape 3.**
+
+| | **Avec vos outils** | **Génération intégrée** |
+|---|---|---|
+| Image de référence | Le producteur la produit avec l'outil de son choix (ChatGPT, Gemini…), à partir des images et du prompt mesuré fournis par SceneLine, puis l'importe | SceneLine l'obtient lui-même de l'API OpenAI Images |
+| Vidéo | Kling AI par l'API ou tout autre outil vidéo, puis import | SceneLine l'envoie à Kling AI avec le prompt « MAIN REFERENCE » |
+| Intégration | Vérification du bon plan, recalage, 1 s d'original avant et après | Identique |
+| Ce qu'il faut | Rien de plus que SceneLine | Des crédits d'API : `OPENAI_API_KEY` (ou `.openai-key`) et la clé Kling de SceneLine |
+
+Les deux versions suivent le même parcours et produisent le même résultat ; la génération intégrée évite seulement
+au producteur de quitter SceneLine. Elle s'active dès que les clés d'API sont configurées sur le serveur
+([détails](docs/etapes/3-generation.md#deux-versions-du-parcours)).
 
 <details>
-<summary><b>Rejouer la démonstration enregistrée</b></summary>
+<summary><b>Réenregistrer la vidéo de démonstration du README</b></summary>
 
 La démo de ce README est produite par un script qui pilote l'application réelle dans Chrome, comme un utilisateur :
 
@@ -226,9 +234,9 @@ SceneLine/
 │   ├── evaluation/              Mesure de la qualité face à une annotation manuelle
 │   └── web/                     Interface HTML · CSS · JS, sans framework
 ├── docs/                        Architecture, une page par étape, Éthique 360, vidéo, médias
-├── demo_products/               Catalogue de démonstration, provenance de chaque visuel
+├── demo_products/               Catalogue d'exemple, provenance de chaque visuel
 ├── validation/                  Annotation de référence de l'épisode de test
-├── design/                      Système de design et prototype de l'interface
+├── design/                      Système de design de l'interface (jetons, composants)
 ├── motion-video/                Vidéo de présentation, écrite en code (HyperFrames)
 └── scripts/                     Enregistrement reproductible de la démo
 ```

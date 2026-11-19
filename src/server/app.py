@@ -503,7 +503,7 @@ def modifications(job_id):
 @app.get("/api/jobs/<job_id>/files/<name>")
 def job_file(job_id, name):
     folder = job_folder(job_id)
-    if not re.fullmatch(r"(?:source\.mp4|plan-\d+\.jpg|win-\d+-\d+\.jpg|analysis\.json|sceneline\.json|run\.log|product-[a-z0-9-]+\.(?:png|jpe?g|webp)|(?:render|export|generated)-p-\d+-\d+-r\d+(?:-original|-edited)?\.mp4|kit-p-\d+-\d+-r\d+(?:-plan\.mp4|-(?:debut|fin)(?:-16x9)?\.png|-produit\.png|-angles\.png|-maquette\.png|-reference\.png|-prompt-(?:image-|court-)?(?:en|fr)\.txt|-LISEZ-MOI\.md|\.zip))", name):
+    if not re.fullmatch(r"(?:source\.mp4|plan-\d+\.jpg|win-\d+-\d+\.jpg|analysis\.json|sceneline\.json|run\.log|product-[a-z0-9-]+\.(?:png|jpe?g|webp)|(?:render|export|generated|external)-p-\d+-\d+-r\d+(?:-original|-edited)?\.mp4|kit-p-\d+-\d+-r\d+(?:-plan\.mp4|-(?:debut|fin)(?:-16x9)?\.png|-produit\.png|-angles\.png|-maquette\.png|-reference\.png|-prompt-(?:image-|court-)?(?:en|fr)\.txt|-LISEZ-MOI\.md|\.zip))", name):
         abort(404)
     return send_from_directory(folder, name)
 
@@ -530,7 +530,7 @@ def public_clip(token):
 
 @app.get("/api/pipeline")
 def pipeline_status():
-    """Version finale : les API d'image et de vidéo sont-elles prêtes (ou le mode démonstration actif) ?"""
+    """Génération intégrée : les clés des API d'image et de vidéo sont-elles configurées ?"""
     return jsonify(pipeline.status())
 
 @app.post("/api/jobs/<job_id>/proposals/<proposal_id>/pipeline")

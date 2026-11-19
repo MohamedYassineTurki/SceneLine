@@ -132,7 +132,7 @@ def set_asset(folder, product_id, data):
 
 
 def load_demo(folder):
-    """Copie le catalogue fictif de démonstration. Ignore les produits déjà présents."""
+    """Copie le catalogue d'exemple (produits fictifs, signalés « Fictif »). Ignore les produits déjà présents."""
     entries = json.loads((DEMO / "catalog.json").read_text(encoding="utf-8"))
     present = {p["id"] for p in load_catalog(folder)["products"]}
     added = []
