@@ -30,7 +30,7 @@ flowchart LR
 | Rien n'est modifié sans l'accord du producteur : Accepter, Refuser, Ajuster, Retenir, Choisir une autre surface | [`producer_review/decisions.py`](../src/producer_review/decisions.py) · `decide()` |
 | Un intervalle écarté pour un **avis** (score, visibilité, gêne pour l'action) peut être retenu par le producteur, avec une confirmation **enregistrée** ; un titre, une scène protégée ou l'absence de surface ne le peuvent **jamais** | [`server/app.py`](../src/server/app.py) · `hard_rejection()` |
 | Le producteur exclut des catégories et des intervalles, et déclare le contexte | [`video_analyzer/context.py`](../src/video_analyzer/context.py) |
-| Chaque décision est **signée, datée, liée à une révision par empreinte SHA-256**, dans un journal | [`producer_review/decisions.py`](../src/producer_review/decisions.py) · `digest()` |
+| Chaque décision est **attribuée, datée et liée à la révision complète par une empreinte SHA-256 vérifiée**, dans un journal | [`producer_review/revision_digest.py`](../src/producer_review/revision_digest.py) · `digest()` |
 | La vidéo originale n'est **jamais modifiée** ; une révision modifiée après approbation doit être décidée à nouveau | [`integration/render.py`](../src/integration/render.py) |
 | Les règles de décision sont du code lisible, pas le texte libre d'un modèle | [`video_analyzer/understand.py`](../src/video_analyzer/understand.py) · `classify()` |
 

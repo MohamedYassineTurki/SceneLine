@@ -22,7 +22,7 @@ import cv2
 import numpy as np
 
 from product_matcher.catalog import load_catalog
-from producer_review.decisions import decision_for, digest, read
+from producer_review.decisions import REVISION_DIGEST_VERSION, decision_for, digest, read
 from video_analyzer.review import replace_json
 
 LOCK = threading.RLock()
@@ -80,11 +80,11 @@ def approved_revision(folder, proposal_id):
         raise RenderError("Proposition introuvable.", 404)
     decisions = read(folder, "decisions.json", {"decisions": []})["decisions"]
     approved = [r for r in proposal["revisions"]
-                if (decision_for(decisions, proposal_id, r["n"]) or {}).get("action") == "accepter"]
+                if (decision_for(decisions, proposal_id, r["n"], r) or {}).get("action") == "accepter"]
     if not approved:
         raise RenderError("Seule une révision approuvée peut recevoir un aperçu.", 409)
     revision = approved[-1]
-    return proposal, revision, decision_for(decisions, proposal_id, revision["n"])
+    return proposal, revision, decision_for(decisions, proposal_id, revision["n"], revision)
 
 
 def product_of(folder, revision):
@@ -312,6 +312,7 @@ def assemble(folder, proposal_id, edited_path, tool, note, fit="contain", anchor
     product = product_of(folder, revision)
     record = {
         "proposal_id": proposal_id, "revision": revision["n"], "revision_digest": digest(revision),
+        "revision_digest_version": REVISION_DIGEST_VERSION,
         "product_id": revision["product_id"], "product_name": product["name"] if product else revision["product_id"],
         "mode": revision["mode"], "surface": revision["surface"], "scale": revision["scale"],
         "region": revision.get("region"),
@@ -467,6 +468,7 @@ def modification_log(folder):
             "placement": record["product_name"], "mode": record["mode"], "support": record["surface"],
             "intervalle_source_ms": record["source_interval"], "intervalle_extrait_ms": record["marker"],
             "revision": record["revision"], "empreinte_revision": record["revision_digest"],
+            "version_empreinte_revision": record.get("revision_digest_version", 1),
             "approuve_par": record["approved_by"], "approuve_le": record["approved_at"],
             "provenance": record["provenance"]["label"], "outil": record["provenance"]["tool"],
             "genere_par_sceneline": False, "kit_de_generation": record.get("kit"),

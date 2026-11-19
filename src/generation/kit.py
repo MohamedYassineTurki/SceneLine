@@ -22,7 +22,7 @@ import numpy as np
 from generation import placement
 from integration import render
 from product_matcher.catalog import MODES, effective, load_catalog
-from producer_review.decisions import digest, read
+from producer_review.decisions import REVISION_DIGEST_VERSION, digest, read
 from video_analyzer.review import replace_json
 from video_analyzer.understand import (BACKUP_MODEL, PRIMARY_MODEL, Gemini, Metrics, image_part, one_of, resized_file, text_of,
                         text_part)
@@ -564,6 +564,7 @@ def build_kit(folder, proposal_id, client=None):
             zf.write(folder / name, name.replace(stem + "-", ""))
     record = {
         "proposal_id": proposal_id, "revision": revision["n"], "revision_digest": digest(revision),
+        "revision_digest_version": REVISION_DIGEST_VERSION,
         "created_at": now(), "stem": stem, "zip": archive.name, "product_name": product["name"],
         "seconds": round(seconds, 2), "files": files, "description_model": description["model"],
         "prompt_en": prompt_en, "prompt_fr": prompt_fr, "prompt_short_en": prompt_short, "negative_en": NEGATIVE_EN, "negative_fr": NEGATIVE_FR,
